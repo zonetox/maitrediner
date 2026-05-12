@@ -253,7 +253,7 @@ function MenuTab({ restaurantId, menu, reload }: any) {
 }
 
 function BookingsTab({ bookings, reload }: any) {
-  async function setStatus(id: string, status: string) {
+  async function setStatus(id: string, status: "confirmed" | "cancelled" | "completed" | "pending") {
     await supabase.from("bookings").update({ status }).eq("id", id); reload();
   }
   return (
