@@ -128,7 +128,10 @@ function PartnerPage() {
                     )}
                   </div>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-2 flex-wrap">
+                  <Link to="/partner/membership" className="px-4 py-2 rounded-full border border-gold text-gold text-sm flex items-center gap-2 hover:bg-gold/10">
+                    <Sparkles className="h-3 w-3" /> Nâng cấp gói
+                  </Link>
                   <Link to="/r/$slug" params={{ slug: selected.slug }} target="_blank" className="px-4 py-2 rounded-full border border-border text-sm flex items-center gap-2 hover:border-gold">
                     <ExternalLink className="h-3 w-3" /> Xem trang
                   </Link>
