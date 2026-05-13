@@ -56,6 +56,12 @@ function AdminPage() {
   if (loading) return <div className="min-h-screen bg-background" />;
   if (!user) return null;
   if (!hasRole("admin")) {
+    async function claim() {
+      const { data, error } = await supabase.rpc("claim_admin_if_none");
+      if (error) return toast.error(error.message);
+      if (data) { toast.success("Đã cấp quyền admin cho tài khoản này"); window.location.reload(); }
+      else toast.error("Hệ thống đã có admin. Liên hệ admin hiện tại để được cấp quyền.");
+    }
     return (
       <div className="min-h-screen bg-background">
         <SiteHeader />
@@ -63,9 +69,12 @@ function AdminPage() {
           <Shield className="h-12 w-12 mx-auto text-gold mb-4" />
           <h1 className="font-serif text-3xl mb-3">Khu vực hạn chế</h1>
           <p className="text-muted-foreground mb-6">
-            Tài khoản của bạn không có quyền quản trị. Liên hệ đội ngũ Maître để được cấp quyền admin.
+            Tài khoản của bạn không có quyền quản trị. Nếu bạn là người thiết lập đầu tiên, hãy nhận quyền admin bên dưới.
           </p>
-          <p className="text-xs text-muted-foreground/70 font-mono break-all">User ID: {user.id}</p>
+          <button onClick={claim} className="px-6 py-3 rounded-full bg-gradient-gold text-primary-foreground font-medium hover:shadow-gold">
+            Nhận quyền Admin (chỉ user đầu tiên)
+          </button>
+          <p className="text-xs text-muted-foreground/70 font-mono break-all mt-6">User ID: {user.id}</p>
           <Link to="/" className="inline-block mt-6 text-gold hover:underline">← Về trang chủ</Link>
         </div>
       </div>
