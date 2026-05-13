@@ -109,7 +109,7 @@ function PartnerPage() {
                     <AlertTriangle className="h-8 w-8 text-gold mx-auto mb-3" />
                     <h3 className="font-serif text-2xl">Bản dùng thử đã hết hạn</h3>
                     <p className="text-sm text-muted-foreground mt-2">Nâng cấp gói thành viên để tiếp tục quản lý nhà hàng.</p>
-                    <button className="mt-5 px-6 py-3 rounded-full bg-gradient-gold text-primary-foreground font-medium">Nâng cấp ngay</button>
+                    <Link to="/partner/membership" className="inline-block mt-5 px-6 py-3 rounded-full bg-gradient-gold text-primary-foreground font-medium">Nâng cấp ngay</Link>
                   </div>
                 </div>
               )}
@@ -128,7 +128,10 @@ function PartnerPage() {
                     )}
                   </div>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-2 flex-wrap">
+                  <Link to="/partner/membership" className="px-4 py-2 rounded-full border border-gold text-gold text-sm flex items-center gap-2 hover:bg-gold/10">
+                    <Sparkles className="h-3 w-3" /> Nâng cấp gói
+                  </Link>
                   <Link to="/r/$slug" params={{ slug: selected.slug }} target="_blank" className="px-4 py-2 rounded-full border border-border text-sm flex items-center gap-2 hover:border-gold">
                     <ExternalLink className="h-3 w-3" /> Xem trang
                   </Link>
