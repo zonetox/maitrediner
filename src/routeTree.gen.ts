@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as PartnerRouteImport } from './routes/partner'
+import { Route as MembershipRouteImport } from './routes/membership'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AccountRouteImport } from './routes/account'
@@ -20,6 +21,11 @@ import { Route as PartnerMembershipRouteImport } from './routes/partner.membersh
 const PartnerRoute = PartnerRouteImport.update({
   id: '/partner',
   path: '/partner',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MembershipRoute = MembershipRouteImport.update({
+  id: '/membership',
+  path: '/membership',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -58,6 +64,7 @@ export interface FileRoutesByFullPath {
   '/account': typeof AccountRoute
   '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
+  '/membership': typeof MembershipRoute
   '/partner': typeof PartnerRouteWithChildren
   '/partner/membership': typeof PartnerMembershipRoute
   '/r/$slug': typeof RSlugRoute
@@ -67,6 +74,7 @@ export interface FileRoutesByTo {
   '/account': typeof AccountRoute
   '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
+  '/membership': typeof MembershipRoute
   '/partner': typeof PartnerRouteWithChildren
   '/partner/membership': typeof PartnerMembershipRoute
   '/r/$slug': typeof RSlugRoute
@@ -77,6 +85,7 @@ export interface FileRoutesById {
   '/account': typeof AccountRoute
   '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
+  '/membership': typeof MembershipRoute
   '/partner': typeof PartnerRouteWithChildren
   '/partner/membership': typeof PartnerMembershipRoute
   '/r/$slug': typeof RSlugRoute
@@ -88,6 +97,7 @@ export interface FileRouteTypes {
     | '/account'
     | '/admin'
     | '/auth'
+    | '/membership'
     | '/partner'
     | '/partner/membership'
     | '/r/$slug'
@@ -97,6 +107,7 @@ export interface FileRouteTypes {
     | '/account'
     | '/admin'
     | '/auth'
+    | '/membership'
     | '/partner'
     | '/partner/membership'
     | '/r/$slug'
@@ -106,6 +117,7 @@ export interface FileRouteTypes {
     | '/account'
     | '/admin'
     | '/auth'
+    | '/membership'
     | '/partner'
     | '/partner/membership'
     | '/r/$slug'
@@ -116,6 +128,7 @@ export interface RootRouteChildren {
   AccountRoute: typeof AccountRoute
   AdminRoute: typeof AdminRoute
   AuthRoute: typeof AuthRoute
+  MembershipRoute: typeof MembershipRoute
   PartnerRoute: typeof PartnerRouteWithChildren
   RSlugRoute: typeof RSlugRoute
 }
@@ -127,6 +140,13 @@ declare module '@tanstack/react-router' {
       path: '/partner'
       fullPath: '/partner'
       preLoaderRoute: typeof PartnerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/membership': {
+      id: '/membership'
+      path: '/membership'
+      fullPath: '/membership'
+      preLoaderRoute: typeof MembershipRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -190,6 +210,7 @@ const rootRouteChildren: RootRouteChildren = {
   AccountRoute: AccountRoute,
   AdminRoute: AdminRoute,
   AuthRoute: AuthRoute,
+  MembershipRoute: MembershipRoute,
   PartnerRoute: PartnerRouteWithChildren,
   RSlugRoute: RSlugRoute,
 }
