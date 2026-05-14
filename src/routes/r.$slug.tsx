@@ -1,15 +1,33 @@
-import { createFileRoute, notFound } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
-import { MapPin, Phone, Clock, Heart, Calendar, Sparkles } from "lucide-react";
+import {
+  MapPin, Phone, Clock, Heart, Calendar, Sparkles, Mail,
+  Utensils, Wine, ChefHat, Star, ArrowRight,
+} from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/r/$slug")({
   component: RestaurantPage,
+  head: ({ params }) => ({
+    meta: [
+      { title: `${params.slug} — Maître` },
+      { name: "description", content: "Trải nghiệm ẩm thực tinh tế tại nhà hàng được tuyển chọn trên Maître." },
+    ],
+  }),
 });
+
+const FALLBACK_GALLERY = [
+  "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=1200",
+  "https://images.unsplash.com/photo-1559339352-11d035aa65de?w=1200",
+  "https://images.unsplash.com/photo-1551218808-94e220e084d2?w=1200",
+  "https://images.unsplash.com/photo-1592861956120-e524fc739696?w=1200",
+  "https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=1200",
+  "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=1200",
+];
 
 function RestaurantPage() {
   const { slug } = Route.useParams();
@@ -36,66 +54,195 @@ function RestaurantPage() {
   }, [slug]);
 
   async function addFavorite() {
-    if (!user) return toast.error("Vui lòng đăng nhập");
+    if (!user) return toast.error("Vui lòng đăng nhập để lưu yêu thích");
     const { error } = await supabase.from("favorites").insert({ user_id: user.id, restaurant_id: r.id });
     if (error) toast.error(error.message); else toast.success("Đã lưu vào yêu thích");
   }
 
   if (loading) return <div className="min-h-screen bg-background" />;
-  if (!r) return <div className="min-h-screen bg-background grid place-items-center text-muted-foreground">Không tìm thấy nhà hàng</div>;
+  if (!r) return (
+    <div className="min-h-screen bg-background grid place-items-center">
+      <div className="text-center">
+        <p className="text-muted-foreground">Không tìm thấy nhà hàng</p>
+      </div>
+    </div>
+  );
 
   const lc = r.landing_content || {};
   const cover = r.cover_image_url || "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=1920";
+  const gallery: string[] = lc.gallery?.length ? lc.gallery : FALLBACK_GALLERY;
+  const signatures = menu.filter((m) => m.is_signature).slice(0, 3);
+  const menuByCat = menu.reduce<Record<string, any[]>>((acc, m) => {
+    const k = m.category_name || "À la carte";
+    (acc[k] ??= []).push(m);
+    return acc;
+  }, {});
+
+  const hoursList: { day: string; time: string }[] = lc.hours_list ?? [
+    { day: "Thứ 2 – Thứ 5", time: "11:30 – 14:30 · 18:00 – 22:30" },
+    { day: "Thứ 6 – Thứ 7", time: "11:30 – 15:00 · 18:00 – 23:30" },
+    { day: "Chủ nhật", time: "11:00 – 15:00 · 18:00 – 22:00" },
+  ];
 
   return (
     <div className="min-h-screen bg-background text-foreground">
       <SiteHeader />
       <main>
-        {/* Hero */}
-        <section className="relative min-h-[80vh] flex items-end pb-16 overflow-hidden">
-          <img src={cover} alt={r.name} className="absolute inset-0 w-full h-full object-cover" />
+        {/* HERO */}
+        <section className="relative min-h-[92vh] flex items-end pb-20 overflow-hidden">
+          <img src={cover} alt={r.name} className="absolute inset-0 w-full h-full object-cover scale-105" />
           <div className="absolute inset-0 bg-gradient-hero" />
+          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/30 to-transparent" />
           <div className="relative mx-auto max-w-7xl px-6 w-full">
-            <span className="text-xs tracking-[0.3em] uppercase text-gold">{r.cuisine_type || "Fine dining"}</span>
-            <h1 className="font-serif text-5xl md:text-7xl mt-3 max-w-3xl">{r.name}</h1>
-            {lc.hero_tagline && <p className="text-xl text-muted-foreground mt-4 max-w-2xl italic">{lc.hero_tagline}</p>}
-            <div className="flex flex-wrap items-center gap-6 mt-8 text-sm">
-              {r.city && <span className="flex items-center gap-2 text-muted-foreground"><MapPin className="h-4 w-4 text-gold" /> {r.address || r.city}</span>}
-              {r.phone && <span className="flex items-center gap-2 text-muted-foreground"><Phone className="h-4 w-4 text-gold" /> {r.phone}</span>}
-              {lc.hours && <span className="flex items-center gap-2 text-muted-foreground"><Clock className="h-4 w-4 text-gold" /> {lc.hours}</span>}
+            <div className="flex items-center gap-3 mb-6">
+              <span className="h-px w-12 bg-gold" />
+              <span className="text-xs tracking-[0.3em] uppercase text-gold">{r.cuisine_type || "Fine dining"}</span>
+              {r.is_featured && (
+                <span className="text-[10px] tracking-widest uppercase px-2 py-1 rounded-full border border-gold text-gold">
+                  Maître's Pick
+                </span>
+              )}
             </div>
-            <div className="flex gap-3 mt-8">
-              <button onClick={() => setShowBook(true)} className="px-6 py-3 rounded-full bg-gradient-gold text-primary-foreground font-medium hover:shadow-gold transition">
-                Đặt chỗ
+            <h1 className="font-serif text-5xl md:text-7xl lg:text-8xl max-w-4xl leading-[1.05]">{r.name}</h1>
+            {lc.hero_tagline && (
+              <p className="text-xl md:text-2xl text-muted-foreground mt-6 max-w-2xl italic font-serif">
+                "{lc.hero_tagline}"
+              </p>
+            )}
+            <div className="flex flex-wrap items-center gap-x-8 gap-y-3 mt-10 text-sm">
+              {(r.address || r.city) && (
+                <span className="flex items-center gap-2 text-muted-foreground">
+                  <MapPin className="h-4 w-4 text-gold" /> {r.address || r.city}
+                </span>
+              )}
+              {r.phone && (
+                <span className="flex items-center gap-2 text-muted-foreground">
+                  <Phone className="h-4 w-4 text-gold" /> {r.phone}
+                </span>
+              )}
+              {r.price_range && (
+                <span className="flex items-center gap-2 text-muted-foreground">
+                  <Wine className="h-4 w-4 text-gold" /> {r.price_range}
+                </span>
+              )}
+              {r.rating > 0 && (
+                <span className="flex items-center gap-2 text-muted-foreground">
+                  <Star className="h-4 w-4 text-gold fill-gold" /> {Number(r.rating).toFixed(1)}
+                </span>
+              )}
+            </div>
+            <div className="flex flex-wrap gap-3 mt-10">
+              <button onClick={() => setShowBook(true)}
+                className="px-8 py-4 rounded-full bg-gradient-gold text-primary-foreground font-medium hover:shadow-gold transition flex items-center gap-2">
+                <Calendar className="h-4 w-4" /> Đặt chỗ ngay
               </button>
-              <button onClick={addFavorite} className="px-6 py-3 rounded-full border border-border hover:border-gold flex items-center gap-2">
+              <a href="#menu" className="px-8 py-4 rounded-full border border-border hover:border-gold transition">
+                Xem thực đơn
+              </a>
+              <button onClick={addFavorite} className="px-8 py-4 rounded-full border border-border hover:border-gold flex items-center gap-2 transition">
                 <Heart className="h-4 w-4" /> Lưu
               </button>
             </div>
           </div>
         </section>
 
-        {/* Story */}
-        {lc.story && (
-          <section className="py-24 border-t border-border">
-            <div className="mx-auto max-w-3xl px-6 text-center">
-              <span className="text-xs tracking-[0.3em] uppercase text-gold">Câu chuyện</span>
-              <p className="font-serif text-2xl md:text-3xl leading-relaxed mt-6 italic">"{lc.story}"</p>
+        {/* STORY */}
+        {(lc.story || lc.chef_name) && (
+          <section className="py-28 border-t border-border">
+            <div className="mx-auto max-w-7xl px-6 grid md:grid-cols-2 gap-16 items-center">
+              <div>
+                <span className="text-xs tracking-[0.3em] uppercase text-gold">Câu chuyện</span>
+                <h2 className="font-serif text-4xl md:text-5xl mt-4 leading-tight">
+                  {lc.story_title || "Triết lý ẩm thực"}
+                </h2>
+                <div className="hairline w-32 my-8" />
+                <p className="text-muted-foreground leading-loose text-lg font-serif italic">
+                  {lc.story || "Mỗi món ăn là một bản hòa tấu của hương vị, nguyên liệu tuyển chọn và bàn tay của người đầu bếp tận tâm."}
+                </p>
+                {lc.chef_name && (
+                  <div className="flex items-center gap-4 mt-10 pt-8 border-t border-border">
+                    <div className="h-12 w-12 rounded-full bg-gradient-gold grid place-items-center">
+                      <ChefHat className="h-5 w-5 text-primary-foreground" />
+                    </div>
+                    <div>
+                      <p className="font-serif text-xl">{lc.chef_name}</p>
+                      <p className="text-xs uppercase tracking-widest text-muted-foreground mt-1">
+                        {lc.chef_title || "Bếp trưởng điều hành"}
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+              <div className="relative aspect-[4/5] overflow-hidden rounded-2xl">
+                <img src={gallery[0]} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                <div className="absolute inset-0 bg-gradient-to-t from-background/40 to-transparent" />
+              </div>
             </div>
           </section>
         )}
 
-        {/* Deals */}
-        {deals.length > 0 && (
-          <section className="py-20 border-t border-border bg-secondary/30">
+        {/* SIGNATURES */}
+        {signatures.length > 0 && (
+          <section className="py-24 border-t border-border bg-secondary/20">
             <div className="mx-auto max-w-7xl px-6">
-              <h2 className="font-serif text-3xl mb-8 flex items-center gap-3"><Sparkles className="h-6 w-6 text-gold" /> Ưu đãi đang diễn ra</h2>
-              <div className="grid md:grid-cols-3 gap-4">
+              <div className="text-center mb-16">
+                <span className="text-xs tracking-[0.3em] uppercase text-gold">Signature</span>
+                <h2 className="font-serif text-4xl md:text-5xl mt-3">Món signature của bếp trưởng</h2>
+              </div>
+              <div className="grid md:grid-cols-3 gap-6">
+                {signatures.map((s, i) => (
+                  <article key={s.id} className="group">
+                    <div className="aspect-[4/5] overflow-hidden rounded-2xl bg-card">
+                      <img
+                        src={s.image_url || gallery[(i + 1) % gallery.length]}
+                        alt={s.name}
+                        className="w-full h-full object-cover group-hover:scale-105 transition duration-700"
+                      />
+                    </div>
+                    <div className="mt-5 flex items-start justify-between gap-4">
+                      <div>
+                        <h3 className="font-serif text-2xl">{s.name}</h3>
+                        {s.description && <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{s.description}</p>}
+                      </div>
+                      <div className="text-gold font-serif text-xl whitespace-nowrap">
+                        {Number(s.price).toLocaleString("vi-VN")}₫
+                      </div>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* DEALS */}
+        {deals.length > 0 && (
+          <section className="py-24 border-t border-border">
+            <div className="mx-auto max-w-7xl px-6">
+              <div className="flex items-end justify-between mb-12 gap-6 flex-wrap">
+                <div>
+                  <span className="text-xs tracking-[0.3em] uppercase text-gold">Ưu đãi</span>
+                  <h2 className="font-serif text-4xl md:text-5xl mt-3 flex items-center gap-3">
+                    <Sparkles className="h-7 w-7 text-gold" /> Đang diễn ra
+                  </h2>
+                </div>
+              </div>
+              <div className="grid md:grid-cols-3 gap-6">
                 {deals.map((d) => (
-                  <div key={d.id} className="p-6 rounded-2xl bg-card border border-border">
-                    <span className="text-xs uppercase tracking-wider text-gold">{d.badge}</span>
-                    <h3 className="font-serif text-xl mt-2">{d.title}</h3>
-                    <p className="text-sm text-muted-foreground mt-2">{d.description}</p>
+                  <div key={d.id} className="relative p-8 rounded-2xl bg-card border border-border hover:border-gold transition group overflow-hidden">
+                    <div className="absolute -top-10 -right-10 h-32 w-32 rounded-full bg-gradient-gold opacity-10 blur-2xl group-hover:opacity-20 transition" />
+                    {d.badge && (
+                      <span className="text-[10px] tracking-widest uppercase px-2 py-1 rounded-full border border-gold text-gold">
+                        {d.badge}
+                      </span>
+                    )}
+                    <h3 className="font-serif text-2xl mt-4">{d.title}</h3>
+                    {d.description && <p className="text-sm text-muted-foreground mt-3 leading-relaxed">{d.description}</p>}
+                    {d.expires_at && (
+                      <p className="text-xs text-muted-foreground mt-4 flex items-center gap-1">
+                        <Clock className="h-3 w-3" /> Hết hạn {new Date(d.expires_at).toLocaleDateString("vi-VN")}
+                      </p>
+                    )}
                   </div>
                 ))}
               </div>
@@ -103,32 +250,133 @@ function RestaurantPage() {
           </section>
         )}
 
-        {/* Menu */}
-        <section className="py-24 border-t border-border">
+        {/* MENU */}
+        <section id="menu" className="py-28 border-t border-border">
           <div className="mx-auto max-w-5xl px-6">
-            <div className="text-center mb-12">
+            <div className="text-center mb-16">
               <span className="text-xs tracking-[0.3em] uppercase text-gold">Thực đơn</span>
-              <h2 className="font-serif text-4xl md:text-5xl mt-3">À la carte</h2>
+              <h2 className="font-serif text-4xl md:text-5xl mt-3 flex items-center justify-center gap-3">
+                <Utensils className="h-7 w-7 text-gold" /> À la carte
+              </h2>
+              <div className="hairline w-40 mx-auto mt-8" />
             </div>
             {menu.length === 0 ? (
-              <p className="text-center text-muted-foreground">Đang cập nhật thực đơn.</p>
+              <p className="text-center text-muted-foreground italic">Đang cập nhật thực đơn...</p>
             ) : (
-              <div className="space-y-4">
-                {menu.map((m) => (
-                  <div key={m.id} className="flex justify-between gap-6 py-5 border-b border-border">
-                    <div className="flex-1">
-                      <h4 className="font-serif text-xl">{m.name} {m.is_signature && <span className="text-xs text-gold ml-2">Signature</span>}</h4>
-                      {m.description && <p className="text-sm text-muted-foreground mt-1">{m.description}</p>}
+              <div className="space-y-16">
+                {Object.entries(menuByCat).map(([cat, items]) => (
+                  <div key={cat}>
+                    <h3 className="font-serif text-2xl text-gold mb-6 tracking-wide">{cat}</h3>
+                    <div className="space-y-5">
+                      {items.map((m) => (
+                        <div key={m.id} className="flex justify-between gap-6 py-5 border-b border-border/60">
+                          <div className="flex-1">
+                            <h4 className="font-serif text-xl flex items-center gap-2">
+                              {m.name}
+                              {m.is_signature && (
+                                <span className="text-[10px] uppercase tracking-widest text-gold border border-gold px-2 py-0.5 rounded-full">
+                                  Signature
+                                </span>
+                              )}
+                            </h4>
+                            {m.description && <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">{m.description}</p>}
+                          </div>
+                          <div className="text-gold font-serif text-xl whitespace-nowrap">
+                            {Number(m.price).toLocaleString("vi-VN")}₫
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                    <div className="text-gold font-serif text-xl">{Number(m.price).toLocaleString("vi-VN")}₫</div>
                   </div>
                 ))}
               </div>
             )}
           </div>
         </section>
+
+        {/* GALLERY */}
+        <section className="py-24 border-t border-border bg-secondary/20">
+          <div className="mx-auto max-w-7xl px-6">
+            <div className="text-center mb-12">
+              <span className="text-xs tracking-[0.3em] uppercase text-gold">Không gian</span>
+              <h2 className="font-serif text-4xl md:text-5xl mt-3">Trải nghiệm thị giác</h2>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
+              {gallery.slice(0, 6).map((src, i) => (
+                <div key={i} className={`overflow-hidden rounded-xl ${i === 0 ? "md:col-span-2 md:row-span-2 aspect-square" : "aspect-square"}`}>
+                  <img src={src} alt="" className="w-full h-full object-cover hover:scale-105 transition duration-700" />
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* HOURS + CONTACT */}
+        <section className="py-24 border-t border-border">
+          <div className="mx-auto max-w-7xl px-6 grid md:grid-cols-2 gap-12">
+            <div>
+              <span className="text-xs tracking-[0.3em] uppercase text-gold">Giờ phục vụ</span>
+              <h2 className="font-serif text-3xl md:text-4xl mt-3 flex items-center gap-3">
+                <Clock className="h-6 w-6 text-gold" /> Lịch mở cửa
+              </h2>
+              <div className="mt-8 space-y-4">
+                {hoursList.map((h) => (
+                  <div key={h.day} className="flex justify-between gap-4 py-3 border-b border-border">
+                    <span className="font-serif text-lg">{h.day}</span>
+                    <span className="text-muted-foreground text-sm">{h.time}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div>
+              <span className="text-xs tracking-[0.3em] uppercase text-gold">Liên hệ</span>
+              <h2 className="font-serif text-3xl md:text-4xl mt-3">Đặt bàn & thắc mắc</h2>
+              <div className="mt-8 space-y-5">
+                {r.address && (
+                  <div className="flex gap-4">
+                    <MapPin className="h-5 w-5 text-gold shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-serif text-lg">Địa chỉ</p>
+                      <p className="text-sm text-muted-foreground mt-1">{r.address}{r.city ? `, ${r.city}` : ""}</p>
+                    </div>
+                  </div>
+                )}
+                {r.phone && (
+                  <div className="flex gap-4">
+                    <Phone className="h-5 w-5 text-gold shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-serif text-lg">Điện thoại</p>
+                      <a href={`tel:${r.phone}`} className="text-sm text-muted-foreground hover:text-gold mt-1 block">{r.phone}</a>
+                    </div>
+                  </div>
+                )}
+                {r.email && (
+                  <div className="flex gap-4">
+                    <Mail className="h-5 w-5 text-gold shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-serif text-lg">Email</p>
+                      <a href={`mailto:${r.email}`} className="text-sm text-muted-foreground hover:text-gold mt-1 block">{r.email}</a>
+                    </div>
+                  </div>
+                )}
+                <button onClick={() => setShowBook(true)}
+                  className="mt-6 w-full px-6 py-4 rounded-full bg-gradient-gold text-primary-foreground font-medium hover:shadow-gold transition flex items-center justify-center gap-2">
+                  Đặt chỗ ngay <ArrowRight className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
       </main>
       <SiteFooter />
+
+      {/* Sticky reserve bar */}
+      <div className="fixed bottom-0 inset-x-0 z-40 md:hidden bg-background/95 backdrop-blur border-t border-border p-4">
+        <button onClick={() => setShowBook(true)}
+          className="w-full py-3 rounded-full bg-gradient-gold text-primary-foreground font-medium flex items-center justify-center gap-2">
+          <Calendar className="h-4 w-4" /> Đặt chỗ
+        </button>
+      </div>
 
       {showBook && <BookingModal r={r} onClose={() => setShowBook(false)} user={user} />}
     </div>
@@ -153,28 +401,34 @@ function BookingModal({ r, onClose, user }: any) {
     else { toast.success("Đã gửi yêu cầu đặt chỗ. Nhà hàng sẽ liên hệ xác nhận."); onClose(); }
   }
   return (
-    <div className="fixed inset-0 z-[60] bg-background/80 backdrop-blur grid place-items-center p-4" onClick={onClose}>
-      <form onSubmit={submit} onClick={(e) => e.stopPropagation()} className="bg-card border border-border rounded-2xl p-8 max-w-md w-full">
-        <h3 className="font-serif text-2xl mb-1">Đặt chỗ tại {r.name}</h3>
-        <p className="text-sm text-muted-foreground mb-6">Nhà hàng sẽ liên hệ để xác nhận.</p>
+    <div className="fixed inset-0 z-[60] bg-background/85 backdrop-blur grid place-items-center p-4 overflow-y-auto" onClick={onClose}>
+      <form onSubmit={submit} onClick={(e) => e.stopPropagation()}
+        className="bg-card border border-border rounded-2xl p-8 max-w-md w-full shadow-elegant">
+        <span className="text-xs tracking-[0.3em] uppercase text-gold">Reservation</span>
+        <h3 className="font-serif text-3xl mt-2 mb-1">Đặt chỗ tại {r.name}</h3>
+        <p className="text-sm text-muted-foreground mb-6">Nhà hàng sẽ liên hệ để xác nhận trong vòng 30 phút.</p>
         <div className="space-y-3">
           <input required placeholder="Họ tên" value={form.guest_name} onChange={(e) => setForm({ ...form, guest_name: e.target.value })}
-            className="w-full px-4 py-3 rounded-lg bg-background border border-border focus:border-gold outline-none" />
+            className="w-full px-4 py-3 rounded-lg bg-background border border-border focus:border-gold outline-none transition" />
           <input required placeholder="Số điện thoại" value={form.guest_phone} onChange={(e) => setForm({ ...form, guest_phone: e.target.value })}
-            className="w-full px-4 py-3 rounded-lg bg-background border border-border focus:border-gold outline-none" />
+            className="w-full px-4 py-3 rounded-lg bg-background border border-border focus:border-gold outline-none transition" />
+          <input type="email" placeholder="Email (tùy chọn)" value={form.guest_email} onChange={(e) => setForm({ ...form, guest_email: e.target.value })}
+            className="w-full px-4 py-3 rounded-lg bg-background border border-border focus:border-gold outline-none transition" />
           <div className="grid grid-cols-2 gap-3">
             <input required type="datetime-local" value={form.booking_at} onChange={(e) => setForm({ ...form, booking_at: e.target.value })}
-              className="px-4 py-3 rounded-lg bg-background border border-border focus:border-gold outline-none" />
+              className="px-4 py-3 rounded-lg bg-background border border-border focus:border-gold outline-none transition" />
             <input required type="number" min={1} placeholder="Số khách" value={form.party_size} onChange={(e) => setForm({ ...form, party_size: +e.target.value })}
-              className="px-4 py-3 rounded-lg bg-background border border-border focus:border-gold outline-none" />
+              className="px-4 py-3 rounded-lg bg-background border border-border focus:border-gold outline-none transition" />
           </div>
-          <textarea placeholder="Ghi chú (tùy chọn)" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} rows={3}
-            className="w-full px-4 py-3 rounded-lg bg-background border border-border focus:border-gold outline-none" />
+          <textarea placeholder="Yêu cầu đặc biệt (sinh nhật, kỷ niệm, dị ứng...)" value={form.notes}
+            onChange={(e) => setForm({ ...form, notes: e.target.value })} rows={3}
+            className="w-full px-4 py-3 rounded-lg bg-background border border-border focus:border-gold outline-none transition" />
         </div>
         <div className="flex gap-2 mt-6">
-          <button type="button" onClick={onClose} className="flex-1 py-3 rounded-full border border-border">Hủy</button>
-          <button type="submit" disabled={submitting} className="flex-1 py-3 rounded-full bg-gradient-gold text-primary-foreground font-medium">
-            {submitting ? "Đang gửi..." : <span className="flex items-center justify-center gap-2"><Calendar className="h-4 w-4" /> Đặt chỗ</span>}
+          <button type="button" onClick={onClose} className="flex-1 py-3 rounded-full border border-border hover:border-gold transition">Hủy</button>
+          <button type="submit" disabled={submitting}
+            className="flex-1 py-3 rounded-full bg-gradient-gold text-primary-foreground font-medium hover:shadow-gold transition">
+            {submitting ? "Đang gửi..." : <span className="flex items-center justify-center gap-2"><Calendar className="h-4 w-4" /> Xác nhận</span>}
           </button>
         </div>
       </form>
