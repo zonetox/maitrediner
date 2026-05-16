@@ -26,7 +26,7 @@ export function SiteHeader() {
         </Link>
         <nav className="hidden md:flex items-center gap-8 text-sm">
           {nav.map((n) => (
-            <Link key={n.label} to={n.to as any} search={n.search as any} className="text-muted-foreground hover:text-foreground transition-colors">
+            <Link key={n.label} to={n.to as any} className="text-muted-foreground hover:text-foreground transition-colors">
               {n.label}
             </Link>
           ))}
@@ -64,7 +64,7 @@ export function SiteHeader() {
       {open && (
         <div className="md:hidden border-t border-border bg-background px-6 py-4 space-y-3">
           {nav.map((n) => (
-            <Link key={n.label} to={n.to as any} search={n.search as any} className="block text-muted-foreground" onClick={() => setOpen(false)}>
+            <Link key={n.label} to={n.to as any} className="block text-muted-foreground" onClick={() => setOpen(false)}>
               {n.label}
             </Link>
           ))}
