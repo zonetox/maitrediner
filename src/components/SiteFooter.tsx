@@ -1,3 +1,4 @@
+import { Link } from "@tanstack/react-router";
 import { UtensilsCrossed, Instagram, Facebook, Youtube } from "lucide-react";
 
 export function SiteFooter() {
@@ -17,28 +18,26 @@ export function SiteFooter() {
           <div>
             <h4 className="text-sm font-medium mb-4 text-gold">Khám phá</h4>
             <ul className="space-y-2 text-sm text-muted-foreground">
-              <li>Nhà hàng nổi bật</li>
-              <li>Bộ sưu tập</li>
-              <li>Ưu đãi</li>
-              <li>Sự kiện</li>
+              <li><Link to="/restaurants" className="hover:text-gold">Nhà hàng</Link></li>
+              <li><Link to="/deals" className="hover:text-gold">Ưu đãi</Link></li>
+              <li><Link to="/account" className="hover:text-gold">Yêu thích</Link></li>
             </ul>
           </div>
           <div>
             <h4 className="text-sm font-medium mb-4 text-gold">Đối tác</h4>
             <ul className="space-y-2 text-sm text-muted-foreground">
-              <li>Đăng ký nhà hàng</li>
-              <li>Gói thành viên</li>
-              <li>Trung tâm hỗ trợ</li>
-              <li>Liên hệ</li>
+              <li><Link to="/auth" search={{ mode: "register", as: "restaurant" } as any} className="hover:text-gold">Đăng ký nhà hàng</Link></li>
+              <li><Link to="/membership" className="hover:text-gold">Gói thành viên</Link></li>
+              <li><Link to="/partner" className="hover:text-gold">Quản trị</Link></li>
             </ul>
           </div>
           <div>
             <h4 className="text-sm font-medium mb-4 text-gold">Theo dõi</h4>
             <div className="flex gap-3">
               {[Instagram, Facebook, Youtube].map((Icon, i) => (
-                <button key={i} className="h-10 w-10 rounded-full border border-border grid place-items-center hover:border-gold hover:text-gold transition">
+                <a key={i} href="#" aria-label="social" className="h-10 w-10 rounded-full border border-border grid place-items-center hover:border-gold hover:text-gold transition">
                   <Icon className="h-4 w-4" />
-                </button>
+                </a>
               ))}
             </div>
           </div>
