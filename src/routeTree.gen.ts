@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as RestaurantsRouteImport } from './routes/restaurants'
 import { Route as PartnerRouteImport } from './routes/partner'
 import { Route as MembershipRouteImport } from './routes/membership'
 import { Route as AuthRouteImport } from './routes/auth'
@@ -18,6 +19,11 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as RSlugRouteImport } from './routes/r.$slug'
 import { Route as PartnerMembershipRouteImport } from './routes/partner.membership'
 
+const RestaurantsRoute = RestaurantsRouteImport.update({
+  id: '/restaurants',
+  path: '/restaurants',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PartnerRoute = PartnerRouteImport.update({
   id: '/partner',
   path: '/partner',
@@ -66,6 +72,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/membership': typeof MembershipRoute
   '/partner': typeof PartnerRouteWithChildren
+  '/restaurants': typeof RestaurantsRoute
   '/partner/membership': typeof PartnerMembershipRoute
   '/r/$slug': typeof RSlugRoute
 }
@@ -76,6 +83,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/membership': typeof MembershipRoute
   '/partner': typeof PartnerRouteWithChildren
+  '/restaurants': typeof RestaurantsRoute
   '/partner/membership': typeof PartnerMembershipRoute
   '/r/$slug': typeof RSlugRoute
 }
@@ -87,6 +95,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/membership': typeof MembershipRoute
   '/partner': typeof PartnerRouteWithChildren
+  '/restaurants': typeof RestaurantsRoute
   '/partner/membership': typeof PartnerMembershipRoute
   '/r/$slug': typeof RSlugRoute
 }
@@ -99,6 +108,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/membership'
     | '/partner'
+    | '/restaurants'
     | '/partner/membership'
     | '/r/$slug'
   fileRoutesByTo: FileRoutesByTo
@@ -109,6 +119,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/membership'
     | '/partner'
+    | '/restaurants'
     | '/partner/membership'
     | '/r/$slug'
   id:
@@ -119,6 +130,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/membership'
     | '/partner'
+    | '/restaurants'
     | '/partner/membership'
     | '/r/$slug'
   fileRoutesById: FileRoutesById
@@ -130,11 +142,19 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   MembershipRoute: typeof MembershipRoute
   PartnerRoute: typeof PartnerRouteWithChildren
+  RestaurantsRoute: typeof RestaurantsRoute
   RSlugRoute: typeof RSlugRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/restaurants': {
+      id: '/restaurants'
+      path: '/restaurants'
+      fullPath: '/restaurants'
+      preLoaderRoute: typeof RestaurantsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/partner': {
       id: '/partner'
       path: '/partner'
@@ -212,8 +232,19 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   MembershipRoute: MembershipRoute,
   PartnerRoute: PartnerRouteWithChildren,
+  RestaurantsRoute: RestaurantsRoute,
   RSlugRoute: RSlugRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
