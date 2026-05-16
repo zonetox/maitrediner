@@ -1,12 +1,13 @@
+import { Link } from "@tanstack/react-router";
 import { Wine, Fish, Beef, Croissant, Soup, Cake } from "lucide-react";
 
 const cats = [
-  { icon: Wine, name: "Fine dining", count: 86 },
-  { icon: Fish, name: "Omakase", count: 24 },
-  { icon: Beef, name: "Steakhouse / Diner", count: 41 },
-  { icon: Croissant, name: "Bistro Pháp", count: 33 },
-  { icon: Soup, name: "Á đương đại", count: 58 },
-  { icon: Cake, name: "Patisserie", count: 19 },
+  { icon: Wine, name: "Fine dining", q: "Fine dining" },
+  { icon: Fish, name: "Omakase", q: "Omakase" },
+  { icon: Beef, name: "Steakhouse", q: "Steakhouse" },
+  { icon: Croissant, name: "Bistro Pháp", q: "Pháp" },
+  { icon: Soup, name: "Á đương đại", q: "Việt" },
+  { icon: Cake, name: "Patisserie", q: "Patisserie" },
 ];
 
 export function Categories() {
@@ -21,14 +22,16 @@ export function Categories() {
         </div>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
           {cats.map((c) => (
-            <button
+            <Link
               key={c.name}
+              to="/restaurants"
+              search={{ cuisine: c.q } as any}
               className="group p-6 rounded-2xl bg-card border border-border hover:border-gold transition-all text-left"
             >
               <c.icon className="h-7 w-7 text-gold mb-4 group-hover:scale-110 transition-transform" />
               <div className="font-serif text-lg">{c.name}</div>
-              <div className="text-xs text-muted-foreground mt-1">{c.count} nhà hàng</div>
-            </button>
+              <div className="text-xs text-muted-foreground mt-1">Xem nhà hàng</div>
+            </Link>
           ))}
         </div>
       </div>
