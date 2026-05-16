@@ -1,30 +1,38 @@
-import { Sparkles, Clock, Tag } from "lucide-react";
+import { Link } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { Sparkles, Clock, Tag, Bookmark, ArrowRight } from "lucide-react";
+import { toast } from "sonner";
 
-const deals = [
-  {
-    badge: "Mới",
-    title: "Tasting menu 7 món - Lumière",
-    desc: "Giảm 25% cho đặt bàn từ Chủ nhật đến thứ Tư trong tháng này.",
-    expire: "Hết hạn 30/11",
-    tag: "-25%",
-  },
-  {
-    badge: "Hot",
-    title: "Omakase đôi - Hanami",
-    desc: "Tặng kèm chai sake Junmai Daiginjo cho cặp đôi đặt bàn 19:00.",
-    expire: "Hết hạn 15/12",
-    tag: "Quà tặng",
-  },
-  {
-    badge: "VIP",
-    title: "Brunch cuối tuần - Maison Belle",
-    desc: "Free flow champagne cho khách thân thiết Maître hạng Gold.",
-    expire: "Cuối tuần",
-    tag: "Free flow",
-  },
+const FALLBACK = [
+  { id: "f1", badge: "Mới", title: "Tasting menu 7 món - Lumière", description: "Giảm 25% cho đặt bàn từ Chủ nhật đến thứ Tư trong tháng này.", expires_at: null, tag: "-25%" },
+  { id: "f2", badge: "Hot", title: "Omakase đôi - Hanami", description: "Tặng kèm chai sake Junmai Daiginjo cho cặp đôi đặt bàn 19:00.", expires_at: null, tag: "Quà tặng" },
+  { id: "f3", badge: "VIP", title: "Brunch cuối tuần - Maison Belle", description: "Free flow champagne cho khách thân thiết Maître hạng Gold.", expires_at: null, tag: "Free flow" },
 ];
 
 export function Deals() {
+  const { user } = useAuth();
+  const [items, setItems] = useState<any[]>(FALLBACK);
+
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase
+        .from("deals")
+        .select("id, badge, title, description, expires_at, tag")
+        .eq("is_active", true)
+        .limit(3);
+      if (data && data.length > 0) setItems(data);
+    })();
+  }, []);
+
+  async function save(id: string) {
+    if (id.startsWith("f")) return toast.info("Ưu đãi minh hoạ");
+    if (!user) return toast.error("Vui lòng đăng nhập để lưu ưu đãi");
+    const { error } = await supabase.from("favorites").insert({ user_id: user.id, deal_id: id });
+    if (error) toast.error(error.message); else toast.success("Đã lưu ưu đãi");
+  }
+
   return (
     <section className="py-24 border-t border-border">
       <div className="mx-auto max-w-7xl px-6">
@@ -33,29 +41,35 @@ export function Deals() {
             <span className="text-xs tracking-[0.3em] uppercase text-gold">Ưu đãi độc quyền</span>
             <h2 className="font-serif text-4xl md:text-5xl mt-3">Dành riêng cho thành viên Maître</h2>
           </div>
-          <button className="text-sm text-gold hover:underline">Tất cả ưu đãi →</button>
+          <Link to="/deals" className="text-sm text-gold hover:underline inline-flex items-center gap-2">
+            Tất cả ưu đãi <ArrowRight className="h-3 w-3" />
+          </Link>
         </div>
 
         <div className="grid md:grid-cols-3 gap-6">
-          {deals.map((d) => (
-            <article key={d.title} className="relative p-8 rounded-2xl border border-border bg-card hover:border-gold transition-all overflow-hidden group">
+          {items.map((d) => (
+            <article key={d.id} className="relative p-8 rounded-2xl border border-border bg-card hover:border-gold transition-all overflow-hidden group">
               <div className="absolute -top-10 -right-10 h-32 w-32 rounded-full bg-gradient-gold opacity-10 blur-2xl group-hover:opacity-20 transition" />
               <div className="flex items-center justify-between mb-6">
-                <span className="text-[10px] tracking-widest uppercase px-2 py-1 rounded-full border border-gold text-gold">
-                  {d.badge}
-                </span>
+                {d.badge && (
+                  <span className="text-[10px] tracking-widest uppercase px-2 py-1 rounded-full border border-gold text-gold">{d.badge}</span>
+                )}
                 <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                  <Clock className="h-3 w-3" /> {d.expire}
+                  <Clock className="h-3 w-3" /> {d.expires_at ? new Date(d.expires_at).toLocaleDateString("vi-VN") : "Có hạn"}
                 </span>
               </div>
               <Sparkles className="h-6 w-6 text-gold mb-4" />
               <h3 className="font-serif text-2xl leading-tight">{d.title}</h3>
-              <p className="text-sm text-muted-foreground mt-3 leading-relaxed">{d.desc}</p>
+              <p className="text-sm text-muted-foreground mt-3 leading-relaxed">{d.description}</p>
               <div className="flex items-center justify-between mt-8 pt-6 border-t border-border">
-                <span className="flex items-center gap-2 text-gold font-medium">
-                  <Tag className="h-4 w-4" /> {d.tag}
-                </span>
-                <button className="text-sm hover:text-gold transition">Lưu ưu đãi →</button>
+                {d.tag ? (
+                  <span className="flex items-center gap-2 text-gold font-medium">
+                    <Tag className="h-4 w-4" /> {d.tag}
+                  </span>
+                ) : <span />}
+                <button onClick={() => save(d.id)} className="text-sm hover:text-gold transition inline-flex items-center gap-1">
+                  <Bookmark className="h-4 w-4" /> Lưu ưu đãi
+                </button>
               </div>
             </article>
           ))}

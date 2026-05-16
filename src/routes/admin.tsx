@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { SiteHeader } from "@/components/SiteHeader";
-import { Shield, Users, Store, CreditCard, CheckCircle2, XCircle, Star, Eye, EyeOff } from "lucide-react";
+import { Shield, Users, Store, CreditCard, CheckCircle2, XCircle, Star, Eye, EyeOff, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/admin")({
@@ -169,7 +169,7 @@ function AdminPage() {
                     <div className="font-medium">{p.restaurants?.name ?? "—"}</div>
                     <div className="text-xs text-muted-foreground">{p.plan_name} · {Number(p.amount).toLocaleString("vi-VN")} đ</div>
                   </div>
-                  <button onClick={() => setTab("payments")} className="text-xs text-gold">Xem →</button>
+                  <button onClick={() => setTab("payments")} className="text-xs text-gold inline-flex items-center gap-1">Xem <ArrowRight className="h-3 w-3" /></button>
                 </div>
               ))}
               {payments.filter((p) => p.status === "pending").length === 0 && (
