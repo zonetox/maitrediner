@@ -5,9 +5,9 @@ import { useAuth } from "@/hooks/useAuth";
 
 const nav = [
   { label: "Khám phá", to: "/" },
-  { label: "Nhà hàng", to: "/" },
-  { label: "Ưu đãi", to: "/" },
-  { label: "Dành cho đối tác", to: "/auth", search: { mode: "register", as: "restaurant" } },
+  { label: "Nhà hàng", to: "/restaurants" },
+  { label: "Ưu đãi", to: "/deals" },
+  { label: "Gói thành viên", to: "/membership" },
 ];
 
 export function SiteHeader() {
