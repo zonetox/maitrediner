@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as RestaurantsRouteImport } from './routes/restaurants'
 import { Route as PartnerRouteImport } from './routes/partner'
 import { Route as MembershipRouteImport } from './routes/membership'
+import { Route as DealsRouteImport } from './routes/deals'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AccountRouteImport } from './routes/account'
@@ -32,6 +33,11 @@ const PartnerRoute = PartnerRouteImport.update({
 const MembershipRoute = MembershipRouteImport.update({
   id: '/membership',
   path: '/membership',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DealsRoute = DealsRouteImport.update({
+  id: '/deals',
+  path: '/deals',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -70,6 +76,7 @@ export interface FileRoutesByFullPath {
   '/account': typeof AccountRoute
   '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
+  '/deals': typeof DealsRoute
   '/membership': typeof MembershipRoute
   '/partner': typeof PartnerRouteWithChildren
   '/restaurants': typeof RestaurantsRoute
@@ -81,6 +88,7 @@ export interface FileRoutesByTo {
   '/account': typeof AccountRoute
   '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
+  '/deals': typeof DealsRoute
   '/membership': typeof MembershipRoute
   '/partner': typeof PartnerRouteWithChildren
   '/restaurants': typeof RestaurantsRoute
@@ -93,6 +101,7 @@ export interface FileRoutesById {
   '/account': typeof AccountRoute
   '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
+  '/deals': typeof DealsRoute
   '/membership': typeof MembershipRoute
   '/partner': typeof PartnerRouteWithChildren
   '/restaurants': typeof RestaurantsRoute
@@ -106,6 +115,7 @@ export interface FileRouteTypes {
     | '/account'
     | '/admin'
     | '/auth'
+    | '/deals'
     | '/membership'
     | '/partner'
     | '/restaurants'
@@ -117,6 +127,7 @@ export interface FileRouteTypes {
     | '/account'
     | '/admin'
     | '/auth'
+    | '/deals'
     | '/membership'
     | '/partner'
     | '/restaurants'
@@ -128,6 +139,7 @@ export interface FileRouteTypes {
     | '/account'
     | '/admin'
     | '/auth'
+    | '/deals'
     | '/membership'
     | '/partner'
     | '/restaurants'
@@ -140,6 +152,7 @@ export interface RootRouteChildren {
   AccountRoute: typeof AccountRoute
   AdminRoute: typeof AdminRoute
   AuthRoute: typeof AuthRoute
+  DealsRoute: typeof DealsRoute
   MembershipRoute: typeof MembershipRoute
   PartnerRoute: typeof PartnerRouteWithChildren
   RestaurantsRoute: typeof RestaurantsRoute
@@ -167,6 +180,13 @@ declare module '@tanstack/react-router' {
       path: '/membership'
       fullPath: '/membership'
       preLoaderRoute: typeof MembershipRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/deals': {
+      id: '/deals'
+      path: '/deals'
+      fullPath: '/deals'
+      preLoaderRoute: typeof DealsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -230,6 +250,7 @@ const rootRouteChildren: RootRouteChildren = {
   AccountRoute: AccountRoute,
   AdminRoute: AdminRoute,
   AuthRoute: AuthRoute,
+  DealsRoute: DealsRoute,
   MembershipRoute: MembershipRoute,
   PartnerRoute: PartnerRouteWithChildren,
   RestaurantsRoute: RestaurantsRoute,
