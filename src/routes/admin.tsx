@@ -169,7 +169,7 @@ function AdminPage() {
                     <div className="font-medium">{p.restaurants?.name ?? "—"}</div>
                     <div className="text-xs text-muted-foreground">{p.plan_name} · {Number(p.amount).toLocaleString("vi-VN")} đ</div>
                   </div>
-                  <button onClick={() => setTab("payments")} className="text-xs text-gold">Xem →</button>
+                  <button onClick={() => setTab("payments")} className="text-xs text-gold inline-flex items-center gap-1">Xem <ArrowRight className="h-3 w-3" /></button>
                 </div>
               ))}
               {payments.filter((p) => p.status === "pending").length === 0 && (
