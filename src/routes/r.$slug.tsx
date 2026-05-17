@@ -143,6 +143,11 @@ function RestaurantPage() {
                 className="px-8 py-4 rounded-full bg-gradient-gold text-primary-foreground font-medium hover:shadow-gold transition flex items-center gap-2">
                 <Calendar className="h-4 w-4" /> Đặt chỗ ngay
               </button>
+              <button onClick={() => setShowOrder(true)}
+                className="px-8 py-4 rounded-full border border-gold text-gold hover:bg-gold/10 transition flex items-center gap-2">
+                <ShoppingBag className="h-4 w-4" /> Đặt món
+                {cartCount > 0 && <span className="ml-1 h-5 min-w-5 px-1.5 grid place-items-center rounded-full bg-gradient-gold text-primary-foreground text-xs">{cartCount}</span>}
+              </button>
               <a href="#menu" className="px-8 py-4 rounded-full border border-border hover:border-gold transition">
                 Xem thực đơn
               </a>
