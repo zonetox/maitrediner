@@ -37,6 +37,13 @@ function RestaurantPage() {
   const [deals, setDeals] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showBook, setShowBook] = useState(false);
+  const [showOrder, setShowOrder] = useState(false);
+  const [cart, setCart] = useState<Record<string, number>>({});
+  function addToCart(id: string) {
+    setCart((c) => ({ ...c, [id]: (c[id] || 0) + 1 }));
+    toast.success("Đã thêm vào giỏ");
+  }
+  const cartCount = Object.values(cart).reduce((a, b) => a + b, 0);
 
   useEffect(() => {
     (async () => {
