@@ -279,25 +279,43 @@ function RestaurantPage() {
                 {Object.entries(menuByCat).map(([cat, items]) => (
                   <div key={cat}>
                     <h3 className="font-serif text-2xl text-gold mb-6 tracking-wide">{cat}</h3>
-                    <div className="space-y-5">
-                      {items.map((m) => (
-                        <div key={m.id} className="flex justify-between gap-6 py-5 border-b border-border/60">
-                          <div className="flex-1">
-                            <h4 className="font-serif text-xl flex items-center gap-2">
-                              {m.name}
-                              {m.is_signature && (
-                                <span className="text-[10px] uppercase tracking-widest text-gold border border-gold px-2 py-0.5 rounded-full">
-                                  Signature
-                                </span>
+                    <div className="space-y-8">
+                      {items.map((m) => {
+                        const imgs: string[] = (m.image_urls?.length ? m.image_urls : (m.image_url ? [m.image_url] : []));
+                        return (
+                          <div key={m.id} className="grid md:grid-cols-[1fr_auto] gap-6 py-5 border-b border-border/60">
+                            <div className="flex-1">
+                              <div className="flex justify-between items-start gap-4">
+                                <h4 className="font-serif text-xl flex items-center gap-2 flex-wrap">
+                                  {m.name}
+                                  {m.is_signature && (
+                                    <span className="text-[10px] uppercase tracking-widest text-gold border border-gold px-2 py-0.5 rounded-full">
+                                      Signature
+                                    </span>
+                                  )}
+                                </h4>
+                                <div className="text-gold font-serif text-xl whitespace-nowrap">
+                                  {Number(m.price).toLocaleString("vi-VN")}₫
+                                </div>
+                              </div>
+                              {m.description && <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">{m.description}</p>}
+                              {imgs.length > 0 && (
+                                <div className="grid grid-cols-3 gap-2 mt-4 max-w-sm">
+                                  {imgs.slice(0, 3).map((src, i) => (
+                                    <div key={i} className="aspect-square overflow-hidden rounded-lg bg-card">
+                                      <img src={src} alt={m.name} className="w-full h-full object-cover hover:scale-105 transition duration-500" />
+                                    </div>
+                                  ))}
+                                </div>
                               )}
-                            </h4>
-                            {m.description && <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">{m.description}</p>}
+                              <button onClick={() => addToCart(m.id)}
+                                className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-full border border-gold/60 text-gold text-xs hover:bg-gold/10 transition">
+                                <Plus className="h-3 w-3" /> Thêm vào giỏ
+                              </button>
+                            </div>
                           </div>
-                          <div className="text-gold font-serif text-xl whitespace-nowrap">
-                            {Number(m.price).toLocaleString("vi-VN")}₫
-                          </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   </div>
                 ))}
