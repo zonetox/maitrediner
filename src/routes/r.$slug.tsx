@@ -6,7 +6,7 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import {
   MapPin, Phone, Clock, Heart, Calendar, Sparkles, Mail,
-  Utensils, Wine, ChefHat, Star, ArrowRight,
+  Utensils, Wine, ChefHat, Star, ArrowRight, ShoppingBag, Plus, Minus, Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -37,6 +37,13 @@ function RestaurantPage() {
   const [deals, setDeals] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showBook, setShowBook] = useState(false);
+  const [showOrder, setShowOrder] = useState(false);
+  const [cart, setCart] = useState<Record<string, number>>({});
+  function addToCart(id: string) {
+    setCart((c) => ({ ...c, [id]: (c[id] || 0) + 1 }));
+    toast.success("Đã thêm vào giỏ");
+  }
+  const cartCount = Object.values(cart).reduce((a, b) => a + b, 0);
 
   useEffect(() => {
     (async () => {
@@ -135,6 +142,11 @@ function RestaurantPage() {
               <button onClick={() => setShowBook(true)}
                 className="px-8 py-4 rounded-full bg-gradient-gold text-primary-foreground font-medium hover:shadow-gold transition flex items-center gap-2">
                 <Calendar className="h-4 w-4" /> Đặt chỗ ngay
+              </button>
+              <button onClick={() => setShowOrder(true)}
+                className="px-8 py-4 rounded-full border border-gold text-gold hover:bg-gold/10 transition flex items-center gap-2">
+                <ShoppingBag className="h-4 w-4" /> Đặt món
+                {cartCount > 0 && <span className="ml-1 h-5 min-w-5 px-1.5 grid place-items-center rounded-full bg-gradient-gold text-primary-foreground text-xs">{cartCount}</span>}
               </button>
               <a href="#menu" className="px-8 py-4 rounded-full border border-border hover:border-gold transition">
                 Xem thực đơn
@@ -267,25 +279,43 @@ function RestaurantPage() {
                 {Object.entries(menuByCat).map(([cat, items]) => (
                   <div key={cat}>
                     <h3 className="font-serif text-2xl text-gold mb-6 tracking-wide">{cat}</h3>
-                    <div className="space-y-5">
-                      {items.map((m) => (
-                        <div key={m.id} className="flex justify-between gap-6 py-5 border-b border-border/60">
-                          <div className="flex-1">
-                            <h4 className="font-serif text-xl flex items-center gap-2">
-                              {m.name}
-                              {m.is_signature && (
-                                <span className="text-[10px] uppercase tracking-widest text-gold border border-gold px-2 py-0.5 rounded-full">
-                                  Signature
-                                </span>
+                    <div className="space-y-8">
+                      {items.map((m) => {
+                        const imgs: string[] = (m.image_urls?.length ? m.image_urls : (m.image_url ? [m.image_url] : []));
+                        return (
+                          <div key={m.id} className="grid md:grid-cols-[1fr_auto] gap-6 py-5 border-b border-border/60">
+                            <div className="flex-1">
+                              <div className="flex justify-between items-start gap-4">
+                                <h4 className="font-serif text-xl flex items-center gap-2 flex-wrap">
+                                  {m.name}
+                                  {m.is_signature && (
+                                    <span className="text-[10px] uppercase tracking-widest text-gold border border-gold px-2 py-0.5 rounded-full">
+                                      Signature
+                                    </span>
+                                  )}
+                                </h4>
+                                <div className="text-gold font-serif text-xl whitespace-nowrap">
+                                  {Number(m.price).toLocaleString("vi-VN")}₫
+                                </div>
+                              </div>
+                              {m.description && <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">{m.description}</p>}
+                              {imgs.length > 0 && (
+                                <div className="grid grid-cols-3 gap-2 mt-4 max-w-sm">
+                                  {imgs.slice(0, 3).map((src, i) => (
+                                    <div key={i} className="aspect-square overflow-hidden rounded-lg bg-card">
+                                      <img src={src} alt={m.name} className="w-full h-full object-cover hover:scale-105 transition duration-500" />
+                                    </div>
+                                  ))}
+                                </div>
                               )}
-                            </h4>
-                            {m.description && <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">{m.description}</p>}
+                              <button onClick={() => addToCart(m.id)}
+                                className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-full border border-gold/60 text-gold text-xs hover:bg-gold/10 transition">
+                                <Plus className="h-3 w-3" /> Thêm vào giỏ
+                              </button>
+                            </div>
                           </div>
-                          <div className="text-gold font-serif text-xl whitespace-nowrap">
-                            {Number(m.price).toLocaleString("vi-VN")}₫
-                          </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   </div>
                 ))}
@@ -371,14 +401,20 @@ function RestaurantPage() {
       <SiteFooter />
 
       {/* Sticky reserve bar */}
-      <div className="fixed bottom-0 inset-x-0 z-40 md:hidden bg-background/95 backdrop-blur border-t border-border p-4">
+      <div className="fixed bottom-0 inset-x-0 z-40 md:hidden bg-background/95 backdrop-blur border-t border-border p-4 flex gap-2">
         <button onClick={() => setShowBook(true)}
-          className="w-full py-3 rounded-full bg-gradient-gold text-primary-foreground font-medium flex items-center justify-center gap-2">
+          className="flex-1 py-3 rounded-full bg-gradient-gold text-primary-foreground font-medium flex items-center justify-center gap-2">
           <Calendar className="h-4 w-4" /> Đặt chỗ
+        </button>
+        <button onClick={() => setShowOrder(true)}
+          className="flex-1 py-3 rounded-full border border-gold text-gold font-medium flex items-center justify-center gap-2 relative">
+          <ShoppingBag className="h-4 w-4" /> Đặt món
+          {cartCount > 0 && <span className="absolute -top-1 -right-1 h-5 min-w-5 px-1 grid place-items-center rounded-full bg-gradient-gold text-primary-foreground text-[10px]">{cartCount}</span>}
         </button>
       </div>
 
       {showBook && <BookingModal r={r} onClose={() => setShowBook(false)} user={user} />}
+      {showOrder && <OrderModal r={r} menu={menu} cart={cart} setCart={setCart} onClose={() => setShowOrder(false)} user={user} />}
     </div>
   );
 }
@@ -429,6 +465,125 @@ function BookingModal({ r, onClose, user }: any) {
           <button type="submit" disabled={submitting}
             className="flex-1 py-3 rounded-full bg-gradient-gold text-primary-foreground font-medium hover:shadow-gold transition">
             {submitting ? "Đang gửi..." : <span className="flex items-center justify-center gap-2"><Calendar className="h-4 w-4" /> Xác nhận</span>}
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+}
+
+function OrderModal({ r, menu, cart, setCart, onClose, user }: any) {
+  const [form, setForm] = useState({
+    guest_name: "", guest_phone: "", guest_email: user?.email ?? "",
+    pickup_at: "", notes: "",
+  });
+  const [submitting, setSubmitting] = useState(false);
+
+  const items = menu.filter((m: any) => cart[m.id] > 0).map((m: any) => ({
+    id: m.id, name: m.name, price: Number(m.price), qty: cart[m.id],
+  }));
+  const total = items.reduce((s: number, i: any) => s + i.price * i.qty, 0);
+
+  function inc(id: string) { setCart((c: any) => ({ ...c, [id]: (c[id] || 0) + 1 })); }
+  function dec(id: string) {
+    setCart((c: any) => {
+      const next = { ...c };
+      if (next[id] > 1) next[id]--; else delete next[id];
+      return next;
+    });
+  }
+  function removeItem(id: string) {
+    setCart((c: any) => { const n = { ...c }; delete n[id]; return n; });
+  }
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    if (items.length === 0) return toast.error("Vui lòng chọn ít nhất một món");
+    setSubmitting(true);
+    const { error } = await supabase.from("orders").insert({
+      restaurant_id: r.id,
+      user_id: user?.id ?? null,
+      guest_name: form.guest_name,
+      guest_phone: form.guest_phone,
+      items: items as any,
+      total_amount: total,
+      notes: form.pickup_at ? `Thời gian: ${new Date(form.pickup_at).toLocaleString("vi-VN")}\n${form.notes}` : form.notes,
+    });
+    setSubmitting(false);
+    if (error) toast.error(error.message);
+    else {
+      toast.success("Đã gửi yêu cầu đặt món. Nhà hàng sẽ liên hệ xác nhận.");
+      setCart({}); onClose();
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-[60] bg-background/85 backdrop-blur grid place-items-center p-4 overflow-y-auto" onClick={onClose}>
+      <form onSubmit={submit} onClick={(e) => e.stopPropagation()}
+        className="bg-card border border-border rounded-2xl p-6 max-w-2xl w-full shadow-elegant my-8">
+        <span className="text-xs tracking-[0.3em] uppercase text-gold">Order</span>
+        <h3 className="font-serif text-3xl mt-2 mb-1 flex items-center gap-3">
+          <ShoppingBag className="h-6 w-6 text-gold" /> Đặt món tại {r.name}
+        </h3>
+        <p className="text-sm text-muted-foreground mb-6">Chọn món, thời gian nhận và gửi yêu cầu. Nhà hàng sẽ xác nhận trong vòng 15 phút.</p>
+
+        <div className="space-y-2 mb-4 max-h-72 overflow-y-auto pr-2">
+          {items.length === 0 ? (
+            <div className="text-center py-12 border border-dashed border-border rounded-xl">
+              <Utensils className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+              <p className="text-sm text-muted-foreground">Chưa có món trong giỏ. Cuộn lên menu để chọn món.</p>
+            </div>
+          ) : items.map((it: any) => (
+            <div key={it.id} className="flex items-center gap-3 p-3 rounded-lg bg-background border border-border">
+              <div className="flex-1">
+                <p className="font-serif">{it.name}</p>
+                <p className="text-xs text-gold">{it.price.toLocaleString("vi-VN")}₫</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <button type="button" onClick={() => dec(it.id)} className="h-7 w-7 grid place-items-center rounded-full border border-border hover:border-gold">
+                  <Minus className="h-3 w-3" />
+                </button>
+                <span className="w-6 text-center font-serif">{it.qty}</span>
+                <button type="button" onClick={() => inc(it.id)} className="h-7 w-7 grid place-items-center rounded-full border border-border hover:border-gold">
+                  <Plus className="h-3 w-3" />
+                </button>
+                <button type="button" onClick={() => removeItem(it.id)} className="ml-2 text-muted-foreground hover:text-destructive">
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {items.length > 0 && (
+          <div className="flex justify-between items-center py-4 border-t border-border mb-4">
+            <span className="text-sm text-muted-foreground uppercase tracking-wider">Tổng tạm tính</span>
+            <span className="font-serif text-2xl text-gold">{total.toLocaleString("vi-VN")}₫</span>
+          </div>
+        )}
+
+        <div className="space-y-3">
+          <div className="grid grid-cols-2 gap-3">
+            <input required placeholder="Họ tên" value={form.guest_name} onChange={(e) => setForm({ ...form, guest_name: e.target.value })}
+              className="w-full px-4 py-3 rounded-lg bg-background border border-border focus:border-gold outline-none" />
+            <input required placeholder="Số điện thoại" value={form.guest_phone} onChange={(e) => setForm({ ...form, guest_phone: e.target.value })}
+              className="w-full px-4 py-3 rounded-lg bg-background border border-border focus:border-gold outline-none" />
+          </div>
+          <div>
+            <label className="text-xs uppercase tracking-wider text-muted-foreground">Thời gian nhận / phục vụ</label>
+            <input required type="datetime-local" value={form.pickup_at} onChange={(e) => setForm({ ...form, pickup_at: e.target.value })}
+              className="w-full mt-2 px-4 py-3 rounded-lg bg-background border border-border focus:border-gold outline-none" />
+          </div>
+          <textarea placeholder="Ghi chú (giao hàng, dị ứng, yêu cầu chế biến...)" value={form.notes}
+            onChange={(e) => setForm({ ...form, notes: e.target.value })} rows={2}
+            className="w-full px-4 py-3 rounded-lg bg-background border border-border focus:border-gold outline-none" />
+        </div>
+
+        <div className="flex gap-2 mt-6">
+          <button type="button" onClick={onClose} className="flex-1 py-3 rounded-full border border-border hover:border-gold">Đóng</button>
+          <button type="submit" disabled={submitting || items.length === 0}
+            className="flex-1 py-3 rounded-full bg-gradient-gold text-primary-foreground font-medium hover:shadow-gold transition disabled:opacity-60">
+            {submitting ? "Đang gửi..." : "Xác nhận đặt món"}
           </button>
         </div>
       </form>

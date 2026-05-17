@@ -3,8 +3,9 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { SiteHeader } from "@/components/SiteHeader";
-import { Plus, ExternalLink, Save, Trash2, Calendar, AlertTriangle, Sparkles } from "lucide-react";
+import { Plus, ExternalLink, Save, Trash2, Calendar, AlertTriangle, Sparkles, Star } from "lucide-react";
 import { toast } from "sonner";
+import { ImageUploader, MultiImageUploader } from "@/components/ImageUploader";
 
 export const Route = createFileRoute("/partner")({
   head: () => ({ meta: [{ title: "Quản trị nhà hàng — Maître" }] }),
@@ -202,15 +203,21 @@ function InfoTab({ r, setR }: any) {
       <Field label="Địa chỉ" value={r.address} onChange={(v: any) => setR({ ...r, address: v })} />
       <Field label="Điện thoại" value={r.phone} onChange={(v: any) => setR({ ...r, phone: v })} />
       <Field label="Mức giá" value={r.price_range} onChange={(v: any) => setR({ ...r, price_range: v })} />
-      <Field label="Ảnh bìa (URL)" value={r.cover_image_url} onChange={(v: any) => setR({ ...r, cover_image_url: v })} />
+      <Field label="Email" value={r.email} onChange={(v: any) => setR({ ...r, email: v })} />
       <div className="md:col-span-2">
         <Field label="Mô tả ngắn" textarea value={r.short_description} onChange={(v: any) => setR({ ...r, short_description: v })} />
       </div>
+      <ImageUploader bucket="restaurant-images" folder={r.id} label="Ảnh bìa nhà hàng"
+        value={r.cover_image_url} onChange={(url) => setR({ ...r, cover_image_url: url })} aspect="aspect-video" />
+      <ImageUploader bucket="restaurant-images" folder={`${r.id}/logo`} label="Logo nhà hàng"
+        value={r.logo_url} onChange={(url) => setR({ ...r, logo_url: url })} aspect="aspect-square" />
       <div className="md:col-span-2 pt-6 border-t border-border">
         <h3 className="font-serif text-xl mb-4 text-gold">Nội dung Landing page</h3>
       </div>
       <Field label="Tagline (Hero)" value={lc.hero_tagline} onChange={(v: any) => setLC("hero_tagline", v)} />
       <Field label="Giờ mở cửa" value={lc.hours} onChange={(v: any) => setLC("hours", v)} />
+      <Field label="Tên bếp trưởng" value={lc.chef_name} onChange={(v: any) => setLC("chef_name", v)} />
+      <Field label="Chức danh bếp trưởng" value={lc.chef_title} onChange={(v: any) => setLC("chef_title", v)} />
       <div className="md:col-span-2">
         <Field label="Câu chuyện nhà hàng" textarea value={lc.story} onChange={(v: any) => setLC("story", v)} />
       </div>
@@ -224,32 +231,101 @@ function InfoTab({ r, setR }: any) {
 }
 
 function MenuTab({ restaurantId, menu, reload }: any) {
-  async function add() {
-    const name = prompt("Tên món?"); if (!name) return;
-    const price = Number(prompt("Giá (VNĐ)?") || 0);
-    await supabase.from("menu_items").insert({ restaurant_id: restaurantId, name, price });
-    reload();
+  const [editing, setEditing] = useState<any | null>(null);
+  function newItem() {
+    setEditing({ restaurant_id: restaurantId, name: "", description: "", price: 0, is_signature: false, is_available: true, image_url: "", image_urls: [] });
+  }
+  async function save(item: any) {
+    const { id, ...payload } = item;
+    payload.price = Number(payload.price) || 0;
+    if (id) {
+      const { error } = await supabase.from("menu_items").update(payload as any).eq("id", id);
+      if (error) return toast.error(error.message);
+    } else {
+      const { error } = await supabase.from("menu_items").insert(payload as any);
+      if (error) return toast.error(error.message);
+    }
+    toast.success("Đã lưu món"); setEditing(null); reload();
   }
   async function remove(id: string) {
+    if (!confirm("Xoá món này?")) return;
     await supabase.from("menu_items").delete().eq("id", id); reload();
   }
   return (
     <div>
-      <button onClick={add} className="mb-4 px-4 py-2 rounded-full border border-gold text-gold text-sm flex items-center gap-2">
+      <button onClick={newItem} className="mb-4 px-4 py-2 rounded-full border border-gold text-gold text-sm flex items-center gap-2">
         <Plus className="h-3 w-3" /> Thêm món
       </button>
       <div className="grid md:grid-cols-2 gap-3">
-        {menu.map((m: any) => (
-          <div key={m.id} className="p-4 rounded-xl bg-card border border-border flex justify-between gap-3">
-            <div>
-              <h4 className="font-serif text-lg">{m.name}</h4>
-              <p className="text-xs text-muted-foreground mt-1">{m.description}</p>
-              <p className="text-gold text-sm mt-2">{Number(m.price).toLocaleString("vi-VN")}₫</p>
+        {menu.map((m: any) => {
+          const imgs: string[] = (m.image_urls?.length ? m.image_urls : (m.image_url ? [m.image_url] : []));
+          return (
+            <div key={m.id} className="p-4 rounded-xl bg-card border border-border">
+              <div className="flex gap-3">
+                {imgs[0] && <img src={imgs[0]} alt={m.name} className="h-20 w-20 rounded-lg object-cover" />}
+                <div className="flex-1">
+                  <h4 className="font-serif text-lg flex items-center gap-2">
+                    {m.name}
+                    {m.is_signature && <Star className="h-3 w-3 text-gold fill-gold" />}
+                  </h4>
+                  <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{m.description}</p>
+                  <p className="text-gold text-sm mt-2">{Number(m.price).toLocaleString("vi-VN")}₫</p>
+                </div>
+                <div className="flex flex-col gap-2">
+                  <button onClick={() => setEditing(m)} className="text-xs text-muted-foreground hover:text-gold">Sửa</button>
+                  <button onClick={() => remove(m.id)} className="text-muted-foreground hover:text-destructive"><Trash2 className="h-4 w-4" /></button>
+                </div>
+              </div>
+              {imgs.length > 1 && (
+                <div className="flex gap-1 mt-2">
+                  {imgs.slice(1, 3).map((u, i) => <img key={i} src={u} alt="" className="h-10 w-10 rounded object-cover" />)}
+                </div>
+              )}
             </div>
-            <button onClick={() => remove(m.id)} className="text-muted-foreground hover:text-destructive"><Trash2 className="h-4 w-4" /></button>
-          </div>
-        ))}
+          );
+        })}
         {menu.length === 0 && <p className="text-muted-foreground text-sm col-span-full">Chưa có món nào.</p>}
+      </div>
+
+      {editing && <MenuItemModal item={editing} restaurantId={restaurantId} onClose={() => setEditing(null)} onSave={save} />}
+    </div>
+  );
+}
+
+function MenuItemModal({ item, restaurantId, onClose, onSave }: any) {
+  const [form, setForm] = useState<any>(item);
+  return (
+    <div className="fixed inset-0 z-[60] bg-background/85 backdrop-blur grid place-items-center p-4 overflow-y-auto" onClick={onClose}>
+      <div onClick={(e) => e.stopPropagation()} className="bg-card border border-border rounded-2xl p-6 max-w-2xl w-full shadow-elegant my-8">
+        <h3 className="font-serif text-2xl mb-4">{form.id ? "Sửa món" : "Thêm món mới"}</h3>
+        <div className="grid md:grid-cols-2 gap-4">
+          <Field label="Tên món" value={form.name} onChange={(v: any) => setForm({ ...form, name: v })} />
+          <Field label="Giá (VNĐ)" value={form.price} onChange={(v: any) => setForm({ ...form, price: v })} />
+          <div className="md:col-span-2">
+            <Field label="Mô tả" textarea value={form.description} onChange={(v: any) => setForm({ ...form, description: v })} />
+          </div>
+          <div className="md:col-span-2">
+            <label className="text-xs uppercase tracking-wider text-muted-foreground">Ảnh món ăn (tối đa 3)</label>
+            <div className="mt-2">
+              <MultiImageUploader bucket="menu-images" folder={`${restaurantId}`}
+                value={form.image_urls || []} onChange={(urls) => setForm({ ...form, image_urls: urls, image_url: urls[0] || "" })} />
+            </div>
+          </div>
+          <label className="flex items-center gap-2 text-sm">
+            <input type="checkbox" checked={form.is_signature} onChange={(e) => setForm({ ...form, is_signature: e.target.checked })}
+              className="h-4 w-4 accent-[var(--color-gold)]" />
+            Món signature
+          </label>
+          <label className="flex items-center gap-2 text-sm">
+            <input type="checkbox" checked={form.is_available} onChange={(e) => setForm({ ...form, is_available: e.target.checked })}
+              className="h-4 w-4 accent-[var(--color-gold)]" />
+            Đang bán
+          </label>
+        </div>
+        <div className="flex gap-2 mt-6">
+          <button onClick={onClose} className="flex-1 py-3 rounded-full border border-border hover:border-gold">Hủy</button>
+          <button onClick={() => onSave(form)} className="flex-1 py-3 rounded-full bg-gradient-gold text-primary-foreground font-medium">Lưu</button>
+        </div>
       </div>
     </div>
   );

@@ -245,6 +245,7 @@ export type Database = {
           description: string | null
           id: string
           image_url: string | null
+          image_urls: string[]
           is_available: boolean
           is_signature: boolean
           name: string
@@ -258,6 +259,7 @@ export type Database = {
           description?: string | null
           id?: string
           image_url?: string | null
+          image_urls?: string[]
           is_available?: boolean
           is_signature?: boolean
           name: string
@@ -271,6 +273,7 @@ export type Database = {
           description?: string | null
           id?: string
           image_url?: string | null
+          image_urls?: string[]
           is_available?: boolean
           is_signature?: boolean
           name?: string

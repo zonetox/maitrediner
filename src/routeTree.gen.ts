@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as RestaurantsRouteImport } from './routes/restaurants'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as PartnerRouteImport } from './routes/partner'
 import { Route as MembershipRouteImport } from './routes/membership'
 import { Route as DealsRouteImport } from './routes/deals'
@@ -23,6 +24,11 @@ import { Route as PartnerMembershipRouteImport } from './routes/partner.membersh
 const RestaurantsRoute = RestaurantsRouteImport.update({
   id: '/restaurants',
   path: '/restaurants',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PartnerRoute = PartnerRouteImport.update({
@@ -79,6 +85,7 @@ export interface FileRoutesByFullPath {
   '/deals': typeof DealsRoute
   '/membership': typeof MembershipRoute
   '/partner': typeof PartnerRouteWithChildren
+  '/reset-password': typeof ResetPasswordRoute
   '/restaurants': typeof RestaurantsRoute
   '/partner/membership': typeof PartnerMembershipRoute
   '/r/$slug': typeof RSlugRoute
@@ -91,6 +98,7 @@ export interface FileRoutesByTo {
   '/deals': typeof DealsRoute
   '/membership': typeof MembershipRoute
   '/partner': typeof PartnerRouteWithChildren
+  '/reset-password': typeof ResetPasswordRoute
   '/restaurants': typeof RestaurantsRoute
   '/partner/membership': typeof PartnerMembershipRoute
   '/r/$slug': typeof RSlugRoute
@@ -104,6 +112,7 @@ export interface FileRoutesById {
   '/deals': typeof DealsRoute
   '/membership': typeof MembershipRoute
   '/partner': typeof PartnerRouteWithChildren
+  '/reset-password': typeof ResetPasswordRoute
   '/restaurants': typeof RestaurantsRoute
   '/partner/membership': typeof PartnerMembershipRoute
   '/r/$slug': typeof RSlugRoute
@@ -118,6 +127,7 @@ export interface FileRouteTypes {
     | '/deals'
     | '/membership'
     | '/partner'
+    | '/reset-password'
     | '/restaurants'
     | '/partner/membership'
     | '/r/$slug'
@@ -130,6 +140,7 @@ export interface FileRouteTypes {
     | '/deals'
     | '/membership'
     | '/partner'
+    | '/reset-password'
     | '/restaurants'
     | '/partner/membership'
     | '/r/$slug'
@@ -142,6 +153,7 @@ export interface FileRouteTypes {
     | '/deals'
     | '/membership'
     | '/partner'
+    | '/reset-password'
     | '/restaurants'
     | '/partner/membership'
     | '/r/$slug'
@@ -155,6 +167,7 @@ export interface RootRouteChildren {
   DealsRoute: typeof DealsRoute
   MembershipRoute: typeof MembershipRoute
   PartnerRoute: typeof PartnerRouteWithChildren
+  ResetPasswordRoute: typeof ResetPasswordRoute
   RestaurantsRoute: typeof RestaurantsRoute
   RSlugRoute: typeof RSlugRoute
 }
@@ -166,6 +179,13 @@ declare module '@tanstack/react-router' {
       path: '/restaurants'
       fullPath: '/restaurants'
       preLoaderRoute: typeof RestaurantsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/partner': {
@@ -253,6 +273,7 @@ const rootRouteChildren: RootRouteChildren = {
   DealsRoute: DealsRoute,
   MembershipRoute: MembershipRoute,
   PartnerRoute: PartnerRouteWithChildren,
+  ResetPasswordRoute: ResetPasswordRoute,
   RestaurantsRoute: RestaurantsRoute,
   RSlugRoute: RSlugRoute,
 }
