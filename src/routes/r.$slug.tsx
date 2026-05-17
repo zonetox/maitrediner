@@ -6,7 +6,7 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import {
   MapPin, Phone, Clock, Heart, Calendar, Sparkles, Mail,
-  Utensils, Wine, ChefHat, Star, ArrowRight,
+  Utensils, Wine, ChefHat, Star, ArrowRight, ShoppingBag, Plus, Minus, Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
 
