@@ -140,6 +140,11 @@ function AuthPage() {
                 className="w-full mt-2 px-4 py-3 rounded-lg bg-card border border-border focus:border-gold outline-none"
               />
             </div>
+            {mode === "login" && (
+              <div className="text-right">
+                <Link to="/reset-password" className="text-xs text-gold hover:underline">Quên mật khẩu?</Link>
+              </div>
+            )}
             <button
               disabled={loading}
               className="w-full py-3 rounded-full bg-gradient-gold text-primary-foreground font-medium hover:shadow-gold transition disabled:opacity-60"
