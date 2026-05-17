@@ -401,14 +401,20 @@ function RestaurantPage() {
       <SiteFooter />
 
       {/* Sticky reserve bar */}
-      <div className="fixed bottom-0 inset-x-0 z-40 md:hidden bg-background/95 backdrop-blur border-t border-border p-4">
+      <div className="fixed bottom-0 inset-x-0 z-40 md:hidden bg-background/95 backdrop-blur border-t border-border p-4 flex gap-2">
         <button onClick={() => setShowBook(true)}
-          className="w-full py-3 rounded-full bg-gradient-gold text-primary-foreground font-medium flex items-center justify-center gap-2">
+          className="flex-1 py-3 rounded-full bg-gradient-gold text-primary-foreground font-medium flex items-center justify-center gap-2">
           <Calendar className="h-4 w-4" /> Đặt chỗ
+        </button>
+        <button onClick={() => setShowOrder(true)}
+          className="flex-1 py-3 rounded-full border border-gold text-gold font-medium flex items-center justify-center gap-2 relative">
+          <ShoppingBag className="h-4 w-4" /> Đặt món
+          {cartCount > 0 && <span className="absolute -top-1 -right-1 h-5 min-w-5 px-1 grid place-items-center rounded-full bg-gradient-gold text-primary-foreground text-[10px]">{cartCount}</span>}
         </button>
       </div>
 
       {showBook && <BookingModal r={r} onClose={() => setShowBook(false)} user={user} />}
+      {showOrder && <OrderModal r={r} menu={menu} cart={cart} setCart={setCart} onClose={() => setShowOrder(false)} user={user} />}
     </div>
   );
 }
