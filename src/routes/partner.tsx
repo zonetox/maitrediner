@@ -203,15 +203,21 @@ function InfoTab({ r, setR }: any) {
       <Field label="Địa chỉ" value={r.address} onChange={(v: any) => setR({ ...r, address: v })} />
       <Field label="Điện thoại" value={r.phone} onChange={(v: any) => setR({ ...r, phone: v })} />
       <Field label="Mức giá" value={r.price_range} onChange={(v: any) => setR({ ...r, price_range: v })} />
-      <Field label="Ảnh bìa (URL)" value={r.cover_image_url} onChange={(v: any) => setR({ ...r, cover_image_url: v })} />
+      <Field label="Email" value={r.email} onChange={(v: any) => setR({ ...r, email: v })} />
       <div className="md:col-span-2">
         <Field label="Mô tả ngắn" textarea value={r.short_description} onChange={(v: any) => setR({ ...r, short_description: v })} />
       </div>
+      <ImageUploader bucket="restaurant-images" folder={r.id} label="Ảnh bìa nhà hàng"
+        value={r.cover_image_url} onChange={(url) => setR({ ...r, cover_image_url: url })} aspect="aspect-video" />
+      <ImageUploader bucket="restaurant-images" folder={`${r.id}/logo`} label="Logo nhà hàng"
+        value={r.logo_url} onChange={(url) => setR({ ...r, logo_url: url })} aspect="aspect-square" />
       <div className="md:col-span-2 pt-6 border-t border-border">
         <h3 className="font-serif text-xl mb-4 text-gold">Nội dung Landing page</h3>
       </div>
       <Field label="Tagline (Hero)" value={lc.hero_tagline} onChange={(v: any) => setLC("hero_tagline", v)} />
       <Field label="Giờ mở cửa" value={lc.hours} onChange={(v: any) => setLC("hours", v)} />
+      <Field label="Tên bếp trưởng" value={lc.chef_name} onChange={(v: any) => setLC("chef_name", v)} />
+      <Field label="Chức danh bếp trưởng" value={lc.chef_title} onChange={(v: any) => setLC("chef_title", v)} />
       <div className="md:col-span-2">
         <Field label="Câu chuyện nhà hàng" textarea value={lc.story} onChange={(v: any) => setLC("story", v)} />
       </div>
