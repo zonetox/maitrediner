@@ -353,7 +353,7 @@ function Table({ head, children }: any) {
 }
 
 function labelOf(t: Tab) {
-  return { overview: "Tổng quan", restaurants: "Nhà hàng", payments: "Thanh toán gói", users: "Người dùng", bookings: "Đặt chỗ" }[t];
+  return { overview: "Tổng quan", restaurants: "Nhà hàng", payments: "Thanh toán gói", users: "Người dùng", bookings: "Đặt chỗ", orders: "Đơn món" }[t];
 }
 
 function badgeFor(s: string) {
