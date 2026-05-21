@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { SiteHeader } from "@/components/SiteHeader";
-import { Shield, Users, Store, CreditCard, CheckCircle2, XCircle, Star, Eye, EyeOff, ArrowRight } from "lucide-react";
+import { Shield, Users, Store, CreditCard, CheckCircle2, XCircle, Star, Eye, EyeOff, ArrowRight, Calendar, ShoppingBag } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/admin")({
