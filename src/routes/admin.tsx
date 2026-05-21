@@ -143,7 +143,7 @@ function AdminPage() {
           <StatCard icon={<Store className="h-5 w-5" />} label="Nhà hàng" value={stats.restaurants} />
           <StatCard icon={<Users className="h-5 w-5" />} label="Người dùng" value={stats.users} />
           <StatCard icon={<CreditCard className="h-5 w-5" />} label="Chờ duyệt" value={stats.pending} highlight />
-          <StatCard icon={<Calendar />} label="Đặt chỗ" value={stats.bookings} />
+          <StatCard icon={<Calendar className="h-5 w-5" />} label="Đặt chỗ" value={stats.bookings} />
         </div>
 
         {/* Tabs */}
