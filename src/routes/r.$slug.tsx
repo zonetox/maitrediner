@@ -81,8 +81,9 @@ function RestaurantPage() {
   const cover = r.cover_image_url || "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=1920";
   const gallery: string[] = lc.gallery?.length ? lc.gallery : FALLBACK_GALLERY;
   const signatures = menu.filter((m) => m.is_signature).slice(0, 3);
+  const catName = (id: string | null) => categories.find((c) => c.id === id)?.name || "À la carte";
   const menuByCat = menu.reduce<Record<string, any[]>>((acc, m) => {
-    const k = m.category_name || "À la carte";
+    const k = catName(m.category_id);
     (acc[k] ??= []).push(m);
     return acc;
   }, {});
