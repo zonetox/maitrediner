@@ -47,6 +47,10 @@ function MembershipPage() {
   const [note, setNote] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [history, setHistory] = useState<any[]>([]);
+  const [pay, setPay] = useState<any>(null);
+  useEffect(() => {
+    supabase.from("payment_settings").select("*").eq("id", true).maybeSingle().then(({ data }) => setPay(data));
+  }, []);
 
   useEffect(() => {
     if (!loading && !user) navigate({ to: "/auth" });
@@ -172,20 +176,20 @@ function MembershipPage() {
         <div className="grid md:grid-cols-2 gap-6 mb-10">
           <div className="rounded-2xl border border-border bg-card p-6">
             <h3 className="font-serif text-lg mb-4 flex items-center gap-2"><QrCode className="h-5 w-5 text-gold" /> Quét QR thanh toán</h3>
-            <div className="bg-white p-6 rounded-xl flex items-center justify-center mb-4">
-              <img
-                src={`https://img.vietqr.io/image/MB-0123456789-compact2.png?amount=${plan.price}&addInfo=${encodeURIComponent("MAITRE " + (selectedRestaurant?.slug ?? "") + " " + plan.name)}&accountName=MAITRE%20VN`}
-                alt="QR Code"
-                className="max-w-full"
-                onError={(e: any) => { e.currentTarget.style.display = "none"; }}
-              />
+            <div className="bg-white p-6 rounded-xl flex items-center justify-center mb-4 min-h-[220px]">
+              {pay?.qr_image_url ? (
+                <img src={pay.qr_image_url} alt="QR thanh toán" className="max-w-full max-h-72 object-contain" />
+              ) : (
+                <p className="text-sm text-gray-500 text-center">Admin chưa cấu hình QR. Vui lòng liên hệ để được hỗ trợ.</p>
+              )}
             </div>
             <div className="text-sm space-y-1.5">
-              <Row label="Ngân hàng" value="MB Bank" />
-              <Row label="Số tài khoản" value="0123 456 789" />
-              <Row label="Chủ tài khoản" value="CONG TY MAITRE VN" />
+              {pay?.bank_name && <Row label="Ngân hàng" value={pay.bank_name} />}
+              {pay?.account_no && <Row label="Số tài khoản" value={pay.account_no} />}
+              {pay?.account_holder && <Row label="Chủ tài khoản" value={pay.account_holder} />}
               <Row label="Số tiền" value={`${plan.price.toLocaleString("vi-VN")} đ`} highlight />
               <Row label="Nội dung" value={`MAITRE ${selectedRestaurant?.slug ?? ""} ${plan.name}`} />
+              {pay?.instructions && <p className="text-xs text-muted-foreground mt-3 whitespace-pre-line">{pay.instructions}</p>}
             </div>
           </div>
 
