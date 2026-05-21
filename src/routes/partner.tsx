@@ -1,11 +1,13 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { SiteHeader } from "@/components/SiteHeader";
-import { Plus, ExternalLink, Save, Trash2, Calendar, AlertTriangle, Sparkles, Star, ShoppingBag, Phone } from "lucide-react";
+import { Plus, ExternalLink, Save, Trash2, Calendar, AlertTriangle, Sparkles, Star, ShoppingBag, Phone, Radio } from "lucide-react";
 import { toast } from "sonner";
 import { ImageUploader, MultiImageUploader } from "@/components/ImageUploader";
+import { notify } from "@/lib/notify.functions";
 
 export const Route = createFileRoute("/partner")({
   head: () => ({ meta: [{ title: "Quản trị nhà hàng — Maître" }] }),
@@ -63,6 +65,23 @@ function PartnerPage() {
       setDeals(d.data ?? []);
     })();
   }, [selected?.id, refreshTick]);
+
+  // Realtime: live-update bookings & orders for the selected restaurant
+  useEffect(() => {
+    if (!selected) return;
+    const channel = supabase
+      .channel(`partner-${selected.id}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "bookings", filter: `restaurant_id=eq.${selected.id}` }, (payload) => {
+        setBookings((cur) => mergeRow(cur, payload, "booking_at"));
+        if (payload.eventType === "INSERT") toast.success("🔔 Đặt chỗ mới vừa đến!");
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "orders", filter: `restaurant_id=eq.${selected.id}` }, (payload) => {
+        setOrders((cur) => mergeRow(cur, payload, "created_at"));
+        if (payload.eventType === "INSERT") toast.success("🔔 Đơn món mới vừa đến!");
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [selected?.id]);
 
   const reload = () => setRefreshTick((t) => t + 1);
 
@@ -192,10 +211,13 @@ function PartnerPage() {
                 ))}
               </div>
 
+              <div className="text-[10px] text-emerald-400 mb-3 inline-flex items-center gap-1.5 px-2 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30">
+                <Radio className="h-3 w-3 animate-pulse" /> Cập nhật trực tiếp
+              </div>
               {tab === "info" && <InfoTab r={selected} setR={setSelected} />}
               {tab === "menu" && <MenuTab restaurantId={selected.id} menu={menu} reload={reload} />}
-              {tab === "bookings" && <BookingsTab bookings={bookings} reload={reload} />}
-              {tab === "orders" && <OrdersTab orders={orders} reload={reload} />}
+              {tab === "bookings" && <BookingsTab bookings={bookings} restaurantId={selected.id} reload={reload} />}
+              {tab === "orders" && <OrdersTab orders={orders} restaurantId={selected.id} reload={reload} />}
               {tab === "deals" && <DealsTab restaurantId={selected.id} deals={deals} reload={reload} />}
             </section>
           ) : (
@@ -407,11 +429,13 @@ function MenuItemModal({ item, restaurantId, onClose, onSave }: any) {
   );
 }
 
-function BookingsTab({ bookings, reload }: any) {
+function BookingsTab({ bookings, restaurantId, reload }: any) {
+  const notifyFn = useServerFn(notify);
   async function setStatus(id: string, status: "confirmed" | "cancelled" | "completed" | "pending") {
     const { error } = await supabase.from("bookings").update({ status }).eq("id", id);
     if (error) return toast.error(error.message);
     toast.success("Đã cập nhật"); reload();
+    notifyFn({ data: { type: "booking_status", restaurantId, recordId: id, newStatus: status } }).catch(() => {});
   }
   return (
     <div className="space-y-3">
@@ -442,11 +466,13 @@ function BookingsTab({ bookings, reload }: any) {
   );
 }
 
-function OrdersTab({ orders, reload }: any) {
+function OrdersTab({ orders, restaurantId, reload }: any) {
+  const notifyFn = useServerFn(notify);
   async function setStatus(id: string, status: string) {
     const { error } = await supabase.from("orders").update({ status: status as any }).eq("id", id);
     if (error) return toast.error(error.message);
     toast.success("Đã cập nhật"); reload();
+    notifyFn({ data: { type: "order_status", restaurantId, recordId: id, newStatus: status } }).catch(() => {});
   }
   return (
     <div className="space-y-3">
@@ -577,4 +603,13 @@ function DealModal({ deal, onClose, onSave }: any) {
       </div>
     </div>
   );
+}
+
+function mergeRow(cur: any[], payload: any, sortKey: string): any[] {
+  if (payload.eventType === "DELETE") return cur.filter((x) => x.id !== payload.old?.id);
+  const row = payload.new;
+  if (!row) return cur;
+  const exists = cur.some((x) => x.id === row.id);
+  const next = exists ? cur.map((x) => (x.id === row.id ? { ...x, ...row } : x)) : [row, ...cur];
+  return next.sort((a, b) => new Date(b[sortKey]).getTime() - new Date(a[sortKey]).getTime());
 }

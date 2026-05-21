@@ -3,7 +3,8 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { SiteHeader } from "@/components/SiteHeader";
-import { Shield, Users, Store, CreditCard, CheckCircle2, XCircle, Star, Eye, EyeOff, ArrowRight, Calendar, ShoppingBag } from "lucide-react";
+import { Shield, Users, Store, CreditCard, CheckCircle2, XCircle, Star, Eye, EyeOff, ArrowRight, Calendar, ShoppingBag, Settings as SettingsIcon, Save } from "lucide-react";
+import { ImageUploader } from "@/components/ImageUploader";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/admin")({
@@ -11,7 +12,7 @@ export const Route = createFileRoute("/admin")({
   component: AdminPage,
 });
 
-type Tab = "overview" | "restaurants" | "payments" | "users" | "bookings" | "orders";
+type Tab = "overview" | "restaurants" | "payments" | "users" | "bookings" | "orders" | "settings";
 
 function AdminPage() {
   const { user, loading, hasRole, roles } = useAuth();
@@ -148,7 +149,7 @@ function AdminPage() {
 
         {/* Tabs */}
         <div className="border-b border-border mb-6 flex gap-6 overflow-x-auto">
-          {(["overview", "restaurants", "payments", "users", "bookings", "orders"] as Tab[]).map((t) => (
+          {(["overview", "restaurants", "payments", "users", "bookings", "orders", "settings"] as Tab[]).map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
@@ -333,6 +334,8 @@ function AdminPage() {
             )}
           </Table>
         )}
+
+        {tab === "settings" && <SettingsTab />}
       </main>
     </div>
   );
@@ -372,7 +375,87 @@ function Table({ head, children }: any) {
 }
 
 function labelOf(t: Tab) {
-  return { overview: "Tổng quan", restaurants: "Nhà hàng", payments: "Thanh toán gói", users: "Người dùng", bookings: "Đặt chỗ", orders: "Đơn món" }[t];
+  return { overview: "Tổng quan", restaurants: "Nhà hàng", payments: "Thanh toán gói", users: "Người dùng", bookings: "Đặt chỗ", orders: "Đơn món", settings: "Cấu hình" }[t];
+}
+
+function SettingsTab() {
+  const [app, setApp] = useState<any>({ resend_api_key: "", resend_from: "Maître <onboarding@resend.dev>" });
+  const [pay, setPay] = useState<any>({ qr_image_url: "", bank_name: "", account_no: "", account_holder: "", instructions: "" });
+  const [showKey, setShowKey] = useState(false);
+  useEffect(() => {
+    (async () => {
+      const [{ data: a }, { data: p }] = await Promise.all([
+        supabase.from("app_settings").select("*").eq("id", true).maybeSingle(),
+        supabase.from("payment_settings").select("*").eq("id", true).maybeSingle(),
+      ]);
+      if (a) setApp(a); if (p) setPay(p);
+    })();
+  }, []);
+  async function saveApp() {
+    const { error } = await supabase.from("app_settings").update({
+      resend_api_key: app.resend_api_key, resend_from: app.resend_from, updated_at: new Date().toISOString(),
+    }).eq("id", true);
+    if (error) return toast.error(error.message);
+    toast.success("Đã lưu cấu hình email");
+  }
+  async function savePay() {
+    const { error } = await supabase.from("payment_settings").update({
+      qr_image_url: pay.qr_image_url, bank_name: pay.bank_name, account_no: pay.account_no,
+      account_holder: pay.account_holder, instructions: pay.instructions, updated_at: new Date().toISOString(),
+    }).eq("id", true);
+    if (error) return toast.error(error.message);
+    toast.success("Đã lưu thông tin thanh toán");
+  }
+  return (
+    <div className="grid lg:grid-cols-2 gap-6">
+      <Panel title="Resend Email API">
+        <div className="space-y-3 text-sm">
+          <div>
+            <label className="text-xs uppercase tracking-wider text-muted-foreground">API Key (re_...)</label>
+            <div className="flex gap-2 mt-1">
+              <input type={showKey ? "text" : "password"} value={app.resend_api_key ?? ""}
+                onChange={(e) => setApp({ ...app, resend_api_key: e.target.value })}
+                placeholder="re_xxxxxxxxxxxxx"
+                className="flex-1 bg-background border border-border rounded-md px-3 py-2 font-mono text-xs" />
+              <button onClick={() => setShowKey((v) => !v)} className="px-3 rounded-md border border-border text-xs">{showKey ? "Ẩn" : "Hiện"}</button>
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">Lấy tại resend.com/api-keys. Để trống = tắt email thông báo.</p>
+          </div>
+          <div>
+            <label className="text-xs uppercase tracking-wider text-muted-foreground">From</label>
+            <input value={app.resend_from ?? ""} onChange={(e) => setApp({ ...app, resend_from: e.target.value })}
+              className="w-full mt-1 bg-background border border-border rounded-md px-3 py-2" />
+          </div>
+          <button onClick={saveApp} className="px-5 py-2.5 rounded-full bg-gradient-gold text-primary-foreground text-sm font-medium inline-flex items-center gap-2">
+            <Save className="h-3 w-3" /> Lưu
+          </button>
+        </div>
+      </Panel>
+      <Panel title="QR thanh toán gói thành viên">
+        <div className="space-y-3 text-sm">
+          <div>
+            <label className="text-xs uppercase tracking-wider text-muted-foreground mb-2 block">Ảnh QR</label>
+            <ImageUploader bucket="restaurant-images" folder="settings" value={pay.qr_image_url || null}
+              onChange={(url) => setPay({ ...pay, qr_image_url: url ?? "" })} aspect="aspect-square" />
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <input placeholder="Ngân hàng" value={pay.bank_name ?? ""} onChange={(e) => setPay({ ...pay, bank_name: e.target.value })}
+              className="bg-background border border-border rounded-md px-3 py-2" />
+            <input placeholder="Số tài khoản" value={pay.account_no ?? ""} onChange={(e) => setPay({ ...pay, account_no: e.target.value })}
+              className="bg-background border border-border rounded-md px-3 py-2" />
+          </div>
+          <input placeholder="Chủ tài khoản" value={pay.account_holder ?? ""} onChange={(e) => setPay({ ...pay, account_holder: e.target.value })}
+            className="w-full bg-background border border-border rounded-md px-3 py-2" />
+          <textarea placeholder="Hướng dẫn / nội dung chuyển khoản" rows={3} value={pay.instructions ?? ""}
+            onChange={(e) => setPay({ ...pay, instructions: e.target.value })}
+            className="w-full bg-background border border-border rounded-md px-3 py-2" />
+          <button onClick={savePay} className="px-5 py-2.5 rounded-full bg-gradient-gold text-primary-foreground text-sm font-medium inline-flex items-center gap-2">
+            <Save className="h-3 w-3" /> Lưu
+          </button>
+        </div>
+      </Panel>
+    </div>
+  );
 }
 
 function badgeFor(s: string) {
