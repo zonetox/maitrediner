@@ -1,9 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
+import { notify } from "@/lib/notify.functions";
 import {
   MapPin, Phone, Clock, Heart, Calendar, Sparkles, Mail,
   Utensils, Wine, ChefHat, Star, ArrowRight, ShoppingBag, Plus, Minus, Trash2,
@@ -423,6 +425,7 @@ function RestaurantPage() {
 }
 
 function BookingModal({ r, onClose, user }: any) {
+  const notifyFn = useServerFn(notify);
   const [form, setForm] = useState({
     guest_name: "", guest_phone: "", guest_email: user?.email ?? "",
     party_size: 2, booking_at: "", notes: "",
@@ -430,14 +433,16 @@ function BookingModal({ r, onClose, user }: any) {
   const [submitting, setSubmitting] = useState(false);
   async function submit(e: React.FormEvent) {
     e.preventDefault(); setSubmitting(true);
-    const { error } = await supabase.from("bookings").insert({
+    const { data: row, error } = await supabase.from("bookings").insert({
       restaurant_id: r.id, user_id: user?.id ?? null,
       guest_name: form.guest_name, guest_phone: form.guest_phone, guest_email: form.guest_email,
       party_size: form.party_size, booking_at: form.booking_at, notes: form.notes,
-    });
+    }).select().single();
     setSubmitting(false);
-    if (error) toast.error(error.message);
-    else { toast.success("Đã gửi yêu cầu đặt chỗ. Nhà hàng sẽ liên hệ xác nhận."); onClose(); }
+    if (error) return toast.error(error.message);
+    toast.success("Đã gửi yêu cầu đặt chỗ. Nhà hàng sẽ liên hệ xác nhận.");
+    if (row) notifyFn({ data: { type: "booking", restaurantId: r.id, recordId: row.id } }).catch(() => {});
+    onClose();
   }
   return (
     <div className="fixed inset-0 z-[60] bg-background/85 backdrop-blur grid place-items-center p-4 overflow-y-auto" onClick={onClose}>
@@ -476,6 +481,7 @@ function BookingModal({ r, onClose, user }: any) {
 }
 
 function OrderModal({ r, menu, cart, setCart, onClose, user }: any) {
+  const notifyFn = useServerFn(notify);
   const [form, setForm] = useState({
     guest_name: "", guest_phone: "", guest_email: user?.email ?? "",
     pickup_at: "", notes: "",
@@ -503,7 +509,7 @@ function OrderModal({ r, menu, cart, setCart, onClose, user }: any) {
     e.preventDefault();
     if (items.length === 0) return toast.error("Vui lòng chọn ít nhất một món");
     setSubmitting(true);
-    const { error } = await supabase.from("orders").insert({
+    const { data: row, error } = await supabase.from("orders").insert({
       restaurant_id: r.id,
       user_id: user?.id ?? null,
       guest_name: form.guest_name,
@@ -511,13 +517,12 @@ function OrderModal({ r, menu, cart, setCart, onClose, user }: any) {
       items: items as any,
       total_amount: total,
       notes: form.pickup_at ? `Thời gian: ${new Date(form.pickup_at).toLocaleString("vi-VN")}\n${form.notes}` : form.notes,
-    });
+    }).select().single();
     setSubmitting(false);
-    if (error) toast.error(error.message);
-    else {
-      toast.success("Đã gửi yêu cầu đặt món. Nhà hàng sẽ liên hệ xác nhận.");
-      setCart({}); onClose();
-    }
+    if (error) return toast.error(error.message);
+    toast.success("Đã gửi yêu cầu đặt món. Nhà hàng sẽ liên hệ xác nhận.");
+    if (row) notifyFn({ data: { type: "order", restaurantId: r.id, recordId: row.id } }).catch(() => {});
+    setCart({}); onClose();
   }
 
   return (
