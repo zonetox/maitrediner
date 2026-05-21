@@ -601,3 +601,12 @@ function DealModal({ deal, onClose, onSave }: any) {
     </div>
   );
 }
+
+function mergeRow(cur: any[], payload: any, sortKey: string): any[] {
+  if (payload.eventType === "DELETE") return cur.filter((x) => x.id !== payload.old?.id);
+  const row = payload.new;
+  if (!row) return cur;
+  const exists = cur.some((x) => x.id === row.id);
+  const next = exists ? cur.map((x) => (x.id === row.id ? { ...x, ...row } : x)) : [row, ...cur];
+  return next.sort((a, b) => new Date(b[sortKey]).getTime() - new Date(a[sortKey]).getTime());
+}
