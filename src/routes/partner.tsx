@@ -211,7 +211,9 @@ function PartnerPage() {
                 ))}
               </div>
 
-              {tab === "info" && <InfoTab r={selected} setR={setSelected} />}
+              <div className="text-[10px] text-emerald-400 mb-3 inline-flex items-center gap-1.5 px-2 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30">
+                <Radio className="h-3 w-3 animate-pulse" /> Cập nhật trực tiếp
+              </div>
               {tab === "menu" && <MenuTab restaurantId={selected.id} menu={menu} reload={reload} />}
               {tab === "bookings" && <BookingsTab bookings={bookings} restaurantId={selected.id} reload={reload} />}
               {tab === "orders" && <OrdersTab orders={orders} restaurantId={selected.id} reload={reload} />}
