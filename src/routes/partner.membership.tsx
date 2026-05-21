@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { SiteHeader } from "@/components/SiteHeader";
 import { Crown, Check, QrCode, Upload, Clock, AlertCircle } from "lucide-react";
+import { ImageUploader } from "@/components/ImageUploader";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/partner/membership")({
