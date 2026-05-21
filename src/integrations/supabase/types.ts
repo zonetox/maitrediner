@@ -14,6 +14,27 @@ export type Database = {
   }
   public: {
     Tables: {
+      app_settings: {
+        Row: {
+          id: boolean
+          resend_api_key: string | null
+          resend_from: string | null
+          updated_at: string
+        }
+        Insert: {
+          id?: boolean
+          resend_api_key?: string | null
+          resend_from?: string | null
+          updated_at?: string
+        }
+        Update: {
+          id?: boolean
+          resend_api_key?: string | null
+          resend_from?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       bookings: {
         Row: {
           booking_at: string
@@ -362,6 +383,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      payment_settings: {
+        Row: {
+          account_holder: string | null
+          account_no: string | null
+          bank_name: string | null
+          id: boolean
+          instructions: string | null
+          qr_image_url: string | null
+          updated_at: string
+        }
+        Insert: {
+          account_holder?: string | null
+          account_no?: string | null
+          bank_name?: string | null
+          id?: boolean
+          instructions?: string | null
+          qr_image_url?: string | null
+          updated_at?: string
+        }
+        Update: {
+          account_holder?: string | null
+          account_no?: string | null
+          bank_name?: string | null
+          id?: boolean
+          instructions?: string | null
+          qr_image_url?: string | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       profiles: {
         Row: {
