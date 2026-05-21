@@ -34,6 +34,7 @@ function RestaurantPage() {
   const { user } = useAuth();
   const [r, setR] = useState<any>(null);
   const [menu, setMenu] = useState<any[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
   const [deals, setDeals] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showBook, setShowBook] = useState(false);
@@ -50,11 +51,12 @@ function RestaurantPage() {
       const { data } = await supabase.from("restaurants").select("*").eq("slug", slug).maybeSingle();
       setR(data);
       if (data) {
-        const [{ data: m }, { data: d }] = await Promise.all([
-          supabase.from("menu_items").select("*").eq("restaurant_id", data.id).order("sort_order"),
+        const [{ data: m }, { data: d }, { data: cats }] = await Promise.all([
+          supabase.from("menu_items").select("*").eq("restaurant_id", data.id).eq("is_available", true).order("sort_order"),
           supabase.from("deals").select("*").eq("restaurant_id", data.id).eq("is_active", true),
+          supabase.from("menu_categories").select("*").eq("restaurant_id", data.id).order("sort_order"),
         ]);
-        setMenu(m ?? []); setDeals(d ?? []);
+        setMenu(m ?? []); setDeals(d ?? []); setCategories(cats ?? []);
       }
       setLoading(false);
     })();
