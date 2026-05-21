@@ -193,15 +193,17 @@ function MembershipPage() {
             <h3 className="font-serif text-lg mb-4 flex items-center gap-2"><Upload className="h-5 w-5 text-gold" /> Gửi xác nhận</h3>
             <div className="space-y-4 text-sm">
               <div>
-                <label className="text-muted-foreground">Link ảnh chứng từ chuyển khoản</label>
-                <input
-                  type="url"
-                  value={proofUrl}
-                  onChange={(e) => setProofUrl(e.target.value)}
-                  placeholder="https://imgur.com/..."
-                  className="mt-1 w-full bg-background border border-border rounded-md px-3 py-2"
-                />
-                <p className="text-xs text-muted-foreground mt-1">Tải ảnh lên Imgur/Drive và dán link ở đây</p>
+                <label className="text-muted-foreground">Ảnh chứng từ chuyển khoản</label>
+                <div className="mt-2">
+                  <ImageUploader
+                    bucket="restaurant-images"
+                    folder={`payments/${restaurantId || "unknown"}`}
+                    value={proofUrl || null}
+                    onChange={(url) => setProofUrl(url ?? "")}
+                    aspect="aspect-video"
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">Tải lên ảnh chụp giao dịch ngân hàng (tối đa 5MB).</p>
               </div>
               <div>
                 <label className="text-muted-foreground">Ghi chú (tuỳ chọn)</label>
