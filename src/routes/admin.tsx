@@ -314,6 +314,25 @@ function AdminPage() {
             ))}
           </Table>
         )}
+
+        {tab === "orders" && (
+          <Table head={["Nhà hàng", "Khách", "SĐT", "Số món", "Tổng", "Ngày", "Trạng thái"]}>
+            {orders.map((o) => (
+              <tr key={o.id} className="border-b border-border align-top">
+                <td className="py-3 font-medium">{o.restaurants?.name ?? "—"}</td>
+                <td className="text-sm">{o.guest_name ?? "—"}</td>
+                <td className="text-sm text-muted-foreground">{o.guest_phone ?? "—"}</td>
+                <td className="text-sm">{Array.isArray(o.items) ? o.items.reduce((s: number, i: any) => s + (i.qty || 0), 0) : 0}</td>
+                <td className="text-sm text-gold">{Number(o.total_amount).toLocaleString("vi-VN")}₫</td>
+                <td className="text-xs text-muted-foreground">{fmtDate(o.created_at)}</td>
+                <td><span className="text-xs px-2 py-0.5 rounded-full bg-card border border-border inline-flex items-center gap-1"><ShoppingBag className="h-3 w-3" />{o.status}</span></td>
+              </tr>
+            ))}
+            {orders.length === 0 && (
+              <tr><td colSpan={7} className="py-12 text-center text-muted-foreground">Chưa có đơn món nào.</td></tr>
+            )}
+          </Table>
+        )}
       </main>
     </div>
   );
