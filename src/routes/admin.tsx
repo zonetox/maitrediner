@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { SiteHeader } from "@/components/SiteHeader";
-import { Shield, Users, Store, CreditCard, CheckCircle2, XCircle, Star, Eye, EyeOff, ArrowRight } from "lucide-react";
+import { Shield, Users, Store, CreditCard, CheckCircle2, XCircle, Star, Eye, EyeOff, ArrowRight, Calendar, ShoppingBag } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/admin")({
@@ -143,7 +143,7 @@ function AdminPage() {
           <StatCard icon={<Store className="h-5 w-5" />} label="Nhà hàng" value={stats.restaurants} />
           <StatCard icon={<Users className="h-5 w-5" />} label="Người dùng" value={stats.users} />
           <StatCard icon={<CreditCard className="h-5 w-5" />} label="Chờ duyệt" value={stats.pending} highlight />
-          <StatCard icon={<Calendar />} label="Đặt chỗ" value={stats.bookings} />
+          <StatCard icon={<Calendar className="h-5 w-5" />} label="Đặt chỗ" value={stats.bookings} />
         </div>
 
         {/* Tabs */}
@@ -314,6 +314,25 @@ function AdminPage() {
             ))}
           </Table>
         )}
+
+        {tab === "orders" && (
+          <Table head={["Nhà hàng", "Khách", "SĐT", "Số món", "Tổng", "Ngày", "Trạng thái"]}>
+            {orders.map((o) => (
+              <tr key={o.id} className="border-b border-border align-top">
+                <td className="py-3 font-medium">{o.restaurants?.name ?? "—"}</td>
+                <td className="text-sm">{o.guest_name ?? "—"}</td>
+                <td className="text-sm text-muted-foreground">{o.guest_phone ?? "—"}</td>
+                <td className="text-sm">{Array.isArray(o.items) ? o.items.reduce((s: number, i: any) => s + (i.qty || 0), 0) : 0}</td>
+                <td className="text-sm text-gold">{Number(o.total_amount).toLocaleString("vi-VN")}₫</td>
+                <td className="text-xs text-muted-foreground">{fmtDate(o.created_at)}</td>
+                <td><span className="text-xs px-2 py-0.5 rounded-full bg-card border border-border inline-flex items-center gap-1"><ShoppingBag className="h-3 w-3" />{o.status}</span></td>
+              </tr>
+            ))}
+            {orders.length === 0 && (
+              <tr><td colSpan={7} className="py-12 text-center text-muted-foreground">Chưa có đơn món nào.</td></tr>
+            )}
+          </Table>
+        )}
       </main>
     </div>
   );
@@ -376,8 +395,4 @@ function payBadge(s: string) {
 function fmtDate(d: string | null) {
   if (!d) return "—";
   return new Date(d).toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric" });
-}
-
-function Calendar(props: any) {
-  return <svg {...props} width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>;
 }
