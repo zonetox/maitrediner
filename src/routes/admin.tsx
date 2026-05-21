@@ -11,7 +11,7 @@ export const Route = createFileRoute("/admin")({
   component: AdminPage,
 });
 
-type Tab = "overview" | "restaurants" | "payments" | "users" | "bookings";
+type Tab = "overview" | "restaurants" | "payments" | "users" | "bookings" | "orders";
 
 function AdminPage() {
   const { user, loading, hasRole, roles } = useAuth();
@@ -22,30 +22,34 @@ function AdminPage() {
   const [profiles, setProfiles] = useState<any[]>([]);
   const [userRoles, setUserRoles] = useState<any[]>([]);
   const [bookings, setBookings] = useState<any[]>([]);
-  const [stats, setStats] = useState({ restaurants: 0, users: 0, pending: 0, bookings: 0 });
+  const [orders, setOrders] = useState<any[]>([]);
+  const [stats, setStats] = useState({ restaurants: 0, users: 0, pending: 0, bookings: 0, orders: 0 });
 
   useEffect(() => {
     if (!loading && !user) navigate({ to: "/auth" });
   }, [loading, user, navigate]);
 
   async function loadAll() {
-    const [r, p, pr, ur, b] = await Promise.all([
+    const [r, p, pr, ur, b, o] = await Promise.all([
       supabase.from("restaurants").select("*").order("created_at", { ascending: false }),
       supabase.from("membership_payments").select("*, restaurants(name, slug)").order("created_at", { ascending: false }),
       supabase.from("profiles").select("*").order("created_at", { ascending: false }),
       supabase.from("user_roles").select("*"),
-      supabase.from("bookings").select("*, restaurants(name)").order("created_at", { ascending: false }).limit(50),
+      supabase.from("bookings").select("*, restaurants(name)").order("created_at", { ascending: false }).limit(100),
+      supabase.from("orders").select("*, restaurants(name)").order("created_at", { ascending: false }).limit(100),
     ]);
     setRestaurants(r.data ?? []);
     setPayments(p.data ?? []);
     setProfiles(pr.data ?? []);
     setUserRoles(ur.data ?? []);
     setBookings(b.data ?? []);
+    setOrders(o.data ?? []);
     setStats({
       restaurants: r.data?.length ?? 0,
       users: pr.data?.length ?? 0,
       pending: (p.data ?? []).filter((x: any) => x.status === "pending").length,
       bookings: b.data?.length ?? 0,
+      orders: o.data?.length ?? 0,
     });
   }
 
@@ -144,7 +148,7 @@ function AdminPage() {
 
         {/* Tabs */}
         <div className="border-b border-border mb-6 flex gap-6 overflow-x-auto">
-          {(["overview", "restaurants", "payments", "users", "bookings"] as Tab[]).map((t) => (
+          {(["overview", "restaurants", "payments", "users", "bookings", "orders"] as Tab[]).map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}

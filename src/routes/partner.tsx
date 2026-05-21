@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { SiteHeader } from "@/components/SiteHeader";
-import { Plus, ExternalLink, Save, Trash2, Calendar, AlertTriangle, Sparkles, Star } from "lucide-react";
+import { Plus, ExternalLink, Save, Trash2, Calendar, AlertTriangle, Sparkles, Star, ShoppingBag, Phone } from "lucide-react";
 import { toast } from "sonner";
 import { ImageUploader, MultiImageUploader } from "@/components/ImageUploader";
 
@@ -17,15 +17,20 @@ function slugify(s: string) {
     .replace(/đ/g, "d").replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
 }
 
+type Tab = "info" | "menu" | "bookings" | "orders" | "deals";
+
 function PartnerPage() {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   const [restaurants, setRestaurants] = useState<any[]>([]);
   const [selected, setSelected] = useState<any | null>(null);
-  const [tab, setTab] = useState<"info" | "menu" | "bookings" | "deals">("info");
+  const [tab, setTab] = useState<Tab>("info");
   const [menu, setMenu] = useState<any[]>([]);
   const [bookings, setBookings] = useState<any[]>([]);
+  const [orders, setOrders] = useState<any[]>([]);
   const [deals, setDeals] = useState<any[]>([]);
+  const [createOpen, setCreateOpen] = useState(false);
+  const [refreshTick, setRefreshTick] = useState(0);
 
   useEffect(() => {
     if (!loading && !user) navigate({ to: "/auth", search: { mode: "login", as: "restaurant" } });
@@ -33,46 +38,69 @@ function PartnerPage() {
 
   async function load() {
     if (!user) return;
-    const { data } = await supabase.from("restaurants").select("*").eq("owner_id", user.id);
+    const { data } = await supabase.from("restaurants").select("*").eq("owner_id", user.id).order("created_at");
     setRestaurants(data ?? []);
-    if ((data?.length ?? 0) > 0 && !selected) setSelected(data![0]);
+    if (!selected && (data?.length ?? 0) > 0) setSelected(data![0]);
+    if (selected) {
+      const fresh = data?.find((r) => r.id === selected.id);
+      if (fresh) setSelected(fresh);
+    }
   }
   useEffect(() => { load(); }, [user]);
 
   useEffect(() => {
     if (!selected) return;
     (async () => {
-      const { data: m } = await supabase.from("menu_items").select("*").eq("restaurant_id", selected.id).order("sort_order");
-      setMenu(m ?? []);
-      const { data: b } = await supabase.from("bookings").select("*").eq("restaurant_id", selected.id).order("booking_at", { ascending: false });
-      setBookings(b ?? []);
-      const { data: d } = await supabase.from("deals").select("*").eq("restaurant_id", selected.id);
-      setDeals(d ?? []);
+      const [m, b, o, d] = await Promise.all([
+        supabase.from("menu_items").select("*").eq("restaurant_id", selected.id).order("sort_order"),
+        supabase.from("bookings").select("*").eq("restaurant_id", selected.id).order("booking_at", { ascending: false }),
+        supabase.from("orders").select("*").eq("restaurant_id", selected.id).order("created_at", { ascending: false }),
+        supabase.from("deals").select("*").eq("restaurant_id", selected.id).order("created_at", { ascending: false }),
+      ]);
+      setMenu(m.data ?? []);
+      setBookings(b.data ?? []);
+      setOrders(o.data ?? []);
+      setDeals(d.data ?? []);
     })();
-  }, [selected]);
+  }, [selected?.id, refreshTick]);
 
-  async function createRestaurant() {
-    const name = prompt("Tên nhà hàng?");
-    if (!name) return;
+  const reload = () => setRefreshTick((t) => t + 1);
+
+  async function createRestaurant(name: string) {
     const slug = slugify(name) + "-" + Math.random().toString(36).slice(2, 6);
     const { data, error } = await supabase.from("restaurants").insert({
       owner_id: user!.id, name, slug, is_published: false,
       landing_content: { hero_tagline: "Trải nghiệm ẩm thực đáng nhớ", story: "Câu chuyện của chúng tôi...", hours: "11:00 - 22:00 hằng ngày" },
     }).select().single();
-    if (error) toast.error(error.message); else { toast.success("Đã tạo nhà hàng"); load(); setSelected(data); }
+    if (error) return toast.error(error.message);
+    toast.success("Đã tạo nhà hàng");
+    setCreateOpen(false);
+    const { data: all } = await supabase.from("restaurants").select("*").eq("owner_id", user!.id);
+    setRestaurants(all ?? []);
+    setSelected(data);
   }
 
   async function saveRestaurant() {
     if (!selected) return;
     const { id, created_at, updated_at, owner_id, ...payload } = selected;
     const { error } = await supabase.from("restaurants").update(payload).eq("id", id);
-    if (error) toast.error(error.message); else toast.success("Đã lưu");
+    if (error) toast.error(error.message); else { toast.success("Đã lưu"); load(); }
+  }
+
+  async function deleteRestaurant() {
+    if (!selected || !confirm(`Xoá nhà hàng "${selected.name}"? Toàn bộ dữ liệu liên quan sẽ mất.`)) return;
+    const { error } = await supabase.from("restaurants").delete().eq("id", selected.id);
+    if (error) return toast.error(error.message);
+    toast.success("Đã xoá nhà hàng");
+    setSelected(null); load();
   }
 
   if (loading || !user) return <div className="min-h-screen bg-background" />;
 
   const trialDaysLeft = selected ? Math.max(0, Math.ceil((new Date(selected.trial_ends_at).getTime() - Date.now()) / 86400000)) : 0;
   const isExpired = selected?.membership_status === "trial" && trialDaysLeft === 0;
+  const pendingBookings = bookings.filter((b) => b.status === "pending").length;
+  const pendingOrders = orders.filter((o) => o.status === "pending").length;
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -83,7 +111,7 @@ function PartnerPage() {
           <aside className="space-y-2">
             <div className="flex items-center justify-between mb-4">
               <span className="text-xs uppercase tracking-widest text-gold">Nhà hàng của bạn</span>
-              <button onClick={createRestaurant} className="text-gold hover:scale-110 transition" title="Tạo nhà hàng">
+              <button onClick={() => setCreateOpen(true)} className="text-gold hover:scale-110 transition" title="Tạo nhà hàng">
                 <Plus className="h-4 w-4" />
               </button>
             </div>
@@ -95,7 +123,7 @@ function PartnerPage() {
               </button>
             ))}
             {restaurants.length === 0 && (
-              <button onClick={createRestaurant} className="w-full p-6 border border-dashed border-border rounded-lg text-sm text-muted-foreground hover:border-gold">
+              <button onClick={() => setCreateOpen(true)} className="w-full p-6 border border-dashed border-border rounded-lg text-sm text-muted-foreground hover:border-gold">
                 + Tạo nhà hàng đầu tiên
               </button>
             )}
@@ -118,7 +146,7 @@ function PartnerPage() {
               <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
                 <div>
                   <h1 className="font-serif text-3xl">{selected.name}</h1>
-                  <div className="flex items-center gap-3 mt-2 text-xs">
+                  <div className="flex items-center gap-3 mt-2 text-xs flex-wrap">
                     {selected.membership_status === "trial" && (
                       <span className="px-2 py-1 rounded-full bg-gold/10 text-gold border border-gold/30 flex items-center gap-1">
                         <Sparkles className="h-3 w-3" /> Dùng thử · còn {trialDaysLeft} ngày
@@ -126,6 +154,9 @@ function PartnerPage() {
                     )}
                     {selected.membership_status === "active" && (
                       <span className="px-2 py-1 rounded-full bg-green-500/10 text-green-400 border border-green-500/30">Gói thành viên đang hoạt động</span>
+                    )}
+                    {selected.is_published && (
+                      <span className="px-2 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">Đang công khai</span>
                     )}
                   </div>
                 </div>
@@ -136,6 +167,9 @@ function PartnerPage() {
                   <Link to="/r/$slug" params={{ slug: selected.slug }} target="_blank" className="px-4 py-2 rounded-full border border-border text-sm flex items-center gap-2 hover:border-gold">
                     <ExternalLink className="h-3 w-3" /> Xem trang
                   </Link>
+                  <button onClick={deleteRestaurant} className="px-4 py-2 rounded-full border border-border text-sm flex items-center gap-2 hover:border-destructive hover:text-destructive">
+                    <Trash2 className="h-3 w-3" /> Xoá
+                  </button>
                   <button onClick={saveRestaurant} className="px-4 py-2 rounded-full bg-gradient-gold text-primary-foreground text-sm font-medium flex items-center gap-2">
                     <Save className="h-3 w-3" /> Lưu
                   </button>
@@ -143,35 +177,61 @@ function PartnerPage() {
               </div>
 
               <div className="flex gap-2 border-b border-border mb-8 overflow-x-auto">
-                {[
-                  { k: "info", l: "Thông tin & Landing page" },
-                  { k: "menu", l: `Menu (${menu.length})` },
-                  { k: "bookings", l: `Đặt chỗ (${bookings.length})` },
-                  { k: "deals", l: `Ưu đãi (${deals.length})` },
-                ].map((t) => (
-                  <button key={t.k} onClick={() => setTab(t.k as any)}
-                    className={`px-4 py-3 text-sm whitespace-nowrap border-b-2 ${tab === t.k ? "border-gold" : "border-transparent text-muted-foreground"}`}>
+                {([
+                  { k: "info", l: "Thông tin & Landing page", badge: 0 },
+                  { k: "menu", l: `Menu (${menu.length})`, badge: 0 },
+                  { k: "bookings", l: `Đặt chỗ (${bookings.length})`, badge: pendingBookings },
+                  { k: "orders", l: `Đơn món (${orders.length})`, badge: pendingOrders },
+                  { k: "deals", l: `Ưu đãi (${deals.length})`, badge: 0 },
+                ] as { k: Tab; l: string; badge: number }[]).map((t) => (
+                  <button key={t.k} onClick={() => setTab(t.k)}
+                    className={`px-4 py-3 text-sm whitespace-nowrap border-b-2 flex items-center gap-2 ${tab === t.k ? "border-gold" : "border-transparent text-muted-foreground hover:text-foreground"}`}>
                     {t.l}
+                    {t.badge > 0 && <span className="px-1.5 py-0.5 rounded-full bg-gold text-primary-foreground text-[10px]">{t.badge}</span>}
                   </button>
                 ))}
               </div>
 
               {tab === "info" && <InfoTab r={selected} setR={setSelected} />}
-              {tab === "menu" && <MenuTab restaurantId={selected.id} menu={menu} reload={() => setSelected({ ...selected })} />}
-              {tab === "bookings" && <BookingsTab bookings={bookings} reload={() => setSelected({ ...selected })} />}
-              {tab === "deals" && <DealsTab restaurantId={selected.id} deals={deals} reload={() => setSelected({ ...selected })} />}
+              {tab === "menu" && <MenuTab restaurantId={selected.id} menu={menu} reload={reload} />}
+              {tab === "bookings" && <BookingsTab bookings={bookings} reload={reload} />}
+              {tab === "orders" && <OrdersTab orders={orders} reload={reload} />}
+              {tab === "deals" && <DealsTab restaurantId={selected.id} deals={deals} reload={reload} />}
             </section>
           ) : (
             <section className="grid place-items-center min-h-[60vh] text-center">
               <div>
                 <h2 className="font-serif text-3xl">Chào mừng đến với Maître Partner</h2>
                 <p className="text-muted-foreground mt-3 mb-6">Tạo nhà hàng đầu tiên để bắt đầu 30 ngày dùng thử.</p>
-                <button onClick={createRestaurant} className="px-6 py-3 rounded-full bg-gradient-gold text-primary-foreground font-medium">+ Tạo nhà hàng</button>
+                <button onClick={() => setCreateOpen(true)} className="px-6 py-3 rounded-full bg-gradient-gold text-primary-foreground font-medium">+ Tạo nhà hàng</button>
               </div>
             </section>
           )}
         </div>
       </main>
+
+      {createOpen && <CreateRestaurantModal onClose={() => setCreateOpen(false)} onCreate={createRestaurant} />}
+    </div>
+  );
+}
+
+function CreateRestaurantModal({ onClose, onCreate }: any) {
+  const [name, setName] = useState("");
+  return (
+    <div className="fixed inset-0 z-[60] bg-background/85 backdrop-blur grid place-items-center p-4" onClick={onClose}>
+      <form onClick={(e) => e.stopPropagation()}
+        onSubmit={(e) => { e.preventDefault(); if (name.trim()) onCreate(name.trim()); }}
+        className="bg-card border border-border rounded-2xl p-6 max-w-md w-full shadow-elegant">
+        <h3 className="font-serif text-2xl mb-4">Tạo nhà hàng mới</h3>
+        <label className="text-xs uppercase tracking-wider text-muted-foreground">Tên nhà hàng</label>
+        <input autoFocus required value={name} onChange={(e) => setName(e.target.value)}
+          className="w-full mt-2 px-4 py-3 rounded-lg bg-background border border-border focus:border-gold outline-none"
+          placeholder="Ví dụ: Nhà hàng Hoàng Yến" />
+        <div className="flex gap-2 mt-5">
+          <button type="button" onClick={onClose} className="flex-1 py-3 rounded-full border border-border hover:border-gold">Hủy</button>
+          <button type="submit" className="flex-1 py-3 rounded-full bg-gradient-gold text-primary-foreground font-medium">Tạo</button>
+        </div>
+      </form>
     </div>
   );
 }
@@ -194,6 +254,7 @@ function Field({ label, value, onChange, textarea }: any) {
 function InfoTab({ r, setR }: any) {
   const lc = r.landing_content || {};
   const setLC = (k: string, v: any) => setR({ ...r, landing_content: { ...lc, [k]: v } });
+  const gallery: string[] = lc.gallery || [];
   return (
     <div className="grid md:grid-cols-2 gap-6">
       <Field label="Tên nhà hàng" value={r.name} onChange={(v: any) => setR({ ...r, name: v })} />
@@ -221,10 +282,24 @@ function InfoTab({ r, setR }: any) {
       <div className="md:col-span-2">
         <Field label="Câu chuyện nhà hàng" textarea value={lc.story} onChange={(v: any) => setLC("story", v)} />
       </div>
+      <div className="md:col-span-2">
+        <label className="text-xs uppercase tracking-wider text-muted-foreground">Thư viện ảnh không gian (tối đa 6)</label>
+        <div className="grid grid-cols-3 gap-2 mt-2">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <ImageUploader key={i} bucket="restaurant-images" folder={`${r.id}/gallery`}
+              value={gallery[i] ?? null} aspect="aspect-square"
+              onChange={(url) => {
+                const next = [...gallery];
+                if (url) next[i] = url; else next.splice(i, 1);
+                setLC("gallery", next.filter(Boolean));
+              }} />
+          ))}
+        </div>
+      </div>
       <div className="md:col-span-2 flex items-center gap-3 mt-2">
         <input type="checkbox" id="pub" checked={r.is_published} onChange={(e) => setR({ ...r, is_published: e.target.checked })}
           className="h-4 w-4 accent-[var(--color-gold)]" />
-        <label htmlFor="pub" className="text-sm">Công khai trên Maître</label>
+        <label htmlFor="pub" className="text-sm">Công khai trên Maître (nhớ bấm "Lưu" sau khi đổi)</label>
       </div>
     </div>
   );
@@ -267,6 +342,7 @@ function MenuTab({ restaurantId, menu, reload }: any) {
                   <h4 className="font-serif text-lg flex items-center gap-2">
                     {m.name}
                     {m.is_signature && <Star className="h-3 w-3 text-gold fill-gold" />}
+                    {!m.is_available && <span className="text-[10px] uppercase text-muted-foreground border border-border px-1.5 rounded">Tạm hết</span>}
                   </h4>
                   <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{m.description}</p>
                   <p className="text-gold text-sm mt-2">{Number(m.price).toLocaleString("vi-VN")}₫</p>
@@ -333,7 +409,9 @@ function MenuItemModal({ item, restaurantId, onClose, onSave }: any) {
 
 function BookingsTab({ bookings, reload }: any) {
   async function setStatus(id: string, status: "confirmed" | "cancelled" | "completed" | "pending") {
-    await supabase.from("bookings").update({ status }).eq("id", id); reload();
+    const { error } = await supabase.from("bookings").update({ status }).eq("id", id);
+    if (error) return toast.error(error.message);
+    toast.success("Đã cập nhật"); reload();
   }
   return (
     <div className="space-y-3">
@@ -342,16 +420,68 @@ function BookingsTab({ bookings, reload }: any) {
         <div key={b.id} className="p-5 rounded-xl bg-card border border-border flex flex-wrap justify-between gap-3">
           <div>
             <div className="flex items-center gap-2"><Calendar className="h-4 w-4 text-gold" /><span className="font-serif text-lg">{b.guest_name}</span></div>
-            <p className="text-sm text-muted-foreground mt-1">{new Date(b.booking_at).toLocaleString("vi-VN")} · {b.party_size} khách · {b.guest_phone}</p>
-            {b.notes && <p className="text-xs text-muted-foreground mt-2">"{b.notes}"</p>}
+            <p className="text-sm text-muted-foreground mt-1">{new Date(b.booking_at).toLocaleString("vi-VN")} · {b.party_size} khách</p>
+            <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1"><Phone className="h-3 w-3" /> <a href={`tel:${b.guest_phone}`} className="hover:text-gold">{b.guest_phone}</a>{b.guest_email && <span className="ml-2">· {b.guest_email}</span>}</p>
+            {b.notes && <p className="text-xs text-muted-foreground mt-2 italic">"{b.notes}"</p>}
           </div>
-          <div className="flex items-center gap-2 self-start">
+          <div className="flex items-center gap-2 self-start flex-wrap">
             <span className="text-xs px-2 py-1 rounded-full border border-border">{b.status}</span>
             {b.status === "pending" && (
               <>
                 <button onClick={() => setStatus(b.id, "confirmed")} className="text-xs px-3 py-1 rounded-full bg-gold text-primary-foreground">Xác nhận</button>
                 <button onClick={() => setStatus(b.id, "cancelled")} className="text-xs px-3 py-1 rounded-full border border-border">Từ chối</button>
               </>
+            )}
+            {b.status === "confirmed" && (
+              <button onClick={() => setStatus(b.id, "completed")} className="text-xs px-3 py-1 rounded-full border border-gold text-gold">Hoàn tất</button>
+            )}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function OrdersTab({ orders, reload }: any) {
+  async function setStatus(id: string, status: string) {
+    const { error } = await supabase.from("orders").update({ status: status as any }).eq("id", id);
+    if (error) return toast.error(error.message);
+    toast.success("Đã cập nhật"); reload();
+  }
+  return (
+    <div className="space-y-3">
+      {orders.length === 0 && <p className="text-muted-foreground text-sm">Chưa có đơn món.</p>}
+      {orders.map((o: any) => (
+        <div key={o.id} className="p-5 rounded-xl bg-card border border-border">
+          <div className="flex flex-wrap justify-between gap-3 mb-3">
+            <div>
+              <div className="flex items-center gap-2"><ShoppingBag className="h-4 w-4 text-gold" /><span className="font-serif text-lg">{o.guest_name || "Khách"}</span></div>
+              <p className="text-xs text-muted-foreground mt-1">{new Date(o.created_at).toLocaleString("vi-VN")}</p>
+              {o.guest_phone && <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1"><Phone className="h-3 w-3" /> <a href={`tel:${o.guest_phone}`} className="hover:text-gold">{o.guest_phone}</a></p>}
+            </div>
+            <div className="text-right">
+              <span className="text-xs px-2 py-1 rounded-full border border-border">{o.status}</span>
+              <div className="text-gold font-serif text-xl mt-1">{Number(o.total_amount).toLocaleString("vi-VN")}₫</div>
+            </div>
+          </div>
+          <div className="border-t border-border pt-3 space-y-1">
+            {Array.isArray(o.items) && o.items.map((it: any, i: number) => (
+              <div key={i} className="flex justify-between text-sm">
+                <span className="text-muted-foreground">{it.qty}× {it.name}</span>
+                <span>{(it.price * it.qty).toLocaleString("vi-VN")}₫</span>
+              </div>
+            ))}
+          </div>
+          {o.notes && <p className="text-xs text-muted-foreground mt-3 italic">"{o.notes}"</p>}
+          <div className="flex gap-2 mt-3 flex-wrap">
+            {o.status === "pending" && (
+              <>
+                <button onClick={() => setStatus(o.id, "confirmed")} className="text-xs px-3 py-1.5 rounded-full bg-gold text-primary-foreground">Xác nhận</button>
+                <button onClick={() => setStatus(o.id, "cancelled")} className="text-xs px-3 py-1.5 rounded-full border border-border hover:border-destructive">Từ chối</button>
+              </>
+            )}
+            {o.status === "confirmed" && (
+              <button onClick={() => setStatus(o.id, "completed")} className="text-xs px-3 py-1.5 rounded-full border border-gold text-gold">Hoàn tất</button>
             )}
           </div>
         </div>
@@ -361,32 +491,89 @@ function BookingsTab({ bookings, reload }: any) {
 }
 
 function DealsTab({ restaurantId, deals, reload }: any) {
-  async function add() {
-    const title = prompt("Tiêu đề ưu đãi?"); if (!title) return;
-    const description = prompt("Mô tả?") || "";
-    await supabase.from("deals").insert({ restaurant_id: restaurantId, title, description, badge: "Mới", tag: "Ưu đãi" });
-    reload();
+  const [editing, setEditing] = useState<any | null>(null);
+  async function save(d: any) {
+    const { id, ...payload } = d;
+    if (id) {
+      const { error } = await supabase.from("deals").update(payload as any).eq("id", id);
+      if (error) return toast.error(error.message);
+    } else {
+      const { error } = await supabase.from("deals").insert({ ...payload, restaurant_id: restaurantId } as any);
+      if (error) return toast.error(error.message);
+    }
+    toast.success("Đã lưu ưu đãi"); setEditing(null); reload();
   }
   async function remove(id: string) {
+    if (!confirm("Xoá ưu đãi này?")) return;
     await supabase.from("deals").delete().eq("id", id); reload();
+  }
+  async function toggleActive(d: any) {
+    await supabase.from("deals").update({ is_active: !d.is_active }).eq("id", d.id);
+    reload();
   }
   return (
     <div>
-      <button onClick={add} className="mb-4 px-4 py-2 rounded-full border border-gold text-gold text-sm flex items-center gap-2">
+      <button onClick={() => setEditing({ title: "", description: "", badge: "Mới", tag: "Ưu đãi", is_active: true })}
+        className="mb-4 px-4 py-2 rounded-full border border-gold text-gold text-sm flex items-center gap-2">
         <Plus className="h-3 w-3" /> Thêm ưu đãi
       </button>
       <div className="grid md:grid-cols-2 gap-3">
         {deals.map((d: any) => (
-          <div key={d.id} className="p-5 rounded-xl bg-card border border-border flex justify-between gap-3">
-            <div>
-              <span className="text-xs text-gold">{d.badge}</span>
-              <h4 className="font-serif text-lg mt-1">{d.title}</h4>
-              <p className="text-sm text-muted-foreground mt-1">{d.description}</p>
+          <div key={d.id} className="p-5 rounded-xl bg-card border border-border">
+            <div className="flex justify-between gap-3">
+              <div className="flex-1">
+                <span className="text-xs text-gold">{d.badge}</span>
+                <h4 className="font-serif text-lg mt-1">{d.title}</h4>
+                <p className="text-sm text-muted-foreground mt-1">{d.description}</p>
+                {d.expires_at && <p className="text-xs text-muted-foreground mt-2">Hết hạn: {new Date(d.expires_at).toLocaleDateString("vi-VN")}</p>}
+              </div>
+              <div className="flex flex-col gap-2 items-end">
+                <button onClick={() => toggleActive(d)} className={`text-xs px-2 py-1 rounded-full border ${d.is_active ? "border-emerald-500/40 text-emerald-400" : "border-border text-muted-foreground"}`}>
+                  {d.is_active ? "Đang hiện" : "Ẩn"}
+                </button>
+                <button onClick={() => setEditing(d)} className="text-xs text-muted-foreground hover:text-gold">Sửa</button>
+                <button onClick={() => remove(d.id)} className="text-muted-foreground hover:text-destructive"><Trash2 className="h-4 w-4" /></button>
+              </div>
             </div>
-            <button onClick={() => remove(d.id)} className="text-muted-foreground hover:text-destructive"><Trash2 className="h-4 w-4" /></button>
           </div>
         ))}
         {deals.length === 0 && <p className="text-muted-foreground text-sm col-span-full">Chưa có ưu đãi.</p>}
+      </div>
+
+      {editing && <DealModal deal={editing} onClose={() => setEditing(null)} onSave={save} />}
+    </div>
+  );
+}
+
+function DealModal({ deal, onClose, onSave }: any) {
+  const [form, setForm] = useState<any>(deal);
+  return (
+    <div className="fixed inset-0 z-[60] bg-background/85 backdrop-blur grid place-items-center p-4" onClick={onClose}>
+      <div onClick={(e) => e.stopPropagation()} className="bg-card border border-border rounded-2xl p-6 max-w-lg w-full shadow-elegant">
+        <h3 className="font-serif text-2xl mb-4">{form.id ? "Sửa ưu đãi" : "Thêm ưu đãi"}</h3>
+        <div className="space-y-4">
+          <Field label="Tiêu đề" value={form.title} onChange={(v: any) => setForm({ ...form, title: v })} />
+          <Field label="Mô tả" textarea value={form.description} onChange={(v: any) => setForm({ ...form, description: v })} />
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Huy hiệu" value={form.badge} onChange={(v: any) => setForm({ ...form, badge: v })} />
+            <Field label="Nhãn" value={form.tag} onChange={(v: any) => setForm({ ...form, tag: v })} />
+          </div>
+          <div>
+            <label className="text-xs uppercase tracking-wider text-muted-foreground">Hết hạn (tuỳ chọn)</label>
+            <input type="date" value={form.expires_at ? String(form.expires_at).slice(0, 10) : ""}
+              onChange={(e) => setForm({ ...form, expires_at: e.target.value || null })}
+              className="w-full mt-2 px-4 py-3 rounded-lg bg-background border border-border focus:border-gold outline-none" />
+          </div>
+          <label className="flex items-center gap-2 text-sm">
+            <input type="checkbox" checked={form.is_active ?? true} onChange={(e) => setForm({ ...form, is_active: e.target.checked })}
+              className="h-4 w-4 accent-[var(--color-gold)]" />
+            Đang hiển thị
+          </label>
+        </div>
+        <div className="flex gap-2 mt-6">
+          <button onClick={onClose} className="flex-1 py-3 rounded-full border border-border hover:border-gold">Hủy</button>
+          <button onClick={() => onSave(form)} className="flex-1 py-3 rounded-full bg-gradient-gold text-primary-foreground font-medium">Lưu</button>
+        </div>
       </div>
     </div>
   );
