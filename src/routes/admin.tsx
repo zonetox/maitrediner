@@ -148,7 +148,7 @@ function AdminPage() {
 
         {/* Tabs */}
         <div className="border-b border-border mb-6 flex gap-6 overflow-x-auto">
-          {(["overview", "restaurants", "payments", "users", "bookings"] as Tab[]).map((t) => (
+          {(["overview", "restaurants", "payments", "users", "bookings", "orders"] as Tab[]).map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
