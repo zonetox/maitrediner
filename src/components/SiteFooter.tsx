@@ -46,9 +46,9 @@ export function SiteFooter() {
         <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-muted-foreground">
           <p>© {new Date().getFullYear()} Maître. Tuyển chọn từ Việt Nam.</p>
           <div className="flex gap-6">
-            <span>Điều khoản</span>
-            <span>Bảo mật</span>
-            <span>Cookie</span>
+            <Link to="/terms" className="hover:text-gold">Điều khoản</Link>
+            <Link to="/privacy" className="hover:text-gold">Bảo mật</Link>
+            <a href="mailto:hello@maitredinner.vn" className="hover:text-gold">Liên hệ</a>
           </div>
         </div>
       </div>
