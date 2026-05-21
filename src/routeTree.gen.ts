@@ -9,8 +9,10 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TermsRouteImport } from './routes/terms'
 import { Route as RestaurantsRouteImport } from './routes/restaurants'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as PartnerRouteImport } from './routes/partner'
 import { Route as MembershipRouteImport } from './routes/membership'
 import { Route as DealsRouteImport } from './routes/deals'
@@ -21,6 +23,11 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as RSlugRouteImport } from './routes/r.$slug'
 import { Route as PartnerMembershipRouteImport } from './routes/partner.membership'
 
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RestaurantsRoute = RestaurantsRouteImport.update({
   id: '/restaurants',
   path: '/restaurants',
@@ -29,6 +36,11 @@ const RestaurantsRoute = RestaurantsRouteImport.update({
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PartnerRoute = PartnerRouteImport.update({
@@ -85,8 +97,10 @@ export interface FileRoutesByFullPath {
   '/deals': typeof DealsRoute
   '/membership': typeof MembershipRoute
   '/partner': typeof PartnerRouteWithChildren
+  '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/restaurants': typeof RestaurantsRoute
+  '/terms': typeof TermsRoute
   '/partner/membership': typeof PartnerMembershipRoute
   '/r/$slug': typeof RSlugRoute
 }
@@ -98,8 +112,10 @@ export interface FileRoutesByTo {
   '/deals': typeof DealsRoute
   '/membership': typeof MembershipRoute
   '/partner': typeof PartnerRouteWithChildren
+  '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/restaurants': typeof RestaurantsRoute
+  '/terms': typeof TermsRoute
   '/partner/membership': typeof PartnerMembershipRoute
   '/r/$slug': typeof RSlugRoute
 }
@@ -112,8 +128,10 @@ export interface FileRoutesById {
   '/deals': typeof DealsRoute
   '/membership': typeof MembershipRoute
   '/partner': typeof PartnerRouteWithChildren
+  '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/restaurants': typeof RestaurantsRoute
+  '/terms': typeof TermsRoute
   '/partner/membership': typeof PartnerMembershipRoute
   '/r/$slug': typeof RSlugRoute
 }
@@ -127,8 +145,10 @@ export interface FileRouteTypes {
     | '/deals'
     | '/membership'
     | '/partner'
+    | '/privacy'
     | '/reset-password'
     | '/restaurants'
+    | '/terms'
     | '/partner/membership'
     | '/r/$slug'
   fileRoutesByTo: FileRoutesByTo
@@ -140,8 +160,10 @@ export interface FileRouteTypes {
     | '/deals'
     | '/membership'
     | '/partner'
+    | '/privacy'
     | '/reset-password'
     | '/restaurants'
+    | '/terms'
     | '/partner/membership'
     | '/r/$slug'
   id:
@@ -153,8 +175,10 @@ export interface FileRouteTypes {
     | '/deals'
     | '/membership'
     | '/partner'
+    | '/privacy'
     | '/reset-password'
     | '/restaurants'
+    | '/terms'
     | '/partner/membership'
     | '/r/$slug'
   fileRoutesById: FileRoutesById
@@ -167,13 +191,22 @@ export interface RootRouteChildren {
   DealsRoute: typeof DealsRoute
   MembershipRoute: typeof MembershipRoute
   PartnerRoute: typeof PartnerRouteWithChildren
+  PrivacyRoute: typeof PrivacyRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   RestaurantsRoute: typeof RestaurantsRoute
+  TermsRoute: typeof TermsRoute
   RSlugRoute: typeof RSlugRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/restaurants': {
       id: '/restaurants'
       path: '/restaurants'
@@ -186,6 +219,13 @@ declare module '@tanstack/react-router' {
       path: '/reset-password'
       fullPath: '/reset-password'
       preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/partner': {
@@ -273,10 +313,22 @@ const rootRouteChildren: RootRouteChildren = {
   DealsRoute: DealsRoute,
   MembershipRoute: MembershipRoute,
   PartnerRoute: PartnerRouteWithChildren,
+  PrivacyRoute: PrivacyRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   RestaurantsRoute: RestaurantsRoute,
+  TermsRoute: TermsRoute,
   RSlugRoute: RSlugRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
