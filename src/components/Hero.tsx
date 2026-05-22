@@ -169,6 +169,43 @@ export function Hero() {
                 Tìm kiếm
               </button>
             </div>
+            {amenityOptions.length > 0 && (
+              <div className="border-t border-border mt-2 pt-3 px-3 pb-2">
+                <button
+                  type="button"
+                  onClick={() => setShowAmenities((v) => !v)}
+                  className="flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-muted-foreground hover:text-gold transition"
+                >
+                  <Sparkles className="h-3.5 w-3.5 text-gold" />
+                  Bộ lọc tiện ích
+                  {amenities.length > 0 && (
+                    <span className="ml-1 px-2 py-0.5 rounded-full bg-gold/15 text-gold text-[10px]">{amenities.length}</span>
+                  )}
+                </button>
+                {showAmenities && (
+                  <div className="flex flex-wrap gap-2 mt-3">
+                    {amenityOptions.map((a) => {
+                      const active = amenities.includes(a);
+                      return (
+                        <button
+                          key={a}
+                          type="button"
+                          onClick={() => toggleAmenity(a)}
+                          className={`text-xs px-3 py-1.5 rounded-full border transition inline-flex items-center gap-1 ${
+                            active
+                              ? "border-gold text-gold bg-gold/10"
+                              : "border-border text-muted-foreground hover:border-gold hover:text-foreground"
+                          }`}
+                        >
+                          {a}
+                          {active && <X className="h-3 w-3" />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
           </form>
 
           <div className="flex items-center gap-3 mt-8">
