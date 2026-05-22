@@ -135,7 +135,7 @@ export function Hero() {
                   value={cuisine}
                   onChange={setCuisine}
                   placeholder="Loại nhà hàng"
-                  options={CUISINES}
+                  options={cuisines.map((c) => ({ label: c, value: c }))}
                   icon={<Utensils className="h-4 w-4" />}
                 />
               </div>
