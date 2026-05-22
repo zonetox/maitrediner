@@ -43,6 +43,19 @@ export function Hero() {
   const [q, setQ] = useState("");
   const [cuisine, setCuisine] = useState("");
   const [city, setCity] = useState("");
+  const [cuisines, setCuisines] = useState<string[]>(FALLBACK_CUISINES);
+  const [cities, setCities] = useState<string[]>(FALLBACK_CITIES);
+
+  useEffect(() => {
+    (async () => {
+      const [{ data: cu }, { data: lo }] = await Promise.all([
+        supabase.from("cuisine_categories").select("name").eq("is_active", true).order("sort_order"),
+        supabase.from("locations").select("name").eq("is_active", true).order("sort_order"),
+      ]);
+      if (cu?.length) setCuisines(cu.map((c: any) => c.name));
+      if (lo?.length) setCities(lo.map((c: any) => c.name));
+    })();
+  }, []);
 
   useEffect(() => {
     const t = setInterval(() => setIdx((i) => (i + 1) % SLIDES.length), 6500);
