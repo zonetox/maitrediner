@@ -144,7 +144,7 @@ export function Hero() {
                   value={city}
                   onChange={setCity}
                   placeholder="Địa điểm"
-                  options={CITIES}
+                  options={cities.map((c) => ({ label: c, value: c }))}
                   icon={<MapPin className="h-4 w-4" />}
                 />
               </div>
