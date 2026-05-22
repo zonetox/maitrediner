@@ -446,7 +446,7 @@ function RestaurantPage() {
         )}
       </div>
 
-      {showBook && <BookingModal r={r} onClose={() => setShowBook(false)} user={user} />}
+      {showBook && <BookingModal r={r} menu={menu} onClose={() => setShowBook(false)} user={user} />}
       {dish && <DishModal dish={dish} fallback={gallery} onClose={() => setDish(null)} onBook={() => { setDish(null); setShowBook(true); }} onZoom={(list, idx) => openImage(list, idx)} />}
       {deal && <DealModal deal={deal} onClose={() => setDeal(null)} onBook={() => { setDeal(null); setShowBook(true); }} onSave={() => saveDeal(deal.id)} />}
       {lightbox && <Lightbox list={lightbox.list} index={lightbox.index} onClose={() => setLightbox(null)} onIndex={(i) => setLightbox({ ...lightbox, index: i })} />}
@@ -584,19 +584,39 @@ function Lightbox({ list, index, onClose, onIndex }: { list: string[]; index: nu
   );
 }
 
-function BookingModal({ r, onClose, user }: any) {
+function BookingModal({ r, menu, onClose, user }: any) {
   const notifyFn = useServerFn(notify);
   const [form, setForm] = useState({
     guest_name: "", guest_phone: "", guest_email: user?.email ?? "",
-    party_size: 2, booking_at: "", notes: "",
+    party_size: 2, date: "", time: "", notes: "",
   });
+  const [preorder, setPreorder] = useState<Record<string, number>>({});
+  const [showMenu, setShowMenu] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+
+  const selectedItems = (menu ?? []).filter((m: any) => (preorder[m.id] ?? 0) > 0);
+  const preorderTotal = selectedItems.reduce((s: number, m: any) => s + Number(m.price) * preorder[m.id], 0);
+
+  function bump(id: string, delta: number) {
+    setPreorder((p) => {
+      const next = { ...p, [id]: Math.max(0, (p[id] ?? 0) + delta) };
+      if (next[id] === 0) delete next[id];
+      return next;
+    });
+  }
+
   async function submit(e: React.FormEvent) {
-    e.preventDefault(); setSubmitting(true);
+    e.preventDefault();
+    if (!form.date || !form.time) return toast.error("Vui lòng chọn ngày và giờ");
+    setSubmitting(true);
+    const booking_at = `${form.date}T${form.time}`;
+    const preorderNote = selectedItems.length
+      ? `\n\n— Món đặt trước —\n${selectedItems.map((m: any) => `• ${m.name} x${preorder[m.id]} — ${Number(m.price * preorder[m.id]).toLocaleString("vi-VN")}₫`).join("\n")}\nTạm tính: ${preorderTotal.toLocaleString("vi-VN")}₫`
+      : "";
     const { data: row, error } = await supabase.from("bookings").insert({
       restaurant_id: r.id, user_id: user?.id ?? null,
       guest_name: form.guest_name, guest_phone: form.guest_phone, guest_email: form.guest_email,
-      party_size: form.party_size, booking_at: form.booking_at, notes: form.notes,
+      party_size: form.party_size, booking_at, notes: (form.notes || "") + preorderNote,
     }).select().single();
     setSubmitting(false);
     if (error) return toast.error(error.message);
@@ -604,39 +624,99 @@ function BookingModal({ r, onClose, user }: any) {
     if (row) notifyFn({ data: { type: "booking", restaurantId: r.id, recordId: row.id } }).catch(() => {});
     onClose();
   }
+
   return (
-    <div className="fixed inset-0 z-[80] bg-background/85 backdrop-blur grid place-items-center p-4 overflow-y-auto" onClick={onClose}>
+    <div className="fixed inset-0 z-[80] bg-background/85 backdrop-blur grid place-items-center p-3" onClick={onClose}>
       <form onSubmit={submit} onClick={(e) => e.stopPropagation()}
-        className="bg-card border border-border rounded-2xl p-8 max-w-md w-full shadow-elegant my-8">
-        <span className="text-xs tracking-[0.3em] uppercase text-gold">Reservation</span>
-        <h3 className="font-serif text-3xl mt-2 mb-1">Đặt chỗ tại {r.name}</h3>
-        <p className="text-sm text-muted-foreground mb-6">Nhà hàng sẽ liên hệ để xác nhận trong vòng 30 phút.</p>
-        <div className="space-y-3">
-          <input required placeholder="Họ tên" value={form.guest_name} onChange={(e) => setForm({ ...form, guest_name: e.target.value })}
-            className="w-full px-4 py-3 rounded-lg bg-background border border-border focus:border-gold outline-none transition" />
-          <input required placeholder="Số điện thoại" value={form.guest_phone} onChange={(e) => setForm({ ...form, guest_phone: e.target.value })}
-            className="w-full px-4 py-3 rounded-lg bg-background border border-border focus:border-gold outline-none transition" />
-          <input type="email" placeholder="Email (tùy chọn)" value={form.guest_email} onChange={(e) => setForm({ ...form, guest_email: e.target.value })}
-            className="w-full px-4 py-3 rounded-lg bg-background border border-border focus:border-gold outline-none transition" />
-          <div className="grid grid-cols-2 gap-3">
-            <input required type="datetime-local" value={form.booking_at} onChange={(e) => setForm({ ...form, booking_at: e.target.value })}
-              className="px-4 py-3 rounded-lg bg-background border border-border focus:border-gold outline-none transition" />
-            <input required type="number" min={1} placeholder="Số khách" value={form.party_size} onChange={(e) => setForm({ ...form, party_size: +e.target.value })}
-              className="px-4 py-3 rounded-lg bg-background border border-border focus:border-gold outline-none transition" />
-          </div>
-          <textarea placeholder="Yêu cầu đặc biệt (sinh nhật, kỷ niệm, dị ứng, ưu đãi áp dụng...)" value={form.notes}
-            onChange={(e) => setForm({ ...form, notes: e.target.value })} rows={3}
-            className="w-full px-4 py-3 rounded-lg bg-background border border-border focus:border-gold outline-none transition" />
+        className="bg-card border border-border rounded-2xl max-w-md w-full shadow-elegant flex flex-col max-h-[95vh]">
+        <div className="px-6 pt-5 pb-3 border-b border-border">
+          <span className="text-[10px] tracking-[0.3em] uppercase text-gold">Reservation</span>
+          <h3 className="font-serif text-xl mt-1 leading-tight">Đặt chỗ tại {r.name}</h3>
         </div>
-        <p className="text-[11px] text-muted-foreground mt-4 italic text-center">
-          Maître chỉ giới thiệu nhà hàng — không xử lý thanh toán. Thanh toán diễn ra trực tiếp giữa khách và nhà hàng.
-        </p>
-        <div className="flex gap-2 mt-4">
-          <button type="button" onClick={onClose} className="flex-1 py-3 rounded-full border border-border hover:border-gold transition">Hủy</button>
-          <button type="submit" disabled={submitting}
-            className="flex-1 py-3 rounded-full bg-gradient-gold text-primary-foreground font-medium hover:shadow-gold transition">
-            {submitting ? "Đang gửi..." : <span className="flex items-center justify-center gap-2"><Calendar className="h-4 w-4" /> Xác nhận</span>}
-          </button>
+
+        <div className="px-6 py-4 overflow-y-auto flex-1 space-y-2.5">
+          <input required placeholder="Họ tên" value={form.guest_name} onChange={(e) => setForm({ ...form, guest_name: e.target.value })}
+            className="w-full px-3 py-2.5 rounded-lg bg-background border border-border focus:border-gold outline-none text-sm" />
+          <div className="grid grid-cols-2 gap-2">
+            <input required placeholder="Số điện thoại" value={form.guest_phone} onChange={(e) => setForm({ ...form, guest_phone: e.target.value })}
+              className="px-3 py-2.5 rounded-lg bg-background border border-border focus:border-gold outline-none text-sm" />
+            <input type="email" placeholder="Email" value={form.guest_email} onChange={(e) => setForm({ ...form, guest_email: e.target.value })}
+              className="px-3 py-2.5 rounded-lg bg-background border border-border focus:border-gold outline-none text-sm" />
+          </div>
+
+          <div className="grid grid-cols-[1fr_1fr_auto] gap-2">
+            <label className="relative">
+              <span className="absolute -top-2 left-2 px-1 bg-card text-[9px] uppercase tracking-widest text-muted-foreground">Ngày</span>
+              <input required type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })}
+                className="w-full px-3 py-2.5 rounded-lg bg-background border border-border focus:border-gold outline-none text-sm [color-scheme:dark]" />
+            </label>
+            <label className="relative">
+              <span className="absolute -top-2 left-2 px-1 bg-card text-[9px] uppercase tracking-widest text-muted-foreground">Giờ</span>
+              <input required type="time" step={900} value={form.time} onChange={(e) => setForm({ ...form, time: e.target.value })}
+                className="w-full px-3 py-2.5 rounded-lg bg-background border border-border focus:border-gold outline-none text-sm [color-scheme:dark]" />
+            </label>
+            <label className="relative">
+              <span className="absolute -top-2 left-2 px-1 bg-card text-[9px] uppercase tracking-widest text-muted-foreground">Khách</span>
+              <input required type="number" min={1} max={50} value={form.party_size}
+                onChange={(e) => setForm({ ...form, party_size: +e.target.value })}
+                className="w-16 px-3 py-2.5 rounded-lg bg-background border border-border focus:border-gold outline-none text-sm text-center" />
+            </label>
+          </div>
+
+          {/* Pre-order */}
+          {menu && menu.length > 0 && (
+            <div className="rounded-lg border border-border bg-background/40">
+              <button type="button" onClick={() => setShowMenu((v) => !v)}
+                className="w-full px-3 py-2.5 flex items-center justify-between text-sm hover:text-gold transition">
+                <span className="flex items-center gap-2">
+                  <Utensils className="h-3.5 w-3.5 text-gold" />
+                  Đặt món trước {selectedItems.length > 0 && <span className="text-gold">({selectedItems.length})</span>}
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  {preorderTotal > 0 ? `${preorderTotal.toLocaleString("vi-VN")}₫` : (showMenu ? "Ẩn" : "Chọn món")}
+                </span>
+              </button>
+              {showMenu && (
+                <div className="max-h-44 overflow-y-auto border-t border-border divide-y divide-border/50">
+                  {menu.map((m: any) => {
+                    const qty = preorder[m.id] ?? 0;
+                    return (
+                      <div key={m.id} className="flex items-center gap-2 px-3 py-2">
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm truncate">{m.name}</div>
+                          <div className="text-[11px] text-gold">{Number(m.price).toLocaleString("vi-VN")}₫</div>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <button type="button" onClick={() => bump(m.id, -1)} disabled={qty === 0}
+                            className="h-6 w-6 grid place-items-center rounded-full border border-border hover:border-gold disabled:opacity-30 text-sm">−</button>
+                          <span className="w-5 text-center text-sm tabular-nums">{qty}</span>
+                          <button type="button" onClick={() => bump(m.id, 1)}
+                            className="h-6 w-6 grid place-items-center rounded-full border border-border hover:border-gold text-sm">+</button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+
+          <textarea placeholder="Yêu cầu đặc biệt (tùy chọn)" value={form.notes}
+            onChange={(e) => setForm({ ...form, notes: e.target.value })} rows={2}
+            className="w-full px-3 py-2 rounded-lg bg-background border border-border focus:border-gold outline-none text-sm resize-none" />
+        </div>
+
+        <div className="px-6 py-3 border-t border-border">
+          <div className="flex gap-2">
+            <button type="button" onClick={onClose} className="flex-1 py-2.5 rounded-full border border-border hover:border-gold transition text-sm">Hủy</button>
+            <button type="submit" disabled={submitting}
+              className="flex-[2] py-2.5 rounded-full bg-gradient-gold text-primary-foreground font-medium hover:shadow-gold transition text-sm flex items-center justify-center gap-2">
+              {submitting ? "Đang gửi..." : <><Calendar className="h-4 w-4" /> Xác nhận đặt chỗ</>}
+            </button>
+          </div>
+          <p className="text-[10px] text-muted-foreground mt-2 italic text-center">
+            Maître chỉ giới thiệu — thanh toán trực tiếp tại nhà hàng.
+          </p>
         </div>
       </form>
     </div>
