@@ -223,7 +223,7 @@ function PartnerPage() {
                     <Trash2 className="h-3 w-3" /> Xoá
                   </button>
                   <button onClick={saveRestaurant} disabled={!dirty}
-                    className={`px-4 py-2 rounded-full text-sm font-medium flex items-center gap-2 transition ${dirty ? "bg-gradient-gold text-primary-foreground shadow-gold animate-pulse ring-2 ring-gold/40" : "bg-card border border-border text-muted-foreground cursor-default"}`}>
+                    className={`px-4 py-2 rounded-full text-sm font-medium flex items-center gap-2 transition-all duration-200 ${dirty ? "bg-gradient-gold text-primary-foreground shadow-gold ring-2 ring-gold/40 hover:scale-105 hover:shadow-lg hover:ring-gold/70 active:scale-95 animate-pulse" : "bg-card border border-border text-muted-foreground hover:border-gold/40 hover:text-foreground"}`}>
                     <Save className="h-3 w-3" /> {dirty ? "Lưu thay đổi" : "Đã lưu"}
                   </button>
                 </div>
