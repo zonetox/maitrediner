@@ -356,7 +356,7 @@ function Table({ head, children }: any) {
 }
 
 function labelOf(t: Tab) {
-  return { overview: "Tổng quan", restaurants: "Nhà hàng", payments: "Thanh toán gói", users: "Người dùng", bookings: "Đặt chỗ", directory: "Danh mục & Địa điểm", settings: "Cấu hình" }[t];
+  return { overview: "Tổng quan", restaurants: "Nhà hàng", payments: "Thanh toán gói", plans: "Gói thành viên", users: "Người dùng", bookings: "Đặt chỗ", directory: "Danh mục & Địa điểm", settings: "Cấu hình" }[t];
 }
 
 function SettingsTab() {
