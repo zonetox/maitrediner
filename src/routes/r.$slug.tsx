@@ -807,9 +807,13 @@ function BookingModal({ r, menu, onClose, user }: any) {
             </label>
             <label className="relative">
               <span className="absolute -top-2 left-2 px-1 bg-card text-[9px] uppercase tracking-widest text-muted-foreground">Giờ</span>
-              <input required type="time" step={900} value={form.time} onChange={(e) => setForm({ ...form, time: e.target.value })}
-                className="w-full px-3 py-2.5 rounded-lg bg-background border border-border focus:border-gold outline-none text-sm [color-scheme:dark]" />
+              <select required value={form.time} onChange={(e) => setForm({ ...form, time: e.target.value })}
+                className="w-full px-3 py-2.5 rounded-lg bg-background border border-border focus:border-gold outline-none text-sm appearance-none cursor-pointer">
+                <option value="">--:--</option>
+                {timeSlots.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
+              </select>
             </label>
+
             <label className="relative">
               <span className="absolute -top-2 left-2 px-1 bg-card text-[9px] uppercase tracking-widest text-muted-foreground">Khách</span>
               <input required type="number" min={1} max={50} value={form.party_size}
