@@ -391,7 +391,7 @@ function InfoTab({ r, setR }: any) {
         <h3 className="font-serif text-xl mb-4 text-gold">Nội dung Landing page</h3>
       </div>
       <Field label="Tagline (Hero)" value={lc.hero_tagline} onChange={(v: any) => setLC("hero_tagline", v)} />
-      <Field label="Giờ mở cửa" value={lc.hours} onChange={(v: any) => setLC("hours", v)} />
+      <Field label="Giờ mở cửa (mỗi dòng một ngày)" value={lc.hours} onChange={(v: any) => setLC("hours", v)} textarea />
       <Field label="Tên bếp trưởng" value={lc.chef_name} onChange={(v: any) => setLC("chef_name", v)} />
       <Field label="Chức danh bếp trưởng" value={lc.chef_title} onChange={(v: any) => setLC("chef_title", v)} />
       <div className="md:col-span-2">
