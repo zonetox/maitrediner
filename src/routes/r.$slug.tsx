@@ -298,33 +298,45 @@ function RestaurantPage() {
                   </h2>
                 </div>
               </div>
-              <div className="grid md:grid-cols-3 gap-6">
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {deals.map((d) => {
                   const saved = savedDeals.has(d.id);
                   return (
                   <div role="button" tabIndex={0} key={d.id} onClick={() => setDeal(d)}
                     onKeyDown={(e) => { if (e.key === "Enter") setDeal(d); }}
-                    className="relative text-left p-8 rounded-2xl bg-card border border-border hover:border-gold transition group overflow-hidden cursor-pointer">
-                    <div className="absolute -top-10 -right-10 h-32 w-32 rounded-full bg-gradient-gold opacity-10 blur-2xl group-hover:opacity-20 transition" />
-                    <button type="button" onClick={(e) => { e.stopPropagation(); saveDeal(d.id); }}
-                      title={saved ? "Bỏ lưu ưu đãi" : "Lưu ưu đãi"}
-                      className={`absolute top-4 right-4 h-9 w-9 grid place-items-center rounded-full border transition ${saved ? "border-gold bg-gold/15 text-gold" : "border-border bg-background/60 hover:border-gold hover:text-gold"}`}>
-                      <Bookmark className={`h-4 w-4 ${saved ? "fill-gold" : ""}`} />
-                    </button>
-                    {d.badge && (
-                      <span className="text-[10px] tracking-widest uppercase px-2 py-1 rounded-full border border-gold text-gold">
-                        {d.badge}
-                      </span>
-                    )}
-                    <h3 className="font-serif text-2xl mt-4 group-hover:text-gold transition pr-10">{d.title}</h3>
-                    {d.description && <p className="text-sm text-muted-foreground mt-3 leading-relaxed line-clamp-3">{d.description}</p>}
-                    <div className="flex items-center justify-between mt-6 pt-4 border-t border-border text-xs">
-                      {d.expires_at ? (
-                        <span className="text-muted-foreground flex items-center gap-1">
-                          <Clock className="h-3 w-3" /> {new Date(d.expires_at).toLocaleDateString("vi-VN")}
+                    className="group relative flex flex-col h-full rounded-2xl bg-card border border-border hover:border-gold hover:-translate-y-1 transition overflow-hidden cursor-pointer">
+                    <div className="relative aspect-[16/10] overflow-hidden bg-secondary/40">
+                      {d.image_url ? (
+                        <img src={d.image_url} alt={d.title}
+                          className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition duration-700" />
+                      ) : (
+                        <div className="absolute inset-0 bg-gradient-to-br from-gold/20 via-card to-background grid place-items-center">
+                          <Sparkles className="h-10 w-10 text-gold/60" />
+                        </div>
+                      )}
+                      <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-background/10 to-transparent" />
+                      <button type="button" onClick={(e) => { e.stopPropagation(); saveDeal(d.id); }}
+                        title={saved ? "Bỏ lưu ưu đãi" : "Lưu ưu đãi"}
+                        className={`absolute top-3 right-3 h-9 w-9 grid place-items-center rounded-full border backdrop-blur transition ${saved ? "border-gold bg-gold/20 text-gold" : "border-border bg-background/60 hover:border-gold hover:text-gold"}`}>
+                        <Bookmark className={`h-4 w-4 ${saved ? "fill-gold" : ""}`} />
+                      </button>
+                      {d.badge && (
+                        <span className="absolute top-3 left-3 text-[10px] tracking-widest uppercase px-2 py-1 rounded-full border border-gold text-gold bg-background/70 backdrop-blur">
+                          {d.badge}
                         </span>
-                      ) : <span />}
-                      <span className="text-gold inline-flex items-center gap-1">Chi tiết <ArrowRight className="h-3 w-3" /></span>
+                      )}
+                    </div>
+                    <div className="p-5 flex flex-col flex-1">
+                      <h3 className="font-serif text-xl leading-snug group-hover:text-gold transition line-clamp-2 min-h-[3.25rem]">{d.title}</h3>
+                      {d.description && <p className="text-sm text-muted-foreground mt-2 leading-relaxed line-clamp-2">{d.description}</p>}
+                      <div className="flex items-center justify-between mt-auto pt-4 border-t border-border text-xs">
+                        {d.expires_at ? (
+                          <span className="text-muted-foreground flex items-center gap-1">
+                            <Clock className="h-3 w-3" /> {new Date(d.expires_at).toLocaleDateString("vi-VN")}
+                          </span>
+                        ) : <span />}
+                        <span className="text-gold inline-flex items-center gap-1 font-medium">Xem chi tiết <ArrowRight className="h-3 w-3" /></span>
+                      </div>
                     </div>
                   </div>
                   );
@@ -571,11 +583,18 @@ function DealModal({ deal, onClose, onBook, onSave }: { deal: any; onClose: () =
     <div className="fixed inset-0 z-[60] bg-background/90 backdrop-blur overflow-y-auto" onClick={onClose}>
       <div className="min-h-full grid place-items-center p-4">
         <div onClick={(e) => e.stopPropagation()}
-          className="bg-card border border-border rounded-2xl p-8 max-w-lg w-full shadow-elegant relative">
-          <button onClick={onClose} className="absolute top-4 right-4 h-9 w-9 grid place-items-center rounded-full hover:bg-secondary">
+          className="bg-card border border-border rounded-2xl max-w-lg w-full shadow-elegant relative overflow-hidden">
+          <button onClick={onClose} className="absolute top-4 right-4 z-10 h-9 w-9 grid place-items-center rounded-full bg-background/70 backdrop-blur hover:bg-secondary">
             <X className="h-4 w-4" />
           </button>
-          <Sparkles className="h-8 w-8 text-gold mb-4" />
+          {deal.image_url && (
+            <div className="relative aspect-[16/9] overflow-hidden bg-secondary/40">
+              <img src={deal.image_url} alt={deal.title} className="absolute inset-0 w-full h-full object-cover" />
+              <div className="absolute inset-0 bg-gradient-to-t from-card to-transparent" />
+            </div>
+          )}
+          <div className="p-8">
+          {!deal.image_url && <Sparkles className="h-8 w-8 text-gold mb-4" />}
           <div className="flex items-center gap-2 mb-3">
             {deal.badge && (
               <span className="text-[10px] tracking-widest uppercase px-2 py-1 rounded-full border border-gold text-gold">{deal.badge}</span>
