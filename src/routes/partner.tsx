@@ -60,10 +60,16 @@ function PartnerPage() {
     if (!user) return;
     const { data } = await supabase.from("restaurants").select("*").eq("owner_id", user.id).order("created_at");
     setRestaurants(data ?? []);
-    if (!selected && (data?.length ?? 0) > 0) setSelected(data![0]);
+    if (!selected && (data?.length ?? 0) > 0) {
+      setSelected(data![0]);
+      setSavedSnapshot(JSON.stringify(data![0]));
+    }
     if (selected) {
       const fresh = data?.find((r) => r.id === selected.id);
-      if (fresh) setSelected(fresh);
+      if (fresh && !dirty) {
+        setSelected(fresh);
+        setSavedSnapshot(JSON.stringify(fresh));
+      }
     }
   }
   useEffect(() => { load(); }, [user]);
