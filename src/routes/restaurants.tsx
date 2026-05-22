@@ -45,18 +45,20 @@ function RestaurantsPage() {
 
   useEffect(() => {
     (async () => {
-      const [{ data: cu }, { data: lo }, { data: rs }] = await Promise.all([
+      const [{ data: cu }, { data: lo }, { data: am }, { data: rs }] = await Promise.all([
         supabase.from("cuisine_categories").select("name").eq("is_active", true).order("sort_order"),
         supabase.from("locations").select("name").eq("is_active", true).order("sort_order"),
+        supabase.from("amenities").select("name").eq("is_active", true).order("sort_order"),
         supabase.from("restaurants").select("amenities").eq("is_published", true),
       ]);
       setCuisinesList(cu?.map((c: any) => c.name) ?? []);
       setCitiesList(lo?.map((c: any) => c.name) ?? []);
-      const set = new Set<string>();
+      const set = new Set<string>((am ?? []).map((a: any) => a.name));
       (rs ?? []).forEach((r: any) => (r.amenities || []).forEach((a: string) => a && set.add(a)));
-      setAmenitiesList(Array.from(set).sort());
+      setAmenitiesList(Array.from(set));
     })();
   }, []);
+
 
   useEffect(() => {
     setQ(params.q ?? "");
