@@ -618,3 +618,175 @@ function DirectoryTab() {
     </div>
   );
 }
+
+function PlansTab() {
+  const [plans, setPlans] = useState<any[]>([]);
+  const [editing, setEditing] = useState<any | null>(null);
+  const empty = { name: "", slug: "", tagline: "", duration_days: 30, price: 0, perks: [] as string[], is_popular: false, is_active: true, sort_order: 0 };
+
+  async function load() {
+    const { data } = await supabase.from("membership_plans").select("*").order("sort_order");
+    setPlans(data ?? []);
+  }
+  useEffect(() => { load(); }, []);
+
+  function slugify(s: string) {
+    return s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+      .replace(/đ/g, "d").replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+  }
+
+  async function save() {
+    if (!editing) return;
+    const payload = {
+      name: editing.name?.trim(),
+      slug: (editing.slug?.trim() || slugify(editing.name || "")),
+      tagline: editing.tagline || null,
+      duration_days: Number(editing.duration_days) || 30,
+      price: Number(editing.price) || 0,
+      perks: (editing.perks ?? []).filter((p: string) => p && p.trim()),
+      is_popular: !!editing.is_popular,
+      is_active: editing.is_active !== false,
+      sort_order: Number(editing.sort_order) || 0,
+    };
+    if (!payload.name) return toast.error("Nhập tên gói");
+    if (editing.id) {
+      const { error } = await supabase.from("membership_plans").update(payload).eq("id", editing.id);
+      if (error) return toast.error(error.message);
+    } else {
+      const { error } = await supabase.from("membership_plans").insert(payload);
+      if (error) return toast.error(error.message);
+    }
+    toast.success("Đã lưu gói");
+    setEditing(null); load();
+  }
+
+  async function remove(id: string) {
+    if (!confirm("Xoá gói này?")) return;
+    const { error } = await supabase.from("membership_plans").delete().eq("id", id);
+    if (error) return toast.error(error.message);
+    load();
+  }
+
+  async function toggle(p: any) {
+    await supabase.from("membership_plans").update({ is_active: !p.is_active }).eq("id", p.id);
+    load();
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="font-serif text-2xl flex items-center gap-2"><Crown className="h-5 w-5 text-gold" /> Gói thành viên</h2>
+          <p className="text-sm text-muted-foreground mt-1">Tạo, chỉnh sửa và quản lý các gói thành viên hiển thị cho nhà hàng.</p>
+        </div>
+        <button onClick={() => setEditing({ ...empty, sort_order: plans.length + 1 })}
+          className="px-4 py-2 rounded-full bg-gradient-gold text-primary-foreground text-sm font-medium inline-flex items-center gap-2">
+          <Plus className="h-4 w-4" /> Thêm gói mới
+        </button>
+      </div>
+
+      <div className="grid md:grid-cols-3 gap-4">
+        {plans.map((p) => (
+          <div key={p.id} className={`relative rounded-2xl border p-6 ${p.is_active ? "border-border bg-card" : "border-border/40 bg-card/40 opacity-70"} ${p.is_popular ? "ring-1 ring-gold/40" : ""}`}>
+            {p.is_popular && <span className="absolute -top-2 right-4 text-[10px] px-2 py-0.5 rounded-full bg-gradient-gold text-primary-foreground uppercase tracking-wider">Phổ biến</span>}
+            <div className="flex items-start justify-between gap-2">
+              <div>
+                <div className="font-serif text-xl">{p.name}</div>
+                <div className="text-xs text-muted-foreground">/{p.slug}</div>
+              </div>
+              <div className="flex gap-1">
+                <button onClick={() => toggle(p)} className="text-muted-foreground hover:text-gold p-1">
+                  {p.is_active ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+                </button>
+                <button onClick={() => setEditing({ ...p })} className="text-muted-foreground hover:text-gold p-1"><Edit3 className="h-4 w-4" /></button>
+                <button onClick={() => remove(p.id)} className="text-muted-foreground hover:text-destructive p-1"><Trash2 className="h-4 w-4" /></button>
+              </div>
+            </div>
+            {p.tagline && <p className="text-xs text-muted-foreground mt-1">{p.tagline}</p>}
+            <div className="mt-3 mb-3">
+              <span className="font-serif text-2xl text-gold">{Number(p.price).toLocaleString("vi-VN")}đ</span>
+              <span className="text-muted-foreground text-xs"> / {p.duration_days} ngày</span>
+            </div>
+            <ul className="space-y-1 text-xs text-muted-foreground">
+              {(p.perks ?? []).map((perk: string, i: number) => (
+                <li key={i} className="flex gap-1.5"><CheckCircle2 className="h-3 w-3 text-gold mt-0.5 shrink-0" />{perk}</li>
+              ))}
+            </ul>
+          </div>
+        ))}
+        {plans.length === 0 && <p className="text-sm text-muted-foreground italic md:col-span-3">Chưa có gói nào. Bấm "Thêm gói mới" để bắt đầu.</p>}
+      </div>
+
+      {editing && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto" onClick={() => setEditing(null)}>
+          <div className="bg-card border border-border rounded-2xl w-full max-w-2xl my-8 max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="p-6 border-b border-border flex items-center justify-between">
+              <h3 className="font-serif text-xl">{editing.id ? "Chỉnh sửa gói" : "Tạo gói mới"}</h3>
+              <button onClick={() => setEditing(null)} className="text-muted-foreground hover:text-foreground"><XCircle className="h-5 w-5" /></button>
+            </div>
+            <div className="p-6 space-y-4 text-sm">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs text-muted-foreground uppercase tracking-wider">Tên gói *</label>
+                  <input value={editing.name ?? ""} onChange={(e) => setEditing({ ...editing, name: e.target.value })}
+                    className="w-full mt-1 bg-background border border-border rounded-md px-3 py-2" />
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground uppercase tracking-wider">Slug</label>
+                  <input value={editing.slug ?? ""} onChange={(e) => setEditing({ ...editing, slug: e.target.value })}
+                    placeholder="tự tạo từ tên" className="w-full mt-1 bg-background border border-border rounded-md px-3 py-2 font-mono text-xs" />
+                </div>
+              </div>
+              <div>
+                <label className="text-xs text-muted-foreground uppercase tracking-wider">Mô tả ngắn</label>
+                <input value={editing.tagline ?? ""} onChange={(e) => setEditing({ ...editing, tagline: e.target.value })}
+                  className="w-full mt-1 bg-background border border-border rounded-md px-3 py-2" />
+              </div>
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <label className="text-xs text-muted-foreground uppercase tracking-wider">Giá (VND)</label>
+                  <input type="number" value={editing.price ?? 0} onChange={(e) => setEditing({ ...editing, price: e.target.value })}
+                    className="w-full mt-1 bg-background border border-border rounded-md px-3 py-2" />
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground uppercase tracking-wider">Thời hạn (ngày)</label>
+                  <input type="number" value={editing.duration_days ?? 30} onChange={(e) => setEditing({ ...editing, duration_days: e.target.value })}
+                    className="w-full mt-1 bg-background border border-border rounded-md px-3 py-2" />
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground uppercase tracking-wider">Thứ tự</label>
+                  <input type="number" value={editing.sort_order ?? 0} onChange={(e) => setEditing({ ...editing, sort_order: e.target.value })}
+                    className="w-full mt-1 bg-background border border-border rounded-md px-3 py-2" />
+                </div>
+              </div>
+              <div>
+                <label className="text-xs text-muted-foreground uppercase tracking-wider">Quyền lợi (mỗi dòng một mục)</label>
+                <textarea value={(editing.perks ?? []).join("\n")}
+                  onChange={(e) => setEditing({ ...editing, perks: e.target.value.split("\n") })}
+                  rows={6}
+                  placeholder="Trang landing đầy đủ&#10;Nhận đặt chỗ không giới hạn&#10;…"
+                  className="w-full mt-1 bg-background border border-border rounded-md px-3 py-2 text-sm" />
+              </div>
+              <div className="flex items-center gap-6">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" checked={!!editing.is_popular} onChange={(e) => setEditing({ ...editing, is_popular: e.target.checked })} />
+                  <span className="text-sm">Đánh dấu "Phổ biến"</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" checked={editing.is_active !== false} onChange={(e) => setEditing({ ...editing, is_active: e.target.checked })} />
+                  <span className="text-sm">Đang hoạt động</span>
+                </label>
+              </div>
+            </div>
+            <div className="p-6 border-t border-border flex justify-end gap-2">
+              <button onClick={() => setEditing(null)} className="px-4 py-2 rounded-md border border-border text-sm">Huỷ</button>
+              <button onClick={save} className="px-5 py-2 rounded-full bg-gradient-gold text-primary-foreground text-sm font-medium inline-flex items-center gap-2">
+                <Save className="h-3 w-3" /> Lưu gói
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
