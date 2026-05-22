@@ -131,7 +131,7 @@ function MembershipPublic() {
 
                     <Link to={ctaTo}
                       className={`block text-center w-full px-6 py-3 rounded-full font-medium transition ${
-                        p.popular
+                        p.is_popular
                           ? "bg-gradient-gold text-primary-foreground hover:shadow-gold"
                           : "border border-border hover:border-gold"
                       }`}>
