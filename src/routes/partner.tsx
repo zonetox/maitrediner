@@ -26,6 +26,7 @@ function PartnerPage() {
   const navigate = useNavigate();
   const [restaurants, setRestaurants] = useState<any[]>([]);
   const [selected, setSelected] = useState<any | null>(null);
+  const [savedSnapshot, setSavedSnapshot] = useState<string>("");
   const [tab, setTab] = useState<Tab>("info");
   const [menu, setMenu] = useState<any[]>([]);
   const [bookings, setBookings] = useState<any[]>([]);
@@ -33,6 +34,23 @@ function PartnerPage() {
   const [deals, setDeals] = useState<any[]>([]);
   const [createOpen, setCreateOpen] = useState(false);
   const [refreshTick, setRefreshTick] = useState(0);
+
+  const dirty = selected ? JSON.stringify(selected) !== savedSnapshot : false;
+
+  function selectRestaurant(r: any) {
+    if (dirty && selected && r?.id !== selected.id) {
+      if (!confirm("Bạn có thay đổi chưa lưu. Chuyển nhà hàng khác sẽ mất các thay đổi này. Tiếp tục?")) return;
+    }
+    setSelected(r);
+    setSavedSnapshot(r ? JSON.stringify(r) : "");
+  }
+
+  useEffect(() => {
+    if (!dirty) return;
+    const handler = (e: BeforeUnloadEvent) => { e.preventDefault(); e.returnValue = ""; };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [dirty]);
 
   useEffect(() => {
     if (!loading && !user) navigate({ to: "/auth", search: { mode: "login", as: "restaurant" } });
@@ -42,10 +60,16 @@ function PartnerPage() {
     if (!user) return;
     const { data } = await supabase.from("restaurants").select("*").eq("owner_id", user.id).order("created_at");
     setRestaurants(data ?? []);
-    if (!selected && (data?.length ?? 0) > 0) setSelected(data![0]);
+    if (!selected && (data?.length ?? 0) > 0) {
+      setSelected(data![0]);
+      setSavedSnapshot(JSON.stringify(data![0]));
+    }
     if (selected) {
       const fresh = data?.find((r) => r.id === selected.id);
-      if (fresh) setSelected(fresh);
+      if (fresh && !dirty) {
+        setSelected(fresh);
+        setSavedSnapshot(JSON.stringify(fresh));
+      }
     }
   }
   useEffect(() => { load(); }, [user]);
@@ -97,13 +121,19 @@ function PartnerPage() {
     const { data: all } = await supabase.from("restaurants").select("*").eq("owner_id", user!.id);
     setRestaurants(all ?? []);
     setSelected(data);
+    setSavedSnapshot(JSON.stringify(data));
   }
 
   async function saveRestaurant() {
     if (!selected) return;
     const { id, created_at, updated_at, owner_id, ...payload } = selected;
     const { error } = await supabase.from("restaurants").update(payload).eq("id", id);
-    if (error) toast.error(error.message); else { toast.success("Đã lưu"); load(); }
+    if (error) toast.error(error.message);
+    else {
+      toast.success("Đã lưu thay đổi");
+      setSavedSnapshot(JSON.stringify(selected));
+      load();
+    }
   }
 
   async function deleteRestaurant() {
@@ -135,9 +165,12 @@ function PartnerPage() {
               </button>
             </div>
             {restaurants.map((r) => (
-              <button key={r.id} onClick={() => setSelected(r)}
+              <button key={r.id} onClick={() => selectRestaurant(r)}
                 className={`w-full text-left p-3 rounded-lg border transition ${selected?.id === r.id ? "border-gold bg-card" : "border-border hover:bg-card"}`}>
-                <div className="font-serif text-sm">{r.name}</div>
+                <div className="font-serif text-sm flex items-center gap-1.5">
+                  {r.name}
+                  {selected?.id === r.id && dirty && <span className="h-1.5 w-1.5 rounded-full bg-amber-400 animate-pulse" title="Có thay đổi chưa lưu" />}
+                </div>
                 <div className="text-xs text-muted-foreground mt-1">{r.is_published ? "Đang công khai" : "Bản nháp"}</div>
               </button>
             ))}
@@ -189,11 +222,24 @@ function PartnerPage() {
                   <button onClick={deleteRestaurant} className="px-4 py-2 rounded-full border border-border text-sm flex items-center gap-2 hover:border-destructive hover:text-destructive">
                     <Trash2 className="h-3 w-3" /> Xoá
                   </button>
-                  <button onClick={saveRestaurant} className="px-4 py-2 rounded-full bg-gradient-gold text-primary-foreground text-sm font-medium flex items-center gap-2">
-                    <Save className="h-3 w-3" /> Lưu
+                  <button onClick={saveRestaurant} disabled={!dirty}
+                    className={`px-4 py-2 rounded-full text-sm font-medium flex items-center gap-2 transition ${dirty ? "bg-gradient-gold text-primary-foreground shadow-gold animate-pulse ring-2 ring-gold/40" : "bg-card border border-border text-muted-foreground cursor-default"}`}>
+                    <Save className="h-3 w-3" /> {dirty ? "Lưu thay đổi" : "Đã lưu"}
                   </button>
                 </div>
               </div>
+
+              {dirty && (
+                <div className="sticky top-16 z-20 mb-4 px-4 py-3 rounded-lg border border-amber-400/40 bg-amber-500/10 text-amber-200 text-sm flex items-center justify-between gap-3 backdrop-blur">
+                  <span className="flex items-center gap-2">
+                    <AlertTriangle className="h-4 w-4 shrink-0" />
+                    Bạn có thay đổi chưa lưu. Đừng quên nhấn <span className="font-semibold text-gold">"Lưu thay đổi"</span> để cập nhật trang nhà hàng.
+                  </span>
+                  <button onClick={saveRestaurant} className="shrink-0 px-3 py-1.5 rounded-full bg-gradient-gold text-primary-foreground text-xs font-medium inline-flex items-center gap-1.5">
+                    <Save className="h-3 w-3" /> Lưu ngay
+                  </button>
+                </div>
+              )}
 
               <div className="flex gap-2 border-b border-border mb-8 overflow-x-auto">
                 {([
