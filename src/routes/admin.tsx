@@ -586,6 +586,34 @@ function DirectoryTab() {
           {locations.length === 0 && <p className="text-sm text-muted-foreground italic">Chưa có địa điểm.</p>}
         </div>
       </Panel>
+
+      <Panel title={<span className="flex items-center gap-2"><Sparkles className="h-4 w-4 text-gold" /> Tiện ích nhà hàng</span> as any}>
+        <div className="flex gap-2 mb-4">
+          <input value={newAmenity.name} onChange={(e) => setNewAmenity({ ...newAmenity, name: e.target.value })}
+            placeholder="Tên tiện ích (vd: Phòng VIP)" className="flex-1 bg-background border border-border rounded-md px-3 py-2 text-sm" />
+          <input value={newAmenity.icon} onChange={(e) => setNewAmenity({ ...newAmenity, icon: e.target.value })}
+            placeholder="Icon (Lucide)" className="w-32 bg-background border border-border rounded-md px-3 py-2 text-sm font-mono" />
+          <button onClick={addAmenity} className="px-4 py-2 rounded-md bg-gradient-gold text-primary-foreground text-sm inline-flex items-center gap-1">
+            <Plus className="h-3 w-3" /> Thêm
+          </button>
+        </div>
+        <p className="text-[10px] text-muted-foreground mb-3">Tiện ích sẽ xuất hiện trong thanh tìm kiếm và bộ lọc nhà hàng.</p>
+        <div className="space-y-2">
+          {amenitiesList.map((a) => (
+            <div key={a.id} className="flex items-center gap-3 p-2 rounded-md border border-border bg-card/50">
+              <span className="text-xs text-muted-foreground font-mono w-20 truncate">{a.icon ?? "—"}</span>
+              <span className={`flex-1 font-serif ${a.is_active ? "" : "line-through text-muted-foreground"}`}>{a.name}</span>
+              <button onClick={() => toggleAmenity(a)} className="text-xs text-muted-foreground hover:text-gold">
+                {a.is_active ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+              </button>
+              <button onClick={() => removeAmenity(a.id)} className="text-muted-foreground hover:text-destructive">
+                <Trash2 className="h-4 w-4" />
+              </button>
+            </div>
+          ))}
+          {amenitiesList.length === 0 && <p className="text-sm text-muted-foreground italic">Chưa có tiện ích.</p>}
+        </div>
+      </Panel>
     </div>
   );
 }
