@@ -95,6 +95,9 @@ export function Hero() {
           alt=""
           width={1920}
           height={1280}
+          loading={i === 0 ? "eager" : "lazy"}
+          decoding="async"
+          fetchPriority={i === 0 ? "high" : "low" as any}
           className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-[1600ms] ${
             i === idx ? "opacity-100" : "opacity-0"
           }`}

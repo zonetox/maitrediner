@@ -9,6 +9,7 @@ import { notify } from "@/lib/notify.functions";
 import {
   MapPin, Phone, Clock, Heart, Calendar, Sparkles, Mail,
   Utensils, Wine, ChefHat, Star, ArrowRight, X, ChevronLeft, ChevronRight, Tag, Bookmark,
+  Shirt, Receipt, AlertCircle,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -145,7 +146,7 @@ function RestaurantPage() {
           <div className="relative mx-auto max-w-7xl px-6 w-full">
             <div className="flex items-center gap-3 mb-6">
               {r.logo_url && (
-                <img src={r.logo_url} alt={`${r.name} logo`} className="h-12 w-12 rounded-full object-cover border border-gold/40 bg-background/40 backdrop-blur" />
+                <img src={r.logo_url} alt={`${r.name} logo`} loading="lazy" decoding="async" className="h-12 w-12 rounded-full object-cover border border-gold/40 bg-background/40 backdrop-blur" />
               )}
               <span className="h-px w-12 bg-gold" />
               <span className="text-xs tracking-[0.3em] uppercase text-gold">{r.cuisine_type || "Fine dining"}</span>
@@ -172,7 +173,15 @@ function RestaurantPage() {
                   <Phone className="h-4 w-4 text-gold" /> {r.phone}
                 </span>
               )}
-              {r.price_range && (
+              {(r.price_per_guest_min || r.price_per_guest_max) ? (
+                <span className="flex items-center gap-2 text-muted-foreground">
+                  <Wine className="h-4 w-4 text-gold" />
+                  {r.price_per_guest_min ? `${Number(r.price_per_guest_min).toLocaleString("vi-VN")}₫` : ""}
+                  {r.price_per_guest_min && r.price_per_guest_max ? " – " : ""}
+                  {r.price_per_guest_max ? `${Number(r.price_per_guest_max).toLocaleString("vi-VN")}₫` : ""}
+                  <span className="text-xs">/ khách</span>
+                </span>
+              ) : r.price_range && (
                 <span className="flex items-center gap-2 text-muted-foreground">
                   <Wine className="h-4 w-4 text-gold" /> {r.price_range}
                 </span>
@@ -243,8 +252,49 @@ function RestaurantPage() {
               </div>
               <div className="relative aspect-[4/5] overflow-hidden rounded-2xl cursor-zoom-in"
                 onClick={() => openImage(gallery, 0)}>
-                <img src={gallery[0]} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                <img src={gallery[0]} alt="" loading="lazy" decoding="async" className="absolute inset-0 w-full h-full object-cover" />
                 <div className="absolute inset-0 bg-gradient-to-t from-background/40 to-transparent" />
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* GOOD TO KNOW — dress code, cancellation, deposit */}
+        {(r.dress_code || r.cancellation_policy || r.deposit_policy) && (
+          <section className="py-20 border-t border-border">
+            <div className="mx-auto max-w-6xl px-6">
+              <div className="text-center mb-12">
+                <span className="text-xs tracking-[0.3em] uppercase text-gold">Cần biết trước khi đến</span>
+                <h2 className="font-serif text-3xl md:text-4xl mt-3">Để chuẩn bị cho một trải nghiệm trọn vẹn</h2>
+              </div>
+              <div className="grid md:grid-cols-3 gap-5">
+                {r.dress_code && (
+                  <div className="p-6 rounded-2xl bg-card/60 border border-gold/20 hover:border-gold/60 transition">
+                    <div className="h-10 w-10 rounded-full bg-gradient-gold grid place-items-center mb-4">
+                      <Shirt className="h-4 w-4 text-primary-foreground" />
+                    </div>
+                    <h3 className="font-serif text-xl mb-2">Quy định trang phục</h3>
+                    <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line">{r.dress_code}</p>
+                  </div>
+                )}
+                {r.cancellation_policy && (
+                  <div className="p-6 rounded-2xl bg-card/60 border border-gold/20 hover:border-gold/60 transition">
+                    <div className="h-10 w-10 rounded-full bg-gradient-gold grid place-items-center mb-4">
+                      <AlertCircle className="h-4 w-4 text-primary-foreground" />
+                    </div>
+                    <h3 className="font-serif text-xl mb-2">Chính sách hủy bàn</h3>
+                    <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line">{r.cancellation_policy}</p>
+                  </div>
+                )}
+                {r.deposit_policy && (
+                  <div className="p-6 rounded-2xl bg-card/60 border border-gold/20 hover:border-gold/60 transition">
+                    <div className="h-10 w-10 rounded-full bg-gradient-gold grid place-items-center mb-4">
+                      <Receipt className="h-4 w-4 text-primary-foreground" />
+                    </div>
+                    <h3 className="font-serif text-xl mb-2">Chính sách đặt cọc</h3>
+                    <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line">{r.deposit_policy}</p>
+                  </div>
+                )}
               </div>
             </div>
           </section>
@@ -307,7 +357,7 @@ function RestaurantPage() {
                     className="group relative flex flex-col h-full rounded-2xl bg-card border border-border hover:border-gold hover:-translate-y-1 transition overflow-hidden cursor-pointer">
                     <div className="relative aspect-[16/10] overflow-hidden bg-secondary/40">
                       {d.image_url ? (
-                        <img src={d.image_url} alt={d.title}
+                        <img src={d.image_url} alt={d.title} loading="lazy" decoding="async"
                           className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition duration-700" />
                       ) : (
                         <div className="absolute inset-0 bg-gradient-to-br from-gold/20 via-card to-background grid place-items-center">
@@ -381,7 +431,7 @@ function RestaurantPage() {
                           >
                             <div className="relative aspect-[4/3] overflow-hidden bg-secondary/40">
                               {imgs[0] ? (
-                                <img src={imgs[0]} alt={m.name}
+                                <img src={imgs[0]} alt={m.name} loading="lazy" decoding="async"
                                   className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
                               ) : (
                                 <div className="w-full h-full grid place-items-center">
@@ -430,13 +480,28 @@ function RestaurantPage() {
               <h2 className="font-serif text-4xl md:text-5xl mt-3">Trải nghiệm thị giác</h2>
               <p className="text-sm text-muted-foreground mt-3">Bấm vào hình để phóng to</p>
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
-              {gallery.slice(0, 6).map((src, i) => (
-                <button type="button" key={i} onClick={() => openImage(gallery, i)}
-                  className={`overflow-hidden rounded-xl cursor-zoom-in ${i === 0 ? "md:col-span-2 md:row-span-2 aspect-square" : "aspect-square"}`}>
-                  <img src={src} alt="" className="w-full h-full object-cover hover:scale-105 transition duration-700" />
-                </button>
-              ))}
+            {/* Asymmetric bento layout */}
+            <div className="grid grid-cols-6 auto-rows-[110px] md:auto-rows-[150px] gap-3 md:gap-4">
+              {gallery.slice(0, 7).map((src, i) => {
+                // Custom asymmetric span pattern for a curated, magazine feel
+                const spans = [
+                  "col-span-4 row-span-3",            // 0 — hero image
+                  "col-span-2 row-span-2",            // 1
+                  "col-span-2 row-span-1",            // 2
+                  "col-span-3 row-span-2",            // 3
+                  "col-span-3 row-span-2",            // 4
+                  "col-span-2 row-span-2",            // 5
+                  "col-span-4 row-span-2",            // 6
+                ];
+                return (
+                  <button type="button" key={i} onClick={() => openImage(gallery, i)}
+                    className={`group overflow-hidden rounded-xl cursor-zoom-in relative ${spans[i] ?? "col-span-2 row-span-1"}`}>
+                    <img src={src} alt="" loading="lazy" decoding="async"
+                      className="w-full h-full object-cover group-hover:scale-105 transition duration-700" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-background/30 to-transparent opacity-0 group-hover:opacity-100 transition" />
+                  </button>
+                );
+              })}
             </div>
           </div>
         </section>
@@ -696,6 +761,8 @@ function HeroMedia({ r, lc, cover, gallery, onZoom }: { r: any; lc: any; cover: 
       <>
         {slides.map((s, i) => (
           <img key={i} src={s.image} alt={s.title || r.name}
+            loading={i === 0 ? "eager" : "lazy"} decoding="async"
+            fetchPriority={i === 0 ? "high" : "low" as any}
             onClick={() => onZoom(slides.map((x) => x.image), i)}
             className={`absolute inset-0 w-full h-full object-cover scale-105 cursor-zoom-in transition-opacity duration-1000 ${i === idx ? "opacity-100" : "opacity-0"}`} />
         ))}
