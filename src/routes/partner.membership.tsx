@@ -59,6 +59,7 @@ function MembershipPage() {
 
   async function submit() {
     if (!user || !restaurantId) return toast.error("Chọn nhà hàng");
+    if (!plan) return toast.error("Chọn gói thành viên");
     setSubmitting(true);
     const { error } = await supabase.from("membership_payments").insert({
       user_id: user.id,
@@ -74,6 +75,7 @@ function MembershipPage() {
     toast.success("Đã gửi yêu cầu. Admin sẽ duyệt trong 24 giờ.");
     setProofUrl(""); setNote("");
   }
+
 
   if (loading) return <div className="min-h-screen bg-background" />;
   if (!user) return null;
