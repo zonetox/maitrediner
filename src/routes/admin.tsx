@@ -515,6 +515,22 @@ function DirectoryTab() {
   async function toggleLocation(l: any) {
     await supabase.from("locations").update({ is_active: !l.is_active }).eq("id", l.id); load();
   }
+  async function addAmenity() {
+    if (!newAmenity.name.trim()) return;
+    const { error } = await supabase.from("amenities").insert({
+      name: newAmenity.name.trim(), slug: slugify(newAmenity.name), icon: newAmenity.icon || null,
+      sort_order: amenitiesList.length + 1,
+    });
+    if (error) return toast.error(error.message);
+    setNewAmenity({ name: "", icon: "Sparkles" }); load();
+  }
+  async function removeAmenity(id: string) {
+    if (!confirm("Xoá tiện ích này?")) return;
+    await supabase.from("amenities").delete().eq("id", id); load();
+  }
+  async function toggleAmenity(a: any) {
+    await supabase.from("amenities").update({ is_active: !a.is_active }).eq("id", a.id); load();
+  }
 
   return (
     <div className="grid lg:grid-cols-2 gap-6">
