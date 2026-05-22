@@ -246,7 +246,6 @@ function PartnerPage() {
                   { k: "info", l: "Thông tin & Landing page", badge: 0 },
                   { k: "menu", l: `Menu (${menu.length})`, badge: 0 },
                   { k: "bookings", l: `Đặt chỗ (${bookings.length})`, badge: pendingBookings },
-                  { k: "orders", l: `Đơn món (${orders.length})`, badge: pendingOrders },
                   { k: "deals", l: `Ưu đãi (${deals.length})`, badge: 0 },
                 ] as { k: Tab; l: string; badge: number }[]).map((t) => (
                   <button key={t.k} onClick={() => setTab(t.k)}
@@ -263,7 +262,6 @@ function PartnerPage() {
               {tab === "info" && <InfoTab r={selected} setR={setSelected} />}
               {tab === "menu" && <MenuTab restaurantId={selected.id} menu={menu} reload={reload} />}
               {tab === "bookings" && <BookingsTab bookings={bookings} restaurantId={selected.id} reload={reload} />}
-              {tab === "orders" && <OrdersTab orders={orders} restaurantId={selected.id} reload={reload} />}
               {tab === "deals" && <DealsTab restaurantId={selected.id} deals={deals} reload={reload} />}
             </section>
           ) : (
