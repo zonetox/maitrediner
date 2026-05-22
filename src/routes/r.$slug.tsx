@@ -8,7 +8,7 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { notify } from "@/lib/notify.functions";
 import {
   MapPin, Phone, Clock, Heart, Calendar, Sparkles, Mail,
-  Utensils, Wine, ChefHat, Star, ArrowRight, ShoppingBag, Plus, Minus, Trash2,
+  Utensils, Wine, ChefHat, Star, ArrowRight, X, ChevronLeft, ChevronRight, Tag, Bookmark,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -40,13 +40,9 @@ function RestaurantPage() {
   const [deals, setDeals] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showBook, setShowBook] = useState(false);
-  const [showOrder, setShowOrder] = useState(false);
-  const [cart, setCart] = useState<Record<string, number>>({});
-  function addToCart(id: string) {
-    setCart((c) => ({ ...c, [id]: (c[id] || 0) + 1 }));
-    toast.success("Đã thêm vào giỏ");
-  }
-  const cartCount = Object.values(cart).reduce((a, b) => a + b, 0);
+  const [dish, setDish] = useState<any | null>(null);
+  const [deal, setDeal] = useState<any | null>(null);
+  const [lightbox, setLightbox] = useState<{ list: string[]; index: number } | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -68,6 +64,12 @@ function RestaurantPage() {
     if (!user) return toast.error("Vui lòng đăng nhập để lưu yêu thích");
     const { error } = await supabase.from("favorites").insert({ user_id: user.id, restaurant_id: r.id });
     if (error) toast.error(error.message); else toast.success("Đã lưu vào yêu thích");
+  }
+
+  async function saveDeal(id: string) {
+    if (!user) return toast.error("Vui lòng đăng nhập để lưu ưu đãi");
+    const { error } = await supabase.from("favorites").insert({ user_id: user.id, deal_id: id });
+    if (error) toast.error(error.message); else toast.success("Đã lưu ưu đãi");
   }
 
   if (loading) return <div className="min-h-screen bg-background" />;
@@ -96,15 +98,18 @@ function RestaurantPage() {
     { day: "Chủ nhật", time: "11:00 – 15:00 · 18:00 – 22:00" },
   ];
 
+  function openImage(list: string[], index: number) { setLightbox({ list, index }); }
+
   return (
     <div className="min-h-screen bg-background text-foreground">
       <SiteHeader />
       <main>
         {/* HERO */}
         <section className="relative min-h-[92vh] flex items-end pb-20 overflow-hidden">
-          <img src={cover} alt={r.name} className="absolute inset-0 w-full h-full object-cover scale-105" />
-          <div className="absolute inset-0 bg-gradient-hero" />
-          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/30 to-transparent" />
+          <img src={cover} alt={r.name} className="absolute inset-0 w-full h-full object-cover scale-105 cursor-zoom-in"
+            onClick={() => openImage([cover, ...gallery], 0)} />
+          <div className="absolute inset-0 bg-gradient-hero pointer-events-none" />
+          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/30 to-transparent pointer-events-none" />
           <div className="relative mx-auto max-w-7xl px-6 w-full">
             <div className="flex items-center gap-3 mb-6">
               <span className="h-px w-12 bg-gold" />
@@ -148,14 +153,14 @@ function RestaurantPage() {
                 className="px-8 py-4 rounded-full bg-gradient-gold text-primary-foreground font-medium hover:shadow-gold transition flex items-center gap-2">
                 <Calendar className="h-4 w-4" /> Đặt chỗ ngay
               </button>
-              <button onClick={() => setShowOrder(true)}
-                className="px-8 py-4 rounded-full border border-gold text-gold hover:bg-gold/10 transition flex items-center gap-2">
-                <ShoppingBag className="h-4 w-4" /> Đặt món
-                {cartCount > 0 && <span className="ml-1 h-5 min-w-5 px-1.5 grid place-items-center rounded-full bg-gradient-gold text-primary-foreground text-xs">{cartCount}</span>}
-              </button>
-              <a href="#menu" className="px-8 py-4 rounded-full border border-border hover:border-gold transition">
+              <a href="#menu" className="px-8 py-4 rounded-full border border-gold text-gold hover:bg-gold/10 transition">
                 Xem thực đơn
               </a>
+              {r.phone && (
+                <a href={`tel:${r.phone}`} className="px-8 py-4 rounded-full border border-border hover:border-gold transition flex items-center gap-2">
+                  <Phone className="h-4 w-4" /> Gọi nhà hàng
+                </a>
+              )}
               <button onClick={addFavorite} className="px-8 py-4 rounded-full border border-border hover:border-gold flex items-center gap-2 transition">
                 <Heart className="h-4 w-4" /> Lưu
               </button>
@@ -173,7 +178,7 @@ function RestaurantPage() {
                   {lc.story_title || "Triết lý ẩm thực"}
                 </h2>
                 <div className="hairline w-32 my-8" />
-                <p className="text-muted-foreground leading-loose text-lg font-serif italic">
+                <p className="text-muted-foreground leading-loose text-lg font-serif italic whitespace-pre-line">
                   {lc.story || "Mỗi món ăn là một bản hòa tấu của hương vị, nguyên liệu tuyển chọn và bàn tay của người đầu bếp tận tâm."}
                 </p>
                 {lc.chef_name && (
@@ -190,7 +195,8 @@ function RestaurantPage() {
                   </div>
                 )}
               </div>
-              <div className="relative aspect-[4/5] overflow-hidden rounded-2xl">
+              <div className="relative aspect-[4/5] overflow-hidden rounded-2xl cursor-zoom-in"
+                onClick={() => openImage(gallery, 0)}>
                 <img src={gallery[0]} alt="" className="absolute inset-0 w-full h-full object-cover" />
                 <div className="absolute inset-0 bg-gradient-to-t from-background/40 to-transparent" />
               </div>
@@ -205,10 +211,12 @@ function RestaurantPage() {
               <div className="text-center mb-16">
                 <span className="text-xs tracking-[0.3em] uppercase text-gold">Signature</span>
                 <h2 className="font-serif text-4xl md:text-5xl mt-3">Món signature của bếp trưởng</h2>
+                <p className="text-sm text-muted-foreground mt-3">Bấm vào món để xem chi tiết</p>
               </div>
               <div className="grid md:grid-cols-3 gap-6">
                 {signatures.map((s, i) => (
-                  <article key={s.id} className="group">
+                  <button type="button" key={s.id} onClick={() => setDish(s)}
+                    className="group text-left">
                     <div className="aspect-[4/5] overflow-hidden rounded-2xl bg-card">
                       <img
                         src={s.image_url || gallery[(i + 1) % gallery.length]}
@@ -218,14 +226,14 @@ function RestaurantPage() {
                     </div>
                     <div className="mt-5 flex items-start justify-between gap-4">
                       <div>
-                        <h3 className="font-serif text-2xl">{s.name}</h3>
+                        <h3 className="font-serif text-2xl group-hover:text-gold transition">{s.name}</h3>
                         {s.description && <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{s.description}</p>}
                       </div>
                       <div className="text-gold font-serif text-xl whitespace-nowrap">
                         {Number(s.price).toLocaleString("vi-VN")}₫
                       </div>
                     </div>
-                  </article>
+                  </button>
                 ))}
               </div>
             </div>
@@ -246,21 +254,25 @@ function RestaurantPage() {
               </div>
               <div className="grid md:grid-cols-3 gap-6">
                 {deals.map((d) => (
-                  <div key={d.id} className="relative p-8 rounded-2xl bg-card border border-border hover:border-gold transition group overflow-hidden">
+                  <button type="button" key={d.id} onClick={() => setDeal(d)}
+                    className="relative text-left p-8 rounded-2xl bg-card border border-border hover:border-gold transition group overflow-hidden">
                     <div className="absolute -top-10 -right-10 h-32 w-32 rounded-full bg-gradient-gold opacity-10 blur-2xl group-hover:opacity-20 transition" />
                     {d.badge && (
                       <span className="text-[10px] tracking-widest uppercase px-2 py-1 rounded-full border border-gold text-gold">
                         {d.badge}
                       </span>
                     )}
-                    <h3 className="font-serif text-2xl mt-4">{d.title}</h3>
-                    {d.description && <p className="text-sm text-muted-foreground mt-3 leading-relaxed">{d.description}</p>}
-                    {d.expires_at && (
-                      <p className="text-xs text-muted-foreground mt-4 flex items-center gap-1">
-                        <Clock className="h-3 w-3" /> Hết hạn {new Date(d.expires_at).toLocaleDateString("vi-VN")}
-                      </p>
-                    )}
-                  </div>
+                    <h3 className="font-serif text-2xl mt-4 group-hover:text-gold transition">{d.title}</h3>
+                    {d.description && <p className="text-sm text-muted-foreground mt-3 leading-relaxed line-clamp-3">{d.description}</p>}
+                    <div className="flex items-center justify-between mt-6 pt-4 border-t border-border text-xs">
+                      {d.expires_at ? (
+                        <span className="text-muted-foreground flex items-center gap-1">
+                          <Clock className="h-3 w-3" /> {new Date(d.expires_at).toLocaleDateString("vi-VN")}
+                        </span>
+                      ) : <span />}
+                      <span className="text-gold inline-flex items-center gap-1">Chi tiết <ArrowRight className="h-3 w-3" /></span>
+                    </div>
+                  </button>
                 ))}
               </div>
             </div>
@@ -276,6 +288,7 @@ function RestaurantPage() {
                 <Utensils className="h-7 w-7 text-gold" /> À la carte
               </h2>
               <div className="hairline w-40 mx-auto mt-8" />
+              <p className="text-sm text-muted-foreground mt-4">Bấm vào từng món để xem chi tiết và hình ảnh</p>
             </div>
             {menu.length === 0 ? (
               <p className="text-center text-muted-foreground italic">Đang cập nhật thực đơn...</p>
@@ -284,41 +297,32 @@ function RestaurantPage() {
                 {Object.entries(menuByCat).map(([cat, items]) => (
                   <div key={cat}>
                     <h3 className="font-serif text-2xl text-gold mb-6 tracking-wide">{cat}</h3>
-                    <div className="space-y-8">
+                    <div className="space-y-2">
                       {items.map((m) => {
                         const imgs: string[] = (m.image_urls?.length ? m.image_urls : (m.image_url ? [m.image_url] : []));
                         return (
-                          <div key={m.id} className="grid md:grid-cols-[1fr_auto] gap-6 py-5 border-b border-border/60">
-                            <div className="flex-1">
-                              <div className="flex justify-between items-start gap-4">
-                                <h4 className="font-serif text-xl flex items-center gap-2 flex-wrap">
-                                  {m.name}
-                                  {m.is_signature && (
-                                    <span className="text-[10px] uppercase tracking-widest text-gold border border-gold px-2 py-0.5 rounded-full">
-                                      Signature
-                                    </span>
-                                  )}
-                                </h4>
-                                <div className="text-gold font-serif text-xl whitespace-nowrap">
-                                  {Number(m.price).toLocaleString("vi-VN")}₫
-                                </div>
+                          <button type="button" key={m.id} onClick={() => setDish(m)}
+                            className="w-full text-left grid md:grid-cols-[80px_1fr_auto] gap-5 items-center p-4 rounded-xl hover:bg-secondary/40 border border-transparent hover:border-border transition group">
+                            {imgs[0] ? (
+                              <div className="hidden md:block w-20 h-20 rounded-lg overflow-hidden bg-card">
+                                <img src={imgs[0]} alt={m.name} className="w-full h-full object-cover group-hover:scale-105 transition" />
                               </div>
-                              {m.description && <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">{m.description}</p>}
-                              {imgs.length > 0 && (
-                                <div className="grid grid-cols-3 gap-2 mt-4 max-w-sm">
-                                  {imgs.slice(0, 3).map((src, i) => (
-                                    <div key={i} className="aspect-square overflow-hidden rounded-lg bg-card">
-                                      <img src={src} alt={m.name} className="w-full h-full object-cover hover:scale-105 transition duration-500" />
-                                    </div>
-                                  ))}
-                                </div>
-                              )}
-                              <button onClick={() => addToCart(m.id)}
-                                className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-full border border-gold/60 text-gold text-xs hover:bg-gold/10 transition">
-                                <Plus className="h-3 w-3" /> Thêm vào giỏ
-                              </button>
+                            ) : <div className="hidden md:block w-20 h-20 rounded-lg bg-secondary/40 grid place-items-center"><Utensils className="h-5 w-5 text-muted-foreground" /></div>}
+                            <div className="min-w-0">
+                              <h4 className="font-serif text-xl flex items-center gap-2 flex-wrap group-hover:text-gold transition">
+                                {m.name}
+                                {m.is_signature && (
+                                  <span className="text-[10px] uppercase tracking-widest text-gold border border-gold px-2 py-0.5 rounded-full">
+                                    Signature
+                                  </span>
+                                )}
+                              </h4>
+                              {m.description && <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed line-clamp-2">{m.description}</p>}
                             </div>
-                          </div>
+                            <div className="text-gold font-serif text-xl whitespace-nowrap text-right">
+                              {Number(m.price).toLocaleString("vi-VN")}₫
+                            </div>
+                          </button>
                         );
                       })}
                     </div>
@@ -335,12 +339,14 @@ function RestaurantPage() {
             <div className="text-center mb-12">
               <span className="text-xs tracking-[0.3em] uppercase text-gold">Không gian</span>
               <h2 className="font-serif text-4xl md:text-5xl mt-3">Trải nghiệm thị giác</h2>
+              <p className="text-sm text-muted-foreground mt-3">Bấm vào hình để phóng to</p>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
               {gallery.slice(0, 6).map((src, i) => (
-                <div key={i} className={`overflow-hidden rounded-xl ${i === 0 ? "md:col-span-2 md:row-span-2 aspect-square" : "aspect-square"}`}>
+                <button type="button" key={i} onClick={() => openImage(gallery, i)}
+                  className={`overflow-hidden rounded-xl cursor-zoom-in ${i === 0 ? "md:col-span-2 md:row-span-2 aspect-square" : "aspect-square"}`}>
                   <img src={src} alt="" className="w-full h-full object-cover hover:scale-105 transition duration-700" />
-                </div>
+                </button>
               ))}
             </div>
           </div>
@@ -405,21 +411,153 @@ function RestaurantPage() {
       </main>
       <SiteFooter />
 
-      {/* Sticky reserve bar */}
+      {/* Sticky reserve bar - mobile */}
       <div className="fixed bottom-0 inset-x-0 z-40 md:hidden bg-background/95 backdrop-blur border-t border-border p-4 flex gap-2">
         <button onClick={() => setShowBook(true)}
           className="flex-1 py-3 rounded-full bg-gradient-gold text-primary-foreground font-medium flex items-center justify-center gap-2">
-          <Calendar className="h-4 w-4" /> Đặt chỗ
+          <Calendar className="h-4 w-4" /> Đặt chỗ ngay
         </button>
-        <button onClick={() => setShowOrder(true)}
-          className="flex-1 py-3 rounded-full border border-gold text-gold font-medium flex items-center justify-center gap-2 relative">
-          <ShoppingBag className="h-4 w-4" /> Đặt món
-          {cartCount > 0 && <span className="absolute -top-1 -right-1 h-5 min-w-5 px-1 grid place-items-center rounded-full bg-gradient-gold text-primary-foreground text-[10px]">{cartCount}</span>}
-        </button>
+        {r.phone && (
+          <a href={`tel:${r.phone}`} className="px-5 py-3 rounded-full border border-gold text-gold font-medium flex items-center justify-center gap-2">
+            <Phone className="h-4 w-4" />
+          </a>
+        )}
       </div>
 
       {showBook && <BookingModal r={r} onClose={() => setShowBook(false)} user={user} />}
-      {showOrder && <OrderModal r={r} menu={menu} cart={cart} setCart={setCart} onClose={() => setShowOrder(false)} user={user} />}
+      {dish && <DishModal dish={dish} fallback={gallery} onClose={() => setDish(null)} onBook={() => { setDish(null); setShowBook(true); }} onZoom={(list, idx) => openImage(list, idx)} />}
+      {deal && <DealModal deal={deal} onClose={() => setDeal(null)} onBook={() => { setDeal(null); setShowBook(true); }} onSave={() => saveDeal(deal.id)} />}
+      {lightbox && <Lightbox list={lightbox.list} index={lightbox.index} onClose={() => setLightbox(null)} onIndex={(i) => setLightbox({ ...lightbox, index: i })} />}
+    </div>
+  );
+}
+
+function DishModal({ dish, fallback, onClose, onBook, onZoom }: { dish: any; fallback: string[]; onClose: () => void; onBook: () => void; onZoom: (list: string[], i: number) => void }) {
+  const imgs: string[] = (dish.image_urls?.length ? dish.image_urls : (dish.image_url ? [dish.image_url] : [])).filter(Boolean);
+  const display = imgs.length ? imgs : [fallback[0]];
+  const [active, setActive] = useState(0);
+  return (
+    <div className="fixed inset-0 z-[60] bg-background/90 backdrop-blur overflow-y-auto" onClick={onClose}>
+      <div className="min-h-full grid place-items-center p-4">
+        <div onClick={(e) => e.stopPropagation()}
+          className="bg-card border border-border rounded-2xl max-w-3xl w-full shadow-elegant overflow-hidden relative">
+          <button onClick={onClose} className="absolute top-4 right-4 z-10 h-9 w-9 grid place-items-center rounded-full bg-background/70 backdrop-blur hover:bg-gold hover:text-primary-foreground">
+            <X className="h-4 w-4" />
+          </button>
+          <div className="grid md:grid-cols-2">
+            <div className="bg-secondary/40">
+              <button type="button" onClick={() => onZoom(display, active)} className="block w-full aspect-square overflow-hidden cursor-zoom-in">
+                <img src={display[active]} alt={dish.name} className="w-full h-full object-cover hover:scale-105 transition" />
+              </button>
+              {display.length > 1 && (
+                <div className="grid grid-cols-4 gap-1 p-1">
+                  {display.slice(0, 4).map((src, i) => (
+                    <button key={i} type="button" onClick={() => setActive(i)}
+                      className={`aspect-square overflow-hidden rounded ${i === active ? "ring-2 ring-gold" : "opacity-70 hover:opacity-100"}`}>
+                      <img src={src} alt="" className="w-full h-full object-cover" />
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+            <div className="p-6 md:p-8 flex flex-col">
+              <div className="flex items-center gap-2 mb-3">
+                {dish.is_signature && (
+                  <span className="text-[10px] uppercase tracking-widest text-gold border border-gold px-2 py-0.5 rounded-full">Signature</span>
+                )}
+                <span className="text-[10px] uppercase tracking-widest text-muted-foreground">À la carte</span>
+              </div>
+              <h3 className="font-serif text-3xl leading-tight">{dish.name}</h3>
+              <div className="text-gold font-serif text-2xl mt-2">{Number(dish.price).toLocaleString("vi-VN")}₫</div>
+              {dish.description && (
+                <p className="text-sm text-muted-foreground mt-4 leading-relaxed whitespace-pre-line">{dish.description}</p>
+              )}
+              <div className="mt-auto pt-6 flex gap-2">
+                <button onClick={onBook}
+                  className="flex-1 py-3 rounded-full bg-gradient-gold text-primary-foreground font-medium hover:shadow-gold transition flex items-center justify-center gap-2">
+                  <Calendar className="h-4 w-4" /> Đặt chỗ để thưởng thức
+                </button>
+              </div>
+              <p className="text-[11px] text-muted-foreground mt-3 text-center italic">
+                Maître là kênh giới thiệu — giao dịch & thanh toán thực hiện trực tiếp tại nhà hàng.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function DealModal({ deal, onClose, onBook, onSave }: { deal: any; onClose: () => void; onBook: () => void; onSave: () => void }) {
+  return (
+    <div className="fixed inset-0 z-[60] bg-background/90 backdrop-blur overflow-y-auto" onClick={onClose}>
+      <div className="min-h-full grid place-items-center p-4">
+        <div onClick={(e) => e.stopPropagation()}
+          className="bg-card border border-border rounded-2xl p-8 max-w-lg w-full shadow-elegant relative">
+          <button onClick={onClose} className="absolute top-4 right-4 h-9 w-9 grid place-items-center rounded-full hover:bg-secondary">
+            <X className="h-4 w-4" />
+          </button>
+          <Sparkles className="h-8 w-8 text-gold mb-4" />
+          <div className="flex items-center gap-2 mb-3">
+            {deal.badge && (
+              <span className="text-[10px] tracking-widest uppercase px-2 py-1 rounded-full border border-gold text-gold">{deal.badge}</span>
+            )}
+            {deal.tag && (
+              <span className="flex items-center gap-1 text-xs text-gold"><Tag className="h-3 w-3" /> {deal.tag}</span>
+            )}
+          </div>
+          <h3 className="font-serif text-3xl leading-tight">{deal.title}</h3>
+          {deal.description && (
+            <p className="text-sm text-muted-foreground mt-4 leading-relaxed whitespace-pre-line">{deal.description}</p>
+          )}
+          {deal.expires_at && (
+            <p className="text-xs text-muted-foreground mt-4 flex items-center gap-1">
+              <Clock className="h-3 w-3" /> Hết hạn {new Date(deal.expires_at).toLocaleDateString("vi-VN")}
+            </p>
+          )}
+          <div className="mt-6 p-4 rounded-xl bg-background/60 border border-border text-xs text-muted-foreground leading-relaxed">
+            Trình màn hình ưu đãi này tại nhà hàng khi đặt chỗ để được áp dụng. Mỗi ưu đãi có thể đi kèm điều kiện riêng từ nhà hàng.
+          </div>
+          <div className="flex gap-2 mt-6">
+            <button onClick={onSave} className="flex-1 py-3 rounded-full border border-gold text-gold hover:bg-gold/10 transition flex items-center justify-center gap-2">
+              <Bookmark className="h-4 w-4" /> Lưu ưu đãi
+            </button>
+            <button onClick={onBook} className="flex-1 py-3 rounded-full bg-gradient-gold text-primary-foreground font-medium hover:shadow-gold transition flex items-center justify-center gap-2">
+              <Calendar className="h-4 w-4" /> Đặt chỗ
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Lightbox({ list, index, onClose, onIndex }: { list: string[]; index: number; onClose: () => void; onIndex: (i: number) => void }) {
+  const prev = () => onIndex((index - 1 + list.length) % list.length);
+  const next = () => onIndex((index + 1) % list.length);
+  return (
+    <div className="fixed inset-0 z-[70] bg-black/95 grid place-items-center p-4" onClick={onClose}>
+      <button onClick={onClose} className="absolute top-4 right-4 h-10 w-10 grid place-items-center rounded-full bg-white/10 hover:bg-white/20 text-white">
+        <X className="h-5 w-5" />
+      </button>
+      {list.length > 1 && (
+        <>
+          <button onClick={(e) => { e.stopPropagation(); prev(); }} className="absolute left-4 top-1/2 -translate-y-1/2 h-12 w-12 grid place-items-center rounded-full bg-white/10 hover:bg-white/20 text-white">
+            <ChevronLeft className="h-6 w-6" />
+          </button>
+          <button onClick={(e) => { e.stopPropagation(); next(); }} className="absolute right-4 top-1/2 -translate-y-1/2 h-12 w-12 grid place-items-center rounded-full bg-white/10 hover:bg-white/20 text-white">
+            <ChevronRight className="h-6 w-6" />
+          </button>
+        </>
+      )}
+      <img src={list[index]} alt="" onClick={(e) => e.stopPropagation()}
+        className="max-h-[90vh] max-w-[92vw] object-contain rounded-lg" />
+      {list.length > 1 && (
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white/70 text-xs tracking-widest">
+          {index + 1} / {list.length}
+        </div>
+      )}
     </div>
   );
 }
@@ -445,9 +583,9 @@ function BookingModal({ r, onClose, user }: any) {
     onClose();
   }
   return (
-    <div className="fixed inset-0 z-[60] bg-background/85 backdrop-blur grid place-items-center p-4 overflow-y-auto" onClick={onClose}>
+    <div className="fixed inset-0 z-[80] bg-background/85 backdrop-blur grid place-items-center p-4 overflow-y-auto" onClick={onClose}>
       <form onSubmit={submit} onClick={(e) => e.stopPropagation()}
-        className="bg-card border border-border rounded-2xl p-8 max-w-md w-full shadow-elegant">
+        className="bg-card border border-border rounded-2xl p-8 max-w-md w-full shadow-elegant my-8">
         <span className="text-xs tracking-[0.3em] uppercase text-gold">Reservation</span>
         <h3 className="font-serif text-3xl mt-2 mb-1">Đặt chỗ tại {r.name}</h3>
         <p className="text-sm text-muted-foreground mb-6">Nhà hàng sẽ liên hệ để xác nhận trong vòng 30 phút.</p>
@@ -464,134 +602,18 @@ function BookingModal({ r, onClose, user }: any) {
             <input required type="number" min={1} placeholder="Số khách" value={form.party_size} onChange={(e) => setForm({ ...form, party_size: +e.target.value })}
               className="px-4 py-3 rounded-lg bg-background border border-border focus:border-gold outline-none transition" />
           </div>
-          <textarea placeholder="Yêu cầu đặc biệt (sinh nhật, kỷ niệm, dị ứng...)" value={form.notes}
+          <textarea placeholder="Yêu cầu đặc biệt (sinh nhật, kỷ niệm, dị ứng, ưu đãi áp dụng...)" value={form.notes}
             onChange={(e) => setForm({ ...form, notes: e.target.value })} rows={3}
             className="w-full px-4 py-3 rounded-lg bg-background border border-border focus:border-gold outline-none transition" />
         </div>
-        <div className="flex gap-2 mt-6">
+        <p className="text-[11px] text-muted-foreground mt-4 italic text-center">
+          Maître chỉ giới thiệu nhà hàng — không xử lý thanh toán. Thanh toán diễn ra trực tiếp giữa khách và nhà hàng.
+        </p>
+        <div className="flex gap-2 mt-4">
           <button type="button" onClick={onClose} className="flex-1 py-3 rounded-full border border-border hover:border-gold transition">Hủy</button>
           <button type="submit" disabled={submitting}
             className="flex-1 py-3 rounded-full bg-gradient-gold text-primary-foreground font-medium hover:shadow-gold transition">
             {submitting ? "Đang gửi..." : <span className="flex items-center justify-center gap-2"><Calendar className="h-4 w-4" /> Xác nhận</span>}
-          </button>
-        </div>
-      </form>
-    </div>
-  );
-}
-
-function OrderModal({ r, menu, cart, setCart, onClose, user }: any) {
-  const notifyFn = useServerFn(notify);
-  const [form, setForm] = useState({
-    guest_name: "", guest_phone: "", guest_email: user?.email ?? "",
-    pickup_at: "", notes: "",
-  });
-  const [submitting, setSubmitting] = useState(false);
-
-  const items = menu.filter((m: any) => cart[m.id] > 0).map((m: any) => ({
-    id: m.id, name: m.name, price: Number(m.price), qty: cart[m.id],
-  }));
-  const total = items.reduce((s: number, i: any) => s + i.price * i.qty, 0);
-
-  function inc(id: string) { setCart((c: any) => ({ ...c, [id]: (c[id] || 0) + 1 })); }
-  function dec(id: string) {
-    setCart((c: any) => {
-      const next = { ...c };
-      if (next[id] > 1) next[id]--; else delete next[id];
-      return next;
-    });
-  }
-  function removeItem(id: string) {
-    setCart((c: any) => { const n = { ...c }; delete n[id]; return n; });
-  }
-
-  async function submit(e: React.FormEvent) {
-    e.preventDefault();
-    if (items.length === 0) return toast.error("Vui lòng chọn ít nhất một món");
-    setSubmitting(true);
-    const { data: row, error } = await supabase.from("orders").insert({
-      restaurant_id: r.id,
-      user_id: user?.id ?? null,
-      guest_name: form.guest_name,
-      guest_phone: form.guest_phone,
-      items: items as any,
-      total_amount: total,
-      notes: form.pickup_at ? `Thời gian: ${new Date(form.pickup_at).toLocaleString("vi-VN")}\n${form.notes}` : form.notes,
-    }).select().single();
-    setSubmitting(false);
-    if (error) return toast.error(error.message);
-    toast.success("Đã gửi yêu cầu đặt món. Nhà hàng sẽ liên hệ xác nhận.");
-    if (row) notifyFn({ data: { type: "order", restaurantId: r.id, recordId: row.id } }).catch(() => {});
-    setCart({}); onClose();
-  }
-
-  return (
-    <div className="fixed inset-0 z-[60] bg-background/85 backdrop-blur grid place-items-center p-4 overflow-y-auto" onClick={onClose}>
-      <form onSubmit={submit} onClick={(e) => e.stopPropagation()}
-        className="bg-card border border-border rounded-2xl p-6 max-w-2xl w-full shadow-elegant my-8">
-        <span className="text-xs tracking-[0.3em] uppercase text-gold">Order</span>
-        <h3 className="font-serif text-3xl mt-2 mb-1 flex items-center gap-3">
-          <ShoppingBag className="h-6 w-6 text-gold" /> Đặt món tại {r.name}
-        </h3>
-        <p className="text-sm text-muted-foreground mb-6">Chọn món, thời gian nhận và gửi yêu cầu. Nhà hàng sẽ xác nhận trong vòng 15 phút.</p>
-
-        <div className="space-y-2 mb-4 max-h-72 overflow-y-auto pr-2">
-          {items.length === 0 ? (
-            <div className="text-center py-12 border border-dashed border-border rounded-xl">
-              <Utensils className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
-              <p className="text-sm text-muted-foreground">Chưa có món trong giỏ. Cuộn lên menu để chọn món.</p>
-            </div>
-          ) : items.map((it: any) => (
-            <div key={it.id} className="flex items-center gap-3 p-3 rounded-lg bg-background border border-border">
-              <div className="flex-1">
-                <p className="font-serif">{it.name}</p>
-                <p className="text-xs text-gold">{it.price.toLocaleString("vi-VN")}₫</p>
-              </div>
-              <div className="flex items-center gap-2">
-                <button type="button" onClick={() => dec(it.id)} className="h-7 w-7 grid place-items-center rounded-full border border-border hover:border-gold">
-                  <Minus className="h-3 w-3" />
-                </button>
-                <span className="w-6 text-center font-serif">{it.qty}</span>
-                <button type="button" onClick={() => inc(it.id)} className="h-7 w-7 grid place-items-center rounded-full border border-border hover:border-gold">
-                  <Plus className="h-3 w-3" />
-                </button>
-                <button type="button" onClick={() => removeItem(it.id)} className="ml-2 text-muted-foreground hover:text-destructive">
-                  <Trash2 className="h-4 w-4" />
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {items.length > 0 && (
-          <div className="flex justify-between items-center py-4 border-t border-border mb-4">
-            <span className="text-sm text-muted-foreground uppercase tracking-wider">Tổng tạm tính</span>
-            <span className="font-serif text-2xl text-gold">{total.toLocaleString("vi-VN")}₫</span>
-          </div>
-        )}
-
-        <div className="space-y-3">
-          <div className="grid grid-cols-2 gap-3">
-            <input required placeholder="Họ tên" value={form.guest_name} onChange={(e) => setForm({ ...form, guest_name: e.target.value })}
-              className="w-full px-4 py-3 rounded-lg bg-background border border-border focus:border-gold outline-none" />
-            <input required placeholder="Số điện thoại" value={form.guest_phone} onChange={(e) => setForm({ ...form, guest_phone: e.target.value })}
-              className="w-full px-4 py-3 rounded-lg bg-background border border-border focus:border-gold outline-none" />
-          </div>
-          <div>
-            <label className="text-xs uppercase tracking-wider text-muted-foreground">Thời gian nhận / phục vụ</label>
-            <input required type="datetime-local" value={form.pickup_at} onChange={(e) => setForm({ ...form, pickup_at: e.target.value })}
-              className="w-full mt-2 px-4 py-3 rounded-lg bg-background border border-border focus:border-gold outline-none" />
-          </div>
-          <textarea placeholder="Ghi chú (giao hàng, dị ứng, yêu cầu chế biến...)" value={form.notes}
-            onChange={(e) => setForm({ ...form, notes: e.target.value })} rows={2}
-            className="w-full px-4 py-3 rounded-lg bg-background border border-border focus:border-gold outline-none" />
-        </div>
-
-        <div className="flex gap-2 mt-6">
-          <button type="button" onClick={onClose} className="flex-1 py-3 rounded-full border border-border hover:border-gold">Đóng</button>
-          <button type="submit" disabled={submitting || items.length === 0}
-            className="flex-1 py-3 rounded-full bg-gradient-gold text-primary-foreground font-medium hover:shadow-gold transition disabled:opacity-60">
-            {submitting ? "Đang gửi..." : "Xác nhận đặt món"}
           </button>
         </div>
       </form>
