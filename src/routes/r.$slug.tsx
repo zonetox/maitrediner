@@ -446,7 +446,7 @@ function RestaurantPage() {
         )}
       </div>
 
-      {showBook && <BookingModal r={r} onClose={() => setShowBook(false)} user={user} />}
+      {showBook && <BookingModal r={r} menu={menu} onClose={() => setShowBook(false)} user={user} />}
       {dish && <DishModal dish={dish} fallback={gallery} onClose={() => setDish(null)} onBook={() => { setDish(null); setShowBook(true); }} onZoom={(list, idx) => openImage(list, idx)} />}
       {deal && <DealModal deal={deal} onClose={() => setDeal(null)} onBook={() => { setDeal(null); setShowBook(true); }} onSave={() => saveDeal(deal.id)} />}
       {lightbox && <Lightbox list={lightbox.list} index={lightbox.index} onClose={() => setLightbox(null)} onIndex={(i) => setLightbox({ ...lightbox, index: i })} />}
