@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TermsRouteImport } from './routes/terms'
+import { Route as SignatureRouteImport } from './routes/signature'
 import { Route as RestaurantsRouteImport } from './routes/restaurants'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as PrivacyRouteImport } from './routes/privacy'
@@ -26,6 +27,11 @@ import { Route as PartnerMembershipRouteImport } from './routes/partner.membersh
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
   path: '/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SignatureRoute = SignatureRouteImport.update({
+  id: '/signature',
+  path: '/signature',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RestaurantsRoute = RestaurantsRouteImport.update({
@@ -100,6 +106,7 @@ export interface FileRoutesByFullPath {
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/restaurants': typeof RestaurantsRoute
+  '/signature': typeof SignatureRoute
   '/terms': typeof TermsRoute
   '/partner/membership': typeof PartnerMembershipRoute
   '/r/$slug': typeof RSlugRoute
@@ -115,6 +122,7 @@ export interface FileRoutesByTo {
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/restaurants': typeof RestaurantsRoute
+  '/signature': typeof SignatureRoute
   '/terms': typeof TermsRoute
   '/partner/membership': typeof PartnerMembershipRoute
   '/r/$slug': typeof RSlugRoute
@@ -131,6 +139,7 @@ export interface FileRoutesById {
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/restaurants': typeof RestaurantsRoute
+  '/signature': typeof SignatureRoute
   '/terms': typeof TermsRoute
   '/partner/membership': typeof PartnerMembershipRoute
   '/r/$slug': typeof RSlugRoute
@@ -148,6 +157,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/reset-password'
     | '/restaurants'
+    | '/signature'
     | '/terms'
     | '/partner/membership'
     | '/r/$slug'
@@ -163,6 +173,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/reset-password'
     | '/restaurants'
+    | '/signature'
     | '/terms'
     | '/partner/membership'
     | '/r/$slug'
@@ -178,6 +189,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/reset-password'
     | '/restaurants'
+    | '/signature'
     | '/terms'
     | '/partner/membership'
     | '/r/$slug'
@@ -194,6 +206,7 @@ export interface RootRouteChildren {
   PrivacyRoute: typeof PrivacyRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   RestaurantsRoute: typeof RestaurantsRoute
+  SignatureRoute: typeof SignatureRoute
   TermsRoute: typeof TermsRoute
   RSlugRoute: typeof RSlugRoute
 }
@@ -205,6 +218,13 @@ declare module '@tanstack/react-router' {
       path: '/terms'
       fullPath: '/terms'
       preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/signature': {
+      id: '/signature'
+      path: '/signature'
+      fullPath: '/signature'
+      preLoaderRoute: typeof SignatureRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/restaurants': {
@@ -316,6 +336,7 @@ const rootRouteChildren: RootRouteChildren = {
   PrivacyRoute: PrivacyRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   RestaurantsRoute: RestaurantsRoute,
+  SignatureRoute: SignatureRoute,
   TermsRoute: TermsRoute,
   RSlugRoute: RSlugRoute,
 }
