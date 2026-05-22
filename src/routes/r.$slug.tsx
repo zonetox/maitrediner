@@ -146,7 +146,7 @@ function RestaurantPage() {
           <div className="relative mx-auto max-w-7xl px-6 w-full">
             <div className="flex items-center gap-3 mb-6">
               {r.logo_url && (
-                <img src={r.logo_url} alt={`${r.name} logo`} className="h-12 w-12 rounded-full object-cover border border-gold/40 bg-background/40 backdrop-blur" />
+                <img src={r.logo_url} alt={`${r.name} logo`} loading="lazy" decoding="async" className="h-12 w-12 rounded-full object-cover border border-gold/40 bg-background/40 backdrop-blur" />
               )}
               <span className="h-px w-12 bg-gold" />
               <span className="text-xs tracking-[0.3em] uppercase text-gold">{r.cuisine_type || "Fine dining"}</span>
@@ -252,7 +252,7 @@ function RestaurantPage() {
               </div>
               <div className="relative aspect-[4/5] overflow-hidden rounded-2xl cursor-zoom-in"
                 onClick={() => openImage(gallery, 0)}>
-                <img src={gallery[0]} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                <img src={gallery[0]} alt="" loading="lazy" decoding="async" className="absolute inset-0 w-full h-full object-cover" />
                 <div className="absolute inset-0 bg-gradient-to-t from-background/40 to-transparent" />
               </div>
             </div>
@@ -357,7 +357,7 @@ function RestaurantPage() {
                     className="group relative flex flex-col h-full rounded-2xl bg-card border border-border hover:border-gold hover:-translate-y-1 transition overflow-hidden cursor-pointer">
                     <div className="relative aspect-[16/10] overflow-hidden bg-secondary/40">
                       {d.image_url ? (
-                        <img src={d.image_url} alt={d.title}
+                        <img src={d.image_url} alt={d.title} loading="lazy" decoding="async"
                           className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition duration-700" />
                       ) : (
                         <div className="absolute inset-0 bg-gradient-to-br from-gold/20 via-card to-background grid place-items-center">
@@ -431,7 +431,7 @@ function RestaurantPage() {
                           >
                             <div className="relative aspect-[4/3] overflow-hidden bg-secondary/40">
                               {imgs[0] ? (
-                                <img src={imgs[0]} alt={m.name}
+                                <img src={imgs[0]} alt={m.name} loading="lazy" decoding="async"
                                   className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
                               ) : (
                                 <div className="w-full h-full grid place-items-center">
