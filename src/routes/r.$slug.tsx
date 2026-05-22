@@ -480,13 +480,28 @@ function RestaurantPage() {
               <h2 className="font-serif text-4xl md:text-5xl mt-3">Trải nghiệm thị giác</h2>
               <p className="text-sm text-muted-foreground mt-3">Bấm vào hình để phóng to</p>
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
-              {gallery.slice(0, 6).map((src, i) => (
-                <button type="button" key={i} onClick={() => openImage(gallery, i)}
-                  className={`overflow-hidden rounded-xl cursor-zoom-in ${i === 0 ? "md:col-span-2 md:row-span-2 aspect-square" : "aspect-square"}`}>
-                  <img src={src} alt="" className="w-full h-full object-cover hover:scale-105 transition duration-700" />
-                </button>
-              ))}
+            {/* Asymmetric bento layout */}
+            <div className="grid grid-cols-6 auto-rows-[110px] md:auto-rows-[150px] gap-3 md:gap-4">
+              {gallery.slice(0, 7).map((src, i) => {
+                // Custom asymmetric span pattern for a curated, magazine feel
+                const spans = [
+                  "col-span-4 row-span-3",            // 0 — hero image
+                  "col-span-2 row-span-2",            // 1
+                  "col-span-2 row-span-1",            // 2
+                  "col-span-3 row-span-2",            // 3
+                  "col-span-3 row-span-2",            // 4
+                  "col-span-2 row-span-2",            // 5
+                  "col-span-4 row-span-2",            // 6
+                ];
+                return (
+                  <button type="button" key={i} onClick={() => openImage(gallery, i)}
+                    className={`group overflow-hidden rounded-xl cursor-zoom-in relative ${spans[i] ?? "col-span-2 row-span-1"}`}>
+                    <img src={src} alt="" loading="lazy" decoding="async"
+                      className="w-full h-full object-cover group-hover:scale-105 transition duration-700" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-background/30 to-transparent opacity-0 group-hover:opacity-100 transition" />
+                  </button>
+                );
+              })}
             </div>
           </div>
         </section>
