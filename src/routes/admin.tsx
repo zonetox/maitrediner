@@ -464,15 +464,18 @@ function fmtDate(d: string | null) {
 function DirectoryTab() {
   const [cuisines, setCuisines] = useState<any[]>([]);
   const [locations, setLocations] = useState<any[]>([]);
+  const [amenitiesList, setAmenitiesList] = useState<any[]>([]);
   const [newCuisine, setNewCuisine] = useState({ name: "", icon: "Utensils" });
   const [newLocation, setNewLocation] = useState("");
+  const [newAmenity, setNewAmenity] = useState({ name: "", icon: "Sparkles" });
 
   async function load() {
-    const [{ data: cu }, { data: lo }] = await Promise.all([
+    const [{ data: cu }, { data: lo }, { data: am }] = await Promise.all([
       supabase.from("cuisine_categories").select("*").order("sort_order"),
       supabase.from("locations").select("*").order("sort_order"),
+      supabase.from("amenities").select("*").order("sort_order"),
     ]);
-    setCuisines(cu ?? []); setLocations(lo ?? []);
+    setCuisines(cu ?? []); setLocations(lo ?? []); setAmenitiesList(am ?? []);
   }
   useEffect(() => { load(); }, []);
 
