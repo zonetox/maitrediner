@@ -26,6 +26,7 @@ function PartnerPage() {
   const navigate = useNavigate();
   const [restaurants, setRestaurants] = useState<any[]>([]);
   const [selected, setSelected] = useState<any | null>(null);
+  const [savedSnapshot, setSavedSnapshot] = useState<string>("");
   const [tab, setTab] = useState<Tab>("info");
   const [menu, setMenu] = useState<any[]>([]);
   const [bookings, setBookings] = useState<any[]>([]);
@@ -33,6 +34,23 @@ function PartnerPage() {
   const [deals, setDeals] = useState<any[]>([]);
   const [createOpen, setCreateOpen] = useState(false);
   const [refreshTick, setRefreshTick] = useState(0);
+
+  const dirty = selected ? JSON.stringify(selected) !== savedSnapshot : false;
+
+  function selectRestaurant(r: any) {
+    if (dirty && selected && r?.id !== selected.id) {
+      if (!confirm("Bạn có thay đổi chưa lưu. Chuyển nhà hàng khác sẽ mất các thay đổi này. Tiếp tục?")) return;
+    }
+    setSelected(r);
+    setSavedSnapshot(r ? JSON.stringify(r) : "");
+  }
+
+  useEffect(() => {
+    if (!dirty) return;
+    const handler = (e: BeforeUnloadEvent) => { e.preventDefault(); e.returnValue = ""; };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [dirty]);
 
   useEffect(() => {
     if (!loading && !user) navigate({ to: "/auth", search: { mode: "login", as: "restaurant" } });
