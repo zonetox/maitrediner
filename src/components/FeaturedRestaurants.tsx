@@ -8,6 +8,7 @@ import r2 from "@/assets/restaurant-2.jpg";
 import r3 from "@/assets/restaurant-3.jpg";
 import r4 from "@/assets/restaurant-4.jpg";
 import { Star, MapPin, Heart, ArrowRight } from "lucide-react";
+import { img } from "@/lib/img";
 
 const FALLBACKS = [
   { img: r1, name: "Lumière", slug: "lumiere-demo", cuisine_type: "Fine dining Pháp", city: "Quận 1, TP.HCM", rating: 4.9, price_range: "₫₫₫₫", id: null as string | null, cover_image_url: r1 },
