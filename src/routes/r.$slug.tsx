@@ -173,7 +173,15 @@ function RestaurantPage() {
                   <Phone className="h-4 w-4 text-gold" /> {r.phone}
                 </span>
               )}
-              {r.price_range && (
+              {(r.price_per_guest_min || r.price_per_guest_max) ? (
+                <span className="flex items-center gap-2 text-muted-foreground">
+                  <Wine className="h-4 w-4 text-gold" />
+                  {r.price_per_guest_min ? `${Number(r.price_per_guest_min).toLocaleString("vi-VN")}₫` : ""}
+                  {r.price_per_guest_min && r.price_per_guest_max ? " – " : ""}
+                  {r.price_per_guest_max ? `${Number(r.price_per_guest_max).toLocaleString("vi-VN")}₫` : ""}
+                  <span className="text-xs">/ khách</span>
+                </span>
+              ) : r.price_range && (
                 <span className="flex items-center gap-2 text-muted-foreground">
                   <Wine className="h-4 w-4 text-gold" /> {r.price_range}
                 </span>
