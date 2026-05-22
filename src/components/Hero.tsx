@@ -171,34 +171,23 @@ export function Hero() {
                   className="bg-transparent text-sm outline-none flex-1 placeholder:text-muted-foreground"
                 />
               </div>
-              <div className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-secondary/60 transition border-l border-border">
-                <Utensils className="h-4 w-4 text-gold shrink-0" />
-                <select
+              <div className="border-l border-border">
+                <LuxSelect
                   value={cuisine}
-                  onChange={(e) => setCuisine(e.target.value)}
-                  className="bg-transparent text-sm outline-none flex-1 text-muted-foreground appearance-none cursor-pointer"
-                >
-                  <option value="">Loại nhà hàng</option>
-                  <option>Fine dining</option>
-                  <option>Omakase</option>
-                  <option>Steakhouse</option>
-                  <option>Pháp</option>
-                  <option>Ý</option>
-                  <option>Việt</option>
-                </select>
+                  onChange={setCuisine}
+                  placeholder="Loại nhà hàng"
+                  options={CUISINES}
+                  icon={<Utensils className="h-4 w-4" />}
+                />
               </div>
-              <div className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-secondary/60 transition border-l border-border">
-                <MapPin className="h-4 w-4 text-gold shrink-0" />
-                <select
+              <div className="border-l border-border">
+                <LuxSelect
                   value={city}
-                  onChange={(e) => setCity(e.target.value)}
-                  className="bg-transparent text-sm outline-none flex-1 text-muted-foreground appearance-none cursor-pointer"
-                >
-                  <option value="">Địa điểm</option>
-                  <option>TP.HCM</option>
-                  <option>Hà Nội</option>
-                  <option>Đà Nẵng</option>
-                </select>
+                  onChange={setCity}
+                  placeholder="Địa điểm"
+                  options={CITIES}
+                  icon={<MapPin className="h-4 w-4" />}
+                />
               </div>
               <button
                 type="submit"
