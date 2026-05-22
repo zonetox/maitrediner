@@ -577,10 +577,13 @@ export type Database = {
         Row: {
           address: string | null
           amenities: string[]
+          cancellation_policy: string | null
           city: string | null
           cover_image_url: string | null
           created_at: string
           cuisine_type: string | null
+          deposit_policy: string | null
+          dress_code: string | null
           email: string | null
           id: string
           is_featured: boolean
@@ -592,6 +595,8 @@ export type Database = {
           name: string
           owner_id: string
           phone: string | null
+          price_per_guest_max: number | null
+          price_per_guest_min: number | null
           price_range: string | null
           rating: number | null
           short_description: string | null
@@ -602,10 +607,13 @@ export type Database = {
         Insert: {
           address?: string | null
           amenities?: string[]
+          cancellation_policy?: string | null
           city?: string | null
           cover_image_url?: string | null
           created_at?: string
           cuisine_type?: string | null
+          deposit_policy?: string | null
+          dress_code?: string | null
           email?: string | null
           id?: string
           is_featured?: boolean
@@ -617,6 +625,8 @@ export type Database = {
           name: string
           owner_id: string
           phone?: string | null
+          price_per_guest_max?: number | null
+          price_per_guest_min?: number | null
           price_range?: string | null
           rating?: number | null
           short_description?: string | null
@@ -627,10 +637,13 @@ export type Database = {
         Update: {
           address?: string | null
           amenities?: string[]
+          cancellation_policy?: string | null
           city?: string | null
           cover_image_url?: string | null
           created_at?: string
           cuisine_type?: string | null
+          deposit_policy?: string | null
+          dress_code?: string | null
           email?: string | null
           id?: string
           is_featured?: boolean
@@ -642,6 +655,8 @@ export type Database = {
           name?: string
           owner_id?: string
           phone?: string | null
+          price_per_guest_max?: number | null
+          price_per_guest_min?: number | null
           price_range?: string | null
           rating?: number | null
           short_description?: string | null
