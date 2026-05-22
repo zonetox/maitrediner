@@ -85,6 +85,36 @@ export type Database = {
           },
         ]
       }
+      cuisine_categories: {
+        Row: {
+          created_at: string
+          icon: string | null
+          id: string
+          is_active: boolean
+          name: string
+          slug: string
+          sort_order: number
+        }
+        Insert: {
+          created_at?: string
+          icon?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          slug: string
+          sort_order?: number
+        }
+        Update: {
+          created_at?: string
+          icon?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          slug?: string
+          sort_order?: number
+        }
+        Relationships: []
+      }
       deals: {
         Row: {
           badge: string | null
@@ -173,6 +203,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      locations: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          slug: string
+          sort_order: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          slug: string
+          sort_order?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          slug?: string
+          sort_order?: number
+        }
+        Relationships: []
       }
       membership_payments: {
         Row: {
@@ -444,6 +501,7 @@ export type Database = {
       restaurants: {
         Row: {
           address: string | null
+          amenities: string[]
           city: string | null
           cover_image_url: string | null
           created_at: string
@@ -468,6 +526,7 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          amenities?: string[]
           city?: string | null
           cover_image_url?: string | null
           created_at?: string
@@ -492,6 +551,7 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          amenities?: string[]
           city?: string | null
           cover_image_url?: string | null
           created_at?: string
