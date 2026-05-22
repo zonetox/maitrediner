@@ -43,6 +43,8 @@ function RestaurantPage() {
   const [dish, setDish] = useState<any | null>(null);
   const [deal, setDeal] = useState<any | null>(null);
   const [lightbox, setLightbox] = useState<{ list: string[]; index: number } | null>(null);
+  const [isFav, setIsFav] = useState(false);
+  const [savedDeals, setSavedDeals] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     (async () => {
@@ -60,39 +62,48 @@ function RestaurantPage() {
     })();
   }, [slug]);
 
+  // Load favorite state for current user
+  useEffect(() => {
+    (async () => {
+      if (!user || !r) { setIsFav(false); setSavedDeals(new Set()); return; }
+      const { data } = await supabase
+        .from("favorites")
+        .select("restaurant_id, deal_id")
+        .eq("user_id", user.id);
+      const favs = data ?? [];
+      setIsFav(favs.some((f: any) => f.restaurant_id === r.id));
+      setSavedDeals(new Set(favs.filter((f: any) => f.deal_id).map((f: any) => f.deal_id)));
+    })();
+  }, [user, r]);
+
   async function addFavorite() {
     if (!user) return toast.error("Vui lòng đăng nhập để lưu yêu thích");
-    const { data: existing } = await supabase
-      .from("favorites")
-      .select("id")
-      .eq("user_id", user.id)
-      .eq("restaurant_id", r.id)
-      .maybeSingle();
-    if (existing) {
-      const { error } = await supabase.from("favorites").delete().eq("id", existing.id);
+    if (isFav) {
+      const { error } = await supabase.from("favorites").delete().eq("user_id", user.id).eq("restaurant_id", r.id);
       if (error) return toast.error(error.message);
+      setIsFav(false);
       return toast.success("Đã bỏ khỏi yêu thích");
     }
     const { error } = await supabase.from("favorites").insert({ user_id: user.id, restaurant_id: r.id });
-    if (error) toast.error(error.message); else toast.success("Đã lưu vào yêu thích");
+    if (error) return toast.error(error.message);
+    setIsFav(true);
+    toast.success("Đã lưu vào yêu thích");
   }
 
   async function saveDeal(id: string) {
     if (!user) return toast.error("Vui lòng đăng nhập để lưu ưu đãi");
-    const { data: existing } = await supabase
-      .from("favorites")
-      .select("id")
-      .eq("user_id", user.id)
-      .eq("deal_id", id)
-      .maybeSingle();
-    if (existing) {
-      const { error } = await supabase.from("favorites").delete().eq("id", existing.id);
+    if (savedDeals.has(id)) {
+      const { error } = await supabase.from("favorites").delete().eq("user_id", user.id).eq("deal_id", id);
       if (error) return toast.error(error.message);
+      setSavedDeals((s) => { const n = new Set(s); n.delete(id); return n; });
       return toast.success("Đã bỏ ưu đãi khỏi yêu thích");
     }
     const { error } = await supabase.from("favorites").insert({ user_id: user.id, deal_id: id });
-    if (error) toast.error(error.message); else toast.success("Đã lưu ưu đãi");
+    if (error) return toast.error(error.message);
+    setSavedDeals((s) => new Set(s).add(id));
+    toast.success("Đã lưu ưu đãi");
   }
+
 
   if (loading) return <div className="min-h-screen bg-background" />;
   if (!r) return (
