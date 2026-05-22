@@ -9,7 +9,7 @@ import { notify } from "@/lib/notify.functions";
 import {
   MapPin, Phone, Clock, Heart, Calendar, Sparkles, Mail,
   Utensils, Wine, ChefHat, Star, ArrowRight, X, ChevronLeft, ChevronRight, Tag, Bookmark,
-  Shirt, Receipt, AlertCircle,
+  Shirt, AlertCircle,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -259,15 +259,15 @@ function RestaurantPage() {
           </section>
         )}
 
-        {/* GOOD TO KNOW — dress code, cancellation, deposit */}
-        {(r.dress_code || r.cancellation_policy || r.deposit_policy) && (
+        {/* GOOD TO KNOW — dress code, cancellation */}
+        {(r.dress_code || r.cancellation_policy) && (
           <section className="py-20 border-t border-border">
             <div className="mx-auto max-w-6xl px-6">
               <div className="text-center mb-12">
                 <span className="text-xs tracking-[0.3em] uppercase text-gold">Cần biết trước khi đến</span>
                 <h2 className="font-serif text-3xl md:text-4xl mt-3">Để chuẩn bị cho một trải nghiệm trọn vẹn</h2>
               </div>
-              <div className="grid md:grid-cols-3 gap-5">
+              <div className="grid md:grid-cols-2 gap-5 max-w-3xl mx-auto">
                 {r.dress_code && (
                   <div className="p-6 rounded-2xl bg-card/60 border border-gold/20 hover:border-gold/60 transition">
                     <div className="h-10 w-10 rounded-full bg-gradient-gold grid place-items-center mb-4">
@@ -286,19 +286,12 @@ function RestaurantPage() {
                     <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line">{r.cancellation_policy}</p>
                   </div>
                 )}
-                {r.deposit_policy && (
-                  <div className="p-6 rounded-2xl bg-card/60 border border-gold/20 hover:border-gold/60 transition">
-                    <div className="h-10 w-10 rounded-full bg-gradient-gold grid place-items-center mb-4">
-                      <Receipt className="h-4 w-4 text-primary-foreground" />
-                    </div>
-                    <h3 className="font-serif text-xl mb-2">Chính sách đặt cọc</h3>
-                    <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line">{r.deposit_policy}</p>
-                  </div>
-                )}
               </div>
             </div>
           </section>
         )}
+
+
 
         {/* SIGNATURES */}
         {signatures.length > 0 && (

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { ArrowRight, Star } from "lucide-react";
+import { img as imgUrl } from "@/lib/img";
 
 type Dish = {
   id: string;
@@ -78,7 +79,7 @@ export function SignatureDishes() {
               >
                 <div className="relative overflow-hidden rounded-2xl aspect-square mb-6 bg-card border border-border">
                   {img ? (
-                    <img src={img} alt={d.name} loading="lazy" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" />
+                    <img src={imgUrl(img, { w: 600, h: 600, q: 78 })} alt={d.name} loading="lazy" decoding="async" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" />
                   ) : (
                     <div className="w-full h-full grid place-items-center text-muted-foreground/30">
                       <Star className="h-12 w-12" />

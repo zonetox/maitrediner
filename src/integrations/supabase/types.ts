@@ -582,7 +582,6 @@ export type Database = {
           cover_image_url: string | null
           created_at: string
           cuisine_type: string | null
-          deposit_policy: string | null
           dress_code: string | null
           email: string | null
           id: string
@@ -612,7 +611,6 @@ export type Database = {
           cover_image_url?: string | null
           created_at?: string
           cuisine_type?: string | null
-          deposit_policy?: string | null
           dress_code?: string | null
           email?: string | null
           id?: string
@@ -642,7 +640,6 @@ export type Database = {
           cover_image_url?: string | null
           created_at?: string
           cuisine_type?: string | null
-          deposit_policy?: string | null
           dress_code?: string | null
           email?: string | null
           id?: string

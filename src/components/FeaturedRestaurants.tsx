@@ -8,6 +8,7 @@ import r2 from "@/assets/restaurant-2.jpg";
 import r3 from "@/assets/restaurant-3.jpg";
 import r4 from "@/assets/restaurant-4.jpg";
 import { Star, MapPin, Heart, ArrowRight } from "lucide-react";
+import { img } from "@/lib/img";
 
 const FALLBACKS = [
   { img: r1, name: "Lumière", slug: "lumiere-demo", cuisine_type: "Fine dining Pháp", city: "Quận 1, TP.HCM", rating: 4.9, price_range: "₫₫₫₫", id: null as string | null, cover_image_url: r1 },
@@ -57,9 +58,10 @@ export function FeaturedRestaurants() {
               <Link to="/r/$slug" params={{ slug: r.slug }} className="block">
                 <div className="relative overflow-hidden rounded-2xl aspect-[4/5] mb-4 bg-secondary">
                   <img
-                    src={r.cover_image_url ?? r.img}
+                    src={r.cover_image_url ? img(r.cover_image_url, { w: 600, h: 750, q: 78 }) : r.img}
                     alt={r.name}
                     loading="lazy"
+                    decoding="async"
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />

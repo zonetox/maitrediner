@@ -43,6 +43,17 @@ function AccountPage() {
 
   useEffect(() => { loadAll(); }, [user]);
 
+  // Realtime sync: refresh when favorites/bookings change
+  useEffect(() => {
+    if (!user) return;
+    const ch = supabase
+      .channel(`account-${user.id}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "favorites", filter: `user_id=eq.${user.id}` }, () => loadAll())
+      .on("postgres_changes", { event: "*", schema: "public", table: "bookings", filter: `user_id=eq.${user.id}` }, () => loadAll())
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+  }, [user]);
+
   async function saveProfile() {
     const { error } = await supabase.from("profiles").update({
       full_name: profile.full_name, phone: profile.phone,
