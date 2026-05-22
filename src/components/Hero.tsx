@@ -43,17 +43,22 @@ export function Hero() {
   const [q, setQ] = useState("");
   const [cuisine, setCuisine] = useState("");
   const [city, setCity] = useState("");
+  const [amenities, setAmenities] = useState<string[]>([]);
+  const [showAmenities, setShowAmenities] = useState(false);
   const [cuisines, setCuisines] = useState<string[]>(FALLBACK_CUISINES);
   const [cities, setCities] = useState<string[]>(FALLBACK_CITIES);
+  const [amenityOptions, setAmenityOptions] = useState<string[]>([]);
 
   useEffect(() => {
     (async () => {
-      const [{ data: cu }, { data: lo }] = await Promise.all([
+      const [{ data: cu }, { data: lo }, { data: am }] = await Promise.all([
         supabase.from("cuisine_categories").select("name").eq("is_active", true).order("sort_order"),
         supabase.from("locations").select("name").eq("is_active", true).order("sort_order"),
+        supabase.from("amenities").select("name").eq("is_active", true).order("sort_order"),
       ]);
       if (cu?.length) setCuisines(cu.map((c: any) => c.name));
       if (lo?.length) setCities(lo.map((c: any) => c.name));
+      if (am?.length) setAmenityOptions(am.map((a: any) => a.name));
     })();
   }, []);
 
@@ -64,11 +69,20 @@ export function Hero() {
 
   const slide = SLIDES[idx];
 
+  function toggleAmenity(a: string) {
+    setAmenities((prev) => (prev.includes(a) ? prev.filter((x) => x !== a) : [...prev, a]));
+  }
+
   function onSearch(e: React.FormEvent) {
     e.preventDefault();
     navigate({
       to: "/restaurants",
-      search: { q: q || undefined, cuisine: cuisine || undefined, city: city || undefined } as any,
+      search: {
+        q: q || undefined,
+        cuisine: cuisine || undefined,
+        city: city || undefined,
+        amenities: amenities.length ? amenities.join(",") : undefined,
+      } as any,
     });
   }
 
