@@ -128,12 +128,14 @@ function RestaurantPage() {
       <main>
         {/* HERO */}
         <section className="relative min-h-[92vh] flex items-end pb-20 overflow-hidden">
-          <img src={cover} alt={r.name} className="absolute inset-0 w-full h-full object-cover scale-105 cursor-zoom-in"
-            onClick={() => openImage([cover, ...gallery], 0)} />
+          <HeroMedia r={r} lc={lc} cover={cover} gallery={gallery} onZoom={openImage} />
           <div className="absolute inset-0 bg-gradient-hero pointer-events-none" />
           <div className="absolute inset-0 bg-gradient-to-t from-background via-background/30 to-transparent pointer-events-none" />
           <div className="relative mx-auto max-w-7xl px-6 w-full">
             <div className="flex items-center gap-3 mb-6">
+              {r.logo_url && (
+                <img src={r.logo_url} alt={`${r.name} logo`} className="h-12 w-12 rounded-full object-cover border border-gold/40 bg-background/40 backdrop-blur" />
+              )}
               <span className="h-px w-12 bg-gold" />
               <span className="text-xs tracking-[0.3em] uppercase text-gold">{r.cuisine_type || "Fine dining"}</span>
               {r.is_featured && (
