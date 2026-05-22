@@ -395,7 +395,7 @@ function InfoTab({ r, setR }: any) {
         </div>
         <Field label="Quy định trang phục (Dress code)" textarea value={r.dress_code ?? ""} onChange={(v: any) => setR({ ...r, dress_code: v })} />
         <Field label="Chính sách hủy bàn" textarea value={r.cancellation_policy ?? ""} onChange={(v: any) => setR({ ...r, cancellation_policy: v })} />
-        <Field label="Chính sách đặt cọc" textarea value={r.deposit_policy ?? ""} onChange={(v: any) => setR({ ...r, deposit_policy: v })} />
+        
       </div>
 
       {/* Amenities */}
