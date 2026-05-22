@@ -94,14 +94,14 @@ function MembershipPublic() {
             </div>
 
             <div className="grid md:grid-cols-3 gap-6">
-              {PLANS.map((p) => {
-                const Icon = p.icon;
+              {plans.map((p: any, idx: number) => {
+                const Icon = ICONS[idx % ICONS.length];
                 return (
                   <div key={p.id}
                     className={`relative rounded-2xl border p-8 transition ${
-                      p.popular ? "border-gold bg-gold/5 shadow-gold md:scale-105" : "border-border bg-card hover:border-gold/40"
+                      p.is_popular ? "border-gold bg-gold/5 shadow-gold md:scale-105" : "border-border bg-card hover:border-gold/40"
                     }`}>
-                    {p.popular && (
+                    {p.is_popular && (
                       <span className="absolute -top-3 left-1/2 -translate-x-1/2 text-xs px-4 py-1 rounded-full bg-gradient-gold text-primary-foreground font-medium tracking-wider uppercase">
                         Phổ biến nhất
                       </span>
@@ -113,21 +113,22 @@ function MembershipPublic() {
                     <p className="text-sm text-muted-foreground">{p.tagline}</p>
                     <div className="mt-6 mb-6 pb-6 border-b border-border">
                       <div className="flex items-baseline gap-1">
-                        <span className="font-serif text-5xl text-gold">{(p.price / 1000).toFixed(0)}K</span>
-                        <span className="text-muted-foreground text-sm">/ {p.duration}</span>
+                        <span className="font-serif text-5xl text-gold">{(Number(p.price) / 1000).toFixed(0)}K</span>
+                        <span className="text-muted-foreground text-sm">/ {p.duration_days} ngày</span>
                       </div>
                       <p className="text-xs text-muted-foreground mt-2">
-                        {p.price.toLocaleString("vi-VN")}₫ · tiết kiệm khi mua dài hạn
+                        {Number(p.price).toLocaleString("vi-VN")}₫ · tiết kiệm khi mua dài hạn
                       </p>
                     </div>
                     <ul className="space-y-3 text-sm mb-8">
-                      {p.perks.map((perk) => (
+                      {(p.perks ?? []).map((perk: string) => (
                         <li key={perk} className="flex gap-3 text-muted-foreground">
                           <Check className="h-4 w-4 text-gold mt-0.5 shrink-0" />
                           <span>{perk}</span>
                         </li>
                       ))}
                     </ul>
+
                     <Link to={ctaTo}
                       className={`block text-center w-full px-6 py-3 rounded-full font-medium transition ${
                         p.popular
