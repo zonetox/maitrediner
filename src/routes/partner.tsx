@@ -277,12 +277,60 @@ function InfoTab({ r, setR }: any) {
   const lc = r.landing_content || {};
   const setLC = (k: string, v: any) => setR({ ...r, landing_content: { ...lc, [k]: v } });
   const gallery: string[] = lc.gallery || [];
+  const amenities: string[] = Array.isArray(r.amenities) ? r.amenities : [];
+
+  const [cuisines, setCuisines] = useState<string[]>([]);
+  const [cities, setCities] = useState<string[]>([]);
+  const [amenitySuggestions, setAmenitySuggestions] = useState<string[]>([]);
+  const [newAmenity, setNewAmenity] = useState("");
+
+  useEffect(() => {
+    (async () => {
+      const [{ data: cu }, { data: lo }, { data: rs }] = await Promise.all([
+        supabase.from("cuisine_categories").select("name").eq("is_active", true).order("sort_order"),
+        supabase.from("locations").select("name").eq("is_active", true).order("sort_order"),
+        supabase.from("restaurants").select("amenities"),
+      ]);
+      setCuisines(cu?.map((c: any) => c.name) ?? []);
+      setCities(lo?.map((c: any) => c.name) ?? []);
+      const set = new Set<string>();
+      (rs ?? []).forEach((row: any) => (row.amenities || []).forEach((a: string) => a && set.add(a)));
+      ["Bãi đỗ xe", "Phòng VIP", "Sommelier", "Menu chay", "Phù hợp trẻ em", "Sân vườn", "Wifi", "View đẹp", "Nhạc sống", "Phù hợp họp mặt"]
+        .forEach((a) => set.add(a));
+      setAmenitySuggestions(Array.from(set).sort());
+    })();
+  }, []);
+
+  function addAmenity(a: string) {
+    const v = a.trim();
+    if (!v || amenities.includes(v)) return;
+    setR({ ...r, amenities: [...amenities, v] });
+    setNewAmenity("");
+  }
+  function removeAmenity(a: string) {
+    setR({ ...r, amenities: amenities.filter((x) => x !== a) });
+  }
+
   return (
     <div className="grid md:grid-cols-2 gap-6">
       <Field label="Tên nhà hàng" value={r.name} onChange={(v: any) => setR({ ...r, name: v })} />
       <Field label="Slug (đường dẫn)" value={r.slug} onChange={(v: any) => setR({ ...r, slug: v })} />
-      <Field label="Loại hình ẩm thực" value={r.cuisine_type} onChange={(v: any) => setR({ ...r, cuisine_type: v })} />
-      <Field label="Thành phố" value={r.city} onChange={(v: any) => setR({ ...r, city: v })} />
+      <div>
+        <label className="text-xs uppercase tracking-wider text-muted-foreground">Loại hình ẩm thực</label>
+        <input list="cuisine-list" value={r.cuisine_type ?? ""} onChange={(e) => setR({ ...r, cuisine_type: e.target.value })}
+          className="w-full mt-2 px-4 py-3 rounded-lg bg-card border border-border focus:border-gold outline-none" />
+        <datalist id="cuisine-list">
+          {cuisines.map((c) => <option key={c} value={c} />)}
+        </datalist>
+      </div>
+      <div>
+        <label className="text-xs uppercase tracking-wider text-muted-foreground">Thành phố / Địa điểm</label>
+        <input list="city-list" value={r.city ?? ""} onChange={(e) => setR({ ...r, city: e.target.value })}
+          className="w-full mt-2 px-4 py-3 rounded-lg bg-card border border-border focus:border-gold outline-none" />
+        <datalist id="city-list">
+          {cities.map((c) => <option key={c} value={c} />)}
+        </datalist>
+      </div>
       <Field label="Địa chỉ" value={r.address} onChange={(v: any) => setR({ ...r, address: v })} />
       <Field label="Điện thoại" value={r.phone} onChange={(v: any) => setR({ ...r, phone: v })} />
       <Field label="Mức giá" value={r.price_range} onChange={(v: any) => setR({ ...r, price_range: v })} />
@@ -290,6 +338,51 @@ function InfoTab({ r, setR }: any) {
       <div className="md:col-span-2">
         <Field label="Mô tả ngắn" textarea value={r.short_description} onChange={(v: any) => setR({ ...r, short_description: v })} />
       </div>
+
+      {/* Amenities */}
+      <div className="md:col-span-2 p-5 rounded-xl border border-border bg-card/40">
+        <div className="flex items-center justify-between mb-3">
+          <label className="text-xs uppercase tracking-wider text-gold flex items-center gap-2">
+            <Sparkles className="h-3 w-3" /> Tiện ích & đặc trưng
+          </label>
+          <span className="text-[10px] text-muted-foreground">Hiển thị trong tìm kiếm</span>
+        </div>
+        <div className="flex flex-wrap gap-2 mb-3 min-h-[2rem]">
+          {amenities.length === 0 && <span className="text-xs text-muted-foreground italic">Chưa có tiện ích nào.</span>}
+          {amenities.map((a) => (
+            <span key={a} className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gradient-gold text-primary-foreground text-xs font-serif">
+              {a}
+              <button type="button" onClick={() => removeAmenity(a)} className="hover:text-destructive">
+                <Trash2 className="h-3 w-3" />
+              </button>
+            </span>
+          ))}
+        </div>
+        <div className="flex gap-2 mb-3">
+          <input value={newAmenity} onChange={(e) => setNewAmenity(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addAmenity(newAmenity); } }}
+            placeholder="Thêm tiện ích mới (Enter để thêm)..."
+            className="flex-1 px-4 py-2 rounded-lg bg-background border border-border focus:border-gold outline-none text-sm" />
+          <button type="button" onClick={() => addAmenity(newAmenity)}
+            className="px-4 py-2 rounded-lg border border-gold text-gold text-sm hover:bg-gold/10 inline-flex items-center gap-1">
+            <Plus className="h-3 w-3" /> Thêm
+          </button>
+        </div>
+        {amenitySuggestions.filter((s) => !amenities.includes(s)).length > 0 && (
+          <div>
+            <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-2">Gợi ý nhanh</p>
+            <div className="flex flex-wrap gap-1.5">
+              {amenitySuggestions.filter((s) => !amenities.includes(s)).slice(0, 16).map((s) => (
+                <button key={s} type="button" onClick={() => addAmenity(s)}
+                  className="px-2.5 py-1 rounded-full border border-border text-xs text-muted-foreground hover:border-gold hover:text-gold transition">
+                  + {s}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
       <ImageUploader bucket="restaurant-images" folder={r.id} label="Ảnh bìa nhà hàng"
         value={r.cover_image_url} onChange={(url) => setR({ ...r, cover_image_url: url })} aspect="aspect-video" />
       <ImageUploader bucket="restaurant-images" folder={`${r.id}/logo`} label="Logo nhà hàng"
