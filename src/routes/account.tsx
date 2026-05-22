@@ -11,7 +11,7 @@ export const Route = createFileRoute("/account")({
   component: AccountPage,
 });
 
-type Tab = "favorites" | "bookings" | "orders" | "deals" | "profile";
+type Tab = "favorites" | "bookings" | "deals" | "profile";
 
 function AccountPage() {
   const { user, loading } = useAuth();
@@ -19,7 +19,7 @@ function AccountPage() {
   const [tab, setTab] = useState<Tab>("favorites");
   const [favs, setFavs] = useState<any[]>([]);
   const [bookings, setBookings] = useState<any[]>([]);
-  const [orders, setOrders] = useState<any[]>([]);
+  
   const [savedDeals, setSavedDeals] = useState<any[]>([]);
   const [profile, setProfile] = useState<any>({ full_name: "", phone: "" });
 
@@ -29,16 +29,15 @@ function AccountPage() {
 
   async function loadAll() {
     if (!user) return;
-    const [f, b, o, p] = await Promise.all([
+    const [f, b, p] = await Promise.all([
       supabase.from("favorites").select("*, restaurants(*), deals(*, restaurants(name, slug))").eq("user_id", user.id),
       supabase.from("bookings").select("*, restaurants(name, slug)").eq("user_id", user.id).order("booking_at", { ascending: false }),
-      supabase.from("orders").select("*, restaurants(name, slug)").eq("user_id", user.id).order("created_at", { ascending: false }),
       supabase.from("profiles").select("*").eq("id", user.id).single(),
     ]);
     setFavs((f.data ?? []).filter((x: any) => x.restaurant_id));
     setSavedDeals((f.data ?? []).filter((x: any) => x.deal_id));
     setBookings(b.data ?? []);
-    setOrders(o.data ?? []);
+    
     if (p.data) setProfile(p.data);
   }
 
@@ -81,7 +80,6 @@ function AccountPage() {
               { k: "favorites", l: `Yêu thích (${favs.length})` },
               { k: "deals", l: `Ưu đãi đã lưu (${savedDeals.length})` },
               { k: "bookings", l: `Đặt chỗ (${bookings.length})` },
-              { k: "orders", l: `Đơn món (${orders.length})` },
               { k: "profile", l: "Hồ sơ" },
             ].map((t) => (
               <button
