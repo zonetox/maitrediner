@@ -5,7 +5,7 @@ import { LuxSelect } from "@/components/LuxSelect";
 import heroImg from "@/assets/hero-restaurant.jpg";
 import hero2 from "@/assets/hero-2.jpg";
 import hero3 from "@/assets/hero-3.jpg";
-import { Search, MapPin, Utensils, ChevronLeft, ChevronRight } from "lucide-react";
+import { Search, MapPin, Utensils, ChevronLeft, ChevronRight, Sparkles, X } from "lucide-react";
 
 const FALLBACK_CUISINES = ["Fine dining", "Omakase", "Steakhouse", "Pháp", "Ý", "Việt"];
 const FALLBACK_CITIES = ["TP.HCM", "Hà Nội", "Đà Nẵng"];
@@ -43,17 +43,22 @@ export function Hero() {
   const [q, setQ] = useState("");
   const [cuisine, setCuisine] = useState("");
   const [city, setCity] = useState("");
+  const [amenities, setAmenities] = useState<string[]>([]);
+  const [showAmenities, setShowAmenities] = useState(false);
   const [cuisines, setCuisines] = useState<string[]>(FALLBACK_CUISINES);
   const [cities, setCities] = useState<string[]>(FALLBACK_CITIES);
+  const [amenityOptions, setAmenityOptions] = useState<string[]>([]);
 
   useEffect(() => {
     (async () => {
-      const [{ data: cu }, { data: lo }] = await Promise.all([
+      const [{ data: cu }, { data: lo }, { data: am }] = await Promise.all([
         supabase.from("cuisine_categories").select("name").eq("is_active", true).order("sort_order"),
         supabase.from("locations").select("name").eq("is_active", true).order("sort_order"),
+        supabase.from("amenities").select("name").eq("is_active", true).order("sort_order"),
       ]);
       if (cu?.length) setCuisines(cu.map((c: any) => c.name));
       if (lo?.length) setCities(lo.map((c: any) => c.name));
+      if (am?.length) setAmenityOptions(am.map((a: any) => a.name));
     })();
   }, []);
 
@@ -64,11 +69,20 @@ export function Hero() {
 
   const slide = SLIDES[idx];
 
+  function toggleAmenity(a: string) {
+    setAmenities((prev) => (prev.includes(a) ? prev.filter((x) => x !== a) : [...prev, a]));
+  }
+
   function onSearch(e: React.FormEvent) {
     e.preventDefault();
     navigate({
       to: "/restaurants",
-      search: { q: q || undefined, cuisine: cuisine || undefined, city: city || undefined } as any,
+      search: {
+        q: q || undefined,
+        cuisine: cuisine || undefined,
+        city: city || undefined,
+        amenities: amenities.length ? amenities.join(",") : undefined,
+      } as any,
     });
   }
 
@@ -155,6 +169,43 @@ export function Hero() {
                 Tìm kiếm
               </button>
             </div>
+            {amenityOptions.length > 0 && (
+              <div className="border-t border-border mt-2 pt-3 px-3 pb-2">
+                <button
+                  type="button"
+                  onClick={() => setShowAmenities((v) => !v)}
+                  className="flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-muted-foreground hover:text-gold transition"
+                >
+                  <Sparkles className="h-3.5 w-3.5 text-gold" />
+                  Bộ lọc tiện ích
+                  {amenities.length > 0 && (
+                    <span className="ml-1 px-2 py-0.5 rounded-full bg-gold/15 text-gold text-[10px]">{amenities.length}</span>
+                  )}
+                </button>
+                {showAmenities && (
+                  <div className="flex flex-wrap gap-2 mt-3">
+                    {amenityOptions.map((a) => {
+                      const active = amenities.includes(a);
+                      return (
+                        <button
+                          key={a}
+                          type="button"
+                          onClick={() => toggleAmenity(a)}
+                          className={`text-xs px-3 py-1.5 rounded-full border transition inline-flex items-center gap-1 ${
+                            active
+                              ? "border-gold text-gold bg-gold/10"
+                              : "border-border text-muted-foreground hover:border-gold hover:text-foreground"
+                          }`}
+                        >
+                          {a}
+                          {active && <X className="h-3 w-3" />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
           </form>
 
           <div className="flex items-center gap-3 mt-8">

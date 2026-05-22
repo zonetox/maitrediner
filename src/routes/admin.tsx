@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { SiteHeader } from "@/components/SiteHeader";
-import { Shield, Users, Store, CreditCard, CheckCircle2, XCircle, Star, Eye, EyeOff, ArrowRight, Calendar, ShoppingBag, Settings as SettingsIcon, Save, Plus, Trash2, Utensils, MapPin } from "lucide-react";
+import { Shield, Users, Store, CreditCard, CheckCircle2, XCircle, Star, Eye, EyeOff, ArrowRight, Calendar, Save, Plus, Trash2, Utensils, MapPin, Sparkles } from "lucide-react";
 import { ImageUploader } from "@/components/ImageUploader";
 import { toast } from "sonner";
 
@@ -12,7 +12,7 @@ export const Route = createFileRoute("/admin")({
   component: AdminPage,
 });
 
-type Tab = "overview" | "restaurants" | "payments" | "users" | "bookings" | "orders" | "directory" | "settings";
+type Tab = "overview" | "restaurants" | "payments" | "users" | "bookings" | "directory" | "settings";
 
 function AdminPage() {
   const { user, loading, hasRole, roles } = useAuth();
@@ -23,34 +23,30 @@ function AdminPage() {
   const [profiles, setProfiles] = useState<any[]>([]);
   const [userRoles, setUserRoles] = useState<any[]>([]);
   const [bookings, setBookings] = useState<any[]>([]);
-  const [orders, setOrders] = useState<any[]>([]);
-  const [stats, setStats] = useState({ restaurants: 0, users: 0, pending: 0, bookings: 0, orders: 0 });
+  const [stats, setStats] = useState({ restaurants: 0, users: 0, pending: 0, bookings: 0 });
 
   useEffect(() => {
     if (!loading && !user) navigate({ to: "/auth" });
   }, [loading, user, navigate]);
 
   async function loadAll() {
-    const [r, p, pr, ur, b, o] = await Promise.all([
+    const [r, p, pr, ur, b] = await Promise.all([
       supabase.from("restaurants").select("*").order("created_at", { ascending: false }),
       supabase.from("membership_payments").select("*, restaurants(name, slug)").order("created_at", { ascending: false }),
       supabase.from("profiles").select("*").order("created_at", { ascending: false }),
       supabase.from("user_roles").select("*"),
       supabase.from("bookings").select("*, restaurants(name)").order("created_at", { ascending: false }).limit(100),
-      supabase.from("orders").select("*, restaurants(name)").order("created_at", { ascending: false }).limit(100),
     ]);
     setRestaurants(r.data ?? []);
     setPayments(p.data ?? []);
     setProfiles(pr.data ?? []);
     setUserRoles(ur.data ?? []);
     setBookings(b.data ?? []);
-    setOrders(o.data ?? []);
     setStats({
       restaurants: r.data?.length ?? 0,
       users: pr.data?.length ?? 0,
       pending: (p.data ?? []).filter((x: any) => x.status === "pending").length,
       bookings: b.data?.length ?? 0,
-      orders: o.data?.length ?? 0,
     });
   }
 
@@ -149,7 +145,7 @@ function AdminPage() {
 
         {/* Tabs */}
         <div className="border-b border-border mb-6 flex gap-6 overflow-x-auto">
-          {(["overview", "restaurants", "payments", "users", "bookings", "orders", "directory", "settings"] as Tab[]).map((t) => (
+          {(["overview", "restaurants", "payments", "users", "bookings", "directory", "settings"] as Tab[]).map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
@@ -316,24 +312,8 @@ function AdminPage() {
           </Table>
         )}
 
-        {tab === "orders" && (
-          <Table head={["Nhà hàng", "Khách", "SĐT", "Số món", "Tổng", "Ngày", "Trạng thái"]}>
-            {orders.map((o) => (
-              <tr key={o.id} className="border-b border-border align-top">
-                <td className="py-3 font-medium">{o.restaurants?.name ?? "—"}</td>
-                <td className="text-sm">{o.guest_name ?? "—"}</td>
-                <td className="text-sm text-muted-foreground">{o.guest_phone ?? "—"}</td>
-                <td className="text-sm">{Array.isArray(o.items) ? o.items.reduce((s: number, i: any) => s + (i.qty || 0), 0) : 0}</td>
-                <td className="text-sm text-gold">{Number(o.total_amount).toLocaleString("vi-VN")}₫</td>
-                <td className="text-xs text-muted-foreground">{fmtDate(o.created_at)}</td>
-                <td><span className="text-xs px-2 py-0.5 rounded-full bg-card border border-border inline-flex items-center gap-1"><ShoppingBag className="h-3 w-3" />{o.status}</span></td>
-              </tr>
-            ))}
-            {orders.length === 0 && (
-              <tr><td colSpan={7} className="py-12 text-center text-muted-foreground">Chưa có đơn món nào.</td></tr>
-            )}
-          </Table>
-        )}
+
+
 
         {tab === "directory" && <DirectoryTab />}
         {tab === "settings" && <SettingsTab />}
@@ -376,7 +356,7 @@ function Table({ head, children }: any) {
 }
 
 function labelOf(t: Tab) {
-  return { overview: "Tổng quan", restaurants: "Nhà hàng", payments: "Thanh toán gói", users: "Người dùng", bookings: "Đặt chỗ", orders: "Đơn món", directory: "Danh mục & Địa điểm", settings: "Cấu hình" }[t];
+  return { overview: "Tổng quan", restaurants: "Nhà hàng", payments: "Thanh toán gói", users: "Người dùng", bookings: "Đặt chỗ", directory: "Danh mục & Địa điểm", settings: "Cấu hình" }[t];
 }
 
 function SettingsTab() {
@@ -484,15 +464,18 @@ function fmtDate(d: string | null) {
 function DirectoryTab() {
   const [cuisines, setCuisines] = useState<any[]>([]);
   const [locations, setLocations] = useState<any[]>([]);
+  const [amenitiesList, setAmenitiesList] = useState<any[]>([]);
   const [newCuisine, setNewCuisine] = useState({ name: "", icon: "Utensils" });
   const [newLocation, setNewLocation] = useState("");
+  const [newAmenity, setNewAmenity] = useState({ name: "", icon: "Sparkles" });
 
   async function load() {
-    const [{ data: cu }, { data: lo }] = await Promise.all([
+    const [{ data: cu }, { data: lo }, { data: am }] = await Promise.all([
       supabase.from("cuisine_categories").select("*").order("sort_order"),
       supabase.from("locations").select("*").order("sort_order"),
+      supabase.from("amenities").select("*").order("sort_order"),
     ]);
-    setCuisines(cu ?? []); setLocations(lo ?? []);
+    setCuisines(cu ?? []); setLocations(lo ?? []); setAmenitiesList(am ?? []);
   }
   useEffect(() => { load(); }, []);
 
@@ -531,6 +514,22 @@ function DirectoryTab() {
   }
   async function toggleLocation(l: any) {
     await supabase.from("locations").update({ is_active: !l.is_active }).eq("id", l.id); load();
+  }
+  async function addAmenity() {
+    if (!newAmenity.name.trim()) return;
+    const { error } = await supabase.from("amenities").insert({
+      name: newAmenity.name.trim(), slug: slugify(newAmenity.name), icon: newAmenity.icon || null,
+      sort_order: amenitiesList.length + 1,
+    });
+    if (error) return toast.error(error.message);
+    setNewAmenity({ name: "", icon: "Sparkles" }); load();
+  }
+  async function removeAmenity(id: string) {
+    if (!confirm("Xoá tiện ích này?")) return;
+    await supabase.from("amenities").delete().eq("id", id); load();
+  }
+  async function toggleAmenity(a: any) {
+    await supabase.from("amenities").update({ is_active: !a.is_active }).eq("id", a.id); load();
   }
 
   return (
@@ -585,6 +584,34 @@ function DirectoryTab() {
             </div>
           ))}
           {locations.length === 0 && <p className="text-sm text-muted-foreground italic">Chưa có địa điểm.</p>}
+        </div>
+      </Panel>
+
+      <Panel title={<span className="flex items-center gap-2"><Sparkles className="h-4 w-4 text-gold" /> Tiện ích nhà hàng</span> as any}>
+        <div className="flex gap-2 mb-4">
+          <input value={newAmenity.name} onChange={(e) => setNewAmenity({ ...newAmenity, name: e.target.value })}
+            placeholder="Tên tiện ích (vd: Phòng VIP)" className="flex-1 bg-background border border-border rounded-md px-3 py-2 text-sm" />
+          <input value={newAmenity.icon} onChange={(e) => setNewAmenity({ ...newAmenity, icon: e.target.value })}
+            placeholder="Icon (Lucide)" className="w-32 bg-background border border-border rounded-md px-3 py-2 text-sm font-mono" />
+          <button onClick={addAmenity} className="px-4 py-2 rounded-md bg-gradient-gold text-primary-foreground text-sm inline-flex items-center gap-1">
+            <Plus className="h-3 w-3" /> Thêm
+          </button>
+        </div>
+        <p className="text-[10px] text-muted-foreground mb-3">Tiện ích sẽ xuất hiện trong thanh tìm kiếm và bộ lọc nhà hàng.</p>
+        <div className="space-y-2">
+          {amenitiesList.map((a) => (
+            <div key={a.id} className="flex items-center gap-3 p-2 rounded-md border border-border bg-card/50">
+              <span className="text-xs text-muted-foreground font-mono w-20 truncate">{a.icon ?? "—"}</span>
+              <span className={`flex-1 font-serif ${a.is_active ? "" : "line-through text-muted-foreground"}`}>{a.name}</span>
+              <button onClick={() => toggleAmenity(a)} className="text-xs text-muted-foreground hover:text-gold">
+                {a.is_active ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+              </button>
+              <button onClick={() => removeAmenity(a.id)} className="text-muted-foreground hover:text-destructive">
+                <Trash2 className="h-4 w-4" />
+              </button>
+            </div>
+          ))}
+          {amenitiesList.length === 0 && <p className="text-sm text-muted-foreground italic">Chưa có tiện ích.</p>}
         </div>
       </Panel>
     </div>
