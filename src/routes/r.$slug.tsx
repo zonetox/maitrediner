@@ -623,6 +623,7 @@ function DealModal({ deal, onClose, onBook, onSave }: { deal: any; onClose: () =
               <Calendar className="h-4 w-4" /> Đặt chỗ
             </button>
           </div>
+          </div>
         </div>
       </div>
     </div>
