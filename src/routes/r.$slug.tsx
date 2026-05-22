@@ -299,16 +299,24 @@ function RestaurantPage() {
                 </div>
               </div>
               <div className="grid md:grid-cols-3 gap-6">
-                {deals.map((d) => (
-                  <button type="button" key={d.id} onClick={() => setDeal(d)}
-                    className="relative text-left p-8 rounded-2xl bg-card border border-border hover:border-gold transition group overflow-hidden">
+                {deals.map((d) => {
+                  const saved = savedDeals.has(d.id);
+                  return (
+                  <div role="button" tabIndex={0} key={d.id} onClick={() => setDeal(d)}
+                    onKeyDown={(e) => { if (e.key === "Enter") setDeal(d); }}
+                    className="relative text-left p-8 rounded-2xl bg-card border border-border hover:border-gold transition group overflow-hidden cursor-pointer">
                     <div className="absolute -top-10 -right-10 h-32 w-32 rounded-full bg-gradient-gold opacity-10 blur-2xl group-hover:opacity-20 transition" />
+                    <button type="button" onClick={(e) => { e.stopPropagation(); saveDeal(d.id); }}
+                      title={saved ? "Bỏ lưu ưu đãi" : "Lưu ưu đãi"}
+                      className={`absolute top-4 right-4 h-9 w-9 grid place-items-center rounded-full border transition ${saved ? "border-gold bg-gold/15 text-gold" : "border-border bg-background/60 hover:border-gold hover:text-gold"}`}>
+                      <Bookmark className={`h-4 w-4 ${saved ? "fill-gold" : ""}`} />
+                    </button>
                     {d.badge && (
                       <span className="text-[10px] tracking-widest uppercase px-2 py-1 rounded-full border border-gold text-gold">
                         {d.badge}
                       </span>
                     )}
-                    <h3 className="font-serif text-2xl mt-4 group-hover:text-gold transition">{d.title}</h3>
+                    <h3 className="font-serif text-2xl mt-4 group-hover:text-gold transition pr-10">{d.title}</h3>
                     {d.description && <p className="text-sm text-muted-foreground mt-3 leading-relaxed line-clamp-3">{d.description}</p>}
                     <div className="flex items-center justify-between mt-6 pt-4 border-t border-border text-xs">
                       {d.expires_at ? (
@@ -318,8 +326,10 @@ function RestaurantPage() {
                       ) : <span />}
                       <span className="text-gold inline-flex items-center gap-1">Chi tiết <ArrowRight className="h-3 w-3" /></span>
                     </div>
-                  </button>
-                ))}
+                  </div>
+                  );
+                })}
+
               </div>
             </div>
           </section>
