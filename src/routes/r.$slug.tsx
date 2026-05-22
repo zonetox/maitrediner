@@ -62,12 +62,34 @@ function RestaurantPage() {
 
   async function addFavorite() {
     if (!user) return toast.error("Vui lòng đăng nhập để lưu yêu thích");
+    const { data: existing } = await supabase
+      .from("favorites")
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("restaurant_id", r.id)
+      .maybeSingle();
+    if (existing) {
+      const { error } = await supabase.from("favorites").delete().eq("id", existing.id);
+      if (error) return toast.error(error.message);
+      return toast.success("Đã bỏ khỏi yêu thích");
+    }
     const { error } = await supabase.from("favorites").insert({ user_id: user.id, restaurant_id: r.id });
     if (error) toast.error(error.message); else toast.success("Đã lưu vào yêu thích");
   }
 
   async function saveDeal(id: string) {
     if (!user) return toast.error("Vui lòng đăng nhập để lưu ưu đãi");
+    const { data: existing } = await supabase
+      .from("favorites")
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("deal_id", id)
+      .maybeSingle();
+    if (existing) {
+      const { error } = await supabase.from("favorites").delete().eq("id", existing.id);
+      if (error) return toast.error(error.message);
+      return toast.success("Đã bỏ ưu đãi khỏi yêu thích");
+    }
     const { error } = await supabase.from("favorites").insert({ user_id: user.id, deal_id: id });
     if (error) toast.error(error.message); else toast.success("Đã lưu ưu đãi");
   }
