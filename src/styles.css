@@ -111,10 +111,15 @@
     color: transparent;
   }
   .bg-gradient-gold { background: var(--gradient-gold); }
+  .bg-gradient-emerald { background: var(--gradient-emerald); }
+  .bg-gradient-midnight { background: var(--gradient-midnight); }
   .bg-gradient-hero { background: var(--gradient-hero); }
   .shadow-gold { box-shadow: var(--shadow-gold); }
   .shadow-elegant { box-shadow: var(--shadow-elegant); }
   .border-gold { border-color: var(--color-gold); }
+  .border-emerald { border-color: var(--color-emerald); }
+  .text-emerald { color: var(--color-emerald); }
+  .text-midnight { color: var(--color-midnight); }
   .hairline {
     background-image: linear-gradient(90deg, transparent, var(--color-gold) 50%, transparent);
     height: 1px;
