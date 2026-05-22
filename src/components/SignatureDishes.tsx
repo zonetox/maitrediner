@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { ArrowRight, Star } from "lucide-react";
+import { img as imgUrl } from "@/lib/img";
 
 type Dish = {
   id: string;
