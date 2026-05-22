@@ -1,68 +1,14 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
+import { supabase } from "@/integrations/supabase/client";
+import { LuxSelect } from "@/components/LuxSelect";
 import heroImg from "@/assets/hero-restaurant.jpg";
 import hero2 from "@/assets/hero-2.jpg";
 import hero3 from "@/assets/hero-3.jpg";
-import { Search, MapPin, Utensils, ChevronLeft, ChevronRight, ChevronDown, Check } from "lucide-react";
+import { Search, MapPin, Utensils, ChevronLeft, ChevronRight } from "lucide-react";
 
-const CUISINES = ["Fine dining", "Omakase", "Steakhouse", "Pháp", "Ý", "Việt"];
-const CITIES = ["TP.HCM", "Hà Nội", "Đà Nẵng"];
-
-function LuxSelect({
-  value, onChange, placeholder, options, icon,
-}: { value: string; onChange: (v: string) => void; placeholder: string; options: string[]; icon: React.ReactNode }) {
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    function onDoc(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
-    }
-    document.addEventListener("mousedown", onDoc);
-    return () => document.removeEventListener("mousedown", onDoc);
-  }, []);
-  return (
-    <div ref={ref} className="relative">
-      <button
-        type="button"
-        onClick={() => setOpen((o) => !o)}
-        className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-secondary/60 transition text-left"
-      >
-        <span className="text-gold shrink-0">{icon}</span>
-        <span className={`text-sm flex-1 truncate ${value ? "text-foreground" : "text-muted-foreground"}`}>
-          {value || placeholder}
-        </span>
-        <ChevronDown className={`h-4 w-4 text-muted-foreground transition ${open ? "rotate-180 text-gold" : ""}`} />
-      </button>
-      {open && (
-        <div className="absolute z-50 left-0 right-0 mt-2 rounded-xl border border-border bg-card/95 backdrop-blur-xl shadow-elegant overflow-hidden animate-fade-in">
-          <button
-            type="button"
-            onClick={() => { onChange(""); setOpen(false); }}
-            className={`w-full text-left px-4 py-2.5 text-sm flex items-center justify-between hover:bg-secondary/70 transition ${!value ? "text-gold" : "text-muted-foreground"}`}
-          >
-            <span className="italic">{placeholder}</span>
-            {!value && <Check className="h-3.5 w-3.5" />}
-          </button>
-          <div className="h-px bg-border" />
-          <ul className="max-h-64 overflow-y-auto py-1">
-            {options.map((opt) => (
-              <li key={opt}>
-                <button
-                  type="button"
-                  onClick={() => { onChange(opt); setOpen(false); }}
-                  className={`w-full text-left px-4 py-2.5 text-sm flex items-center justify-between hover:bg-secondary/70 hover:text-gold transition ${value === opt ? "text-gold bg-secondary/40" : "text-foreground/90"}`}
-                >
-                  <span className="font-serif tracking-wide">{opt}</span>
-                  {value === opt && <Check className="h-3.5 w-3.5" />}
-                </button>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-    </div>
-  );
-}
+const FALLBACK_CUISINES = ["Fine dining", "Omakase", "Steakhouse", "Pháp", "Ý", "Việt"];
+const FALLBACK_CITIES = ["TP.HCM", "Hà Nội", "Đà Nẵng"];
 
 const SLIDES = [
   {
@@ -97,6 +43,19 @@ export function Hero() {
   const [q, setQ] = useState("");
   const [cuisine, setCuisine] = useState("");
   const [city, setCity] = useState("");
+  const [cuisines, setCuisines] = useState<string[]>(FALLBACK_CUISINES);
+  const [cities, setCities] = useState<string[]>(FALLBACK_CITIES);
+
+  useEffect(() => {
+    (async () => {
+      const [{ data: cu }, { data: lo }] = await Promise.all([
+        supabase.from("cuisine_categories").select("name").eq("is_active", true).order("sort_order"),
+        supabase.from("locations").select("name").eq("is_active", true).order("sort_order"),
+      ]);
+      if (cu?.length) setCuisines(cu.map((c: any) => c.name));
+      if (lo?.length) setCities(lo.map((c: any) => c.name));
+    })();
+  }, []);
 
   useEffect(() => {
     const t = setInterval(() => setIdx((i) => (i + 1) % SLIDES.length), 6500);
@@ -176,7 +135,7 @@ export function Hero() {
                   value={cuisine}
                   onChange={setCuisine}
                   placeholder="Loại nhà hàng"
-                  options={CUISINES}
+                  options={cuisines.map((c) => ({ label: c, value: c }))}
                   icon={<Utensils className="h-4 w-4" />}
                 />
               </div>
@@ -185,7 +144,7 @@ export function Hero() {
                   value={city}
                   onChange={setCity}
                   placeholder="Địa điểm"
-                  options={CITIES}
+                  options={cities.map((c) => ({ label: c, value: c }))}
                   icon={<MapPin className="h-4 w-4" />}
                 />
               </div>
