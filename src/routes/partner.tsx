@@ -223,7 +223,7 @@ function PartnerPage() {
                     <Trash2 className="h-3 w-3" /> Xoá
                   </button>
                   <button onClick={saveRestaurant} disabled={!dirty}
-                    className={`px-4 py-2 rounded-full text-sm font-medium flex items-center gap-2 transition ${dirty ? "bg-gradient-gold text-primary-foreground shadow-gold animate-pulse ring-2 ring-gold/40" : "bg-card border border-border text-muted-foreground cursor-default"}`}>
+                    className={`px-4 py-2 rounded-full text-sm font-medium flex items-center gap-2 transition-all duration-200 ${dirty ? "bg-gradient-gold text-primary-foreground shadow-gold ring-2 ring-gold/40 hover:scale-105 hover:shadow-lg hover:ring-gold/70 active:scale-95 animate-pulse" : "bg-card border border-border text-muted-foreground hover:border-gold/40 hover:text-foreground"}`}>
                     <Save className="h-3 w-3" /> {dirty ? "Lưu thay đổi" : "Đã lưu"}
                   </button>
                 </div>
@@ -437,6 +437,53 @@ function InfoTab({ r, setR }: any) {
         <h3 className="font-serif text-xl mb-4 text-gold">Nội dung Landing page</h3>
       </div>
       <Field label="Tagline (Hero)" value={lc.hero_tagline} onChange={(v: any) => setLC("hero_tagline", v)} />
+
+      {/* Hero media: 3 slides + optional YouTube */}
+      <div className="md:col-span-2 pt-4">
+        <div className="flex items-center justify-between mb-3">
+          <label className="text-xs uppercase tracking-wider text-muted-foreground">Hero · Slide hình ảnh (tối đa 3)</label>
+          <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer">
+            <input type="checkbox" checked={!!lc.use_youtube}
+              onChange={(e) => setLC("use_youtube", e.target.checked)}
+              className="h-3.5 w-3.5 accent-[var(--color-gold)]" />
+            Dùng video YouTube thay cho slide
+          </label>
+        </div>
+
+        {lc.use_youtube ? (
+          <div className="space-y-2">
+            <input value={lc.hero_youtube_url ?? ""}
+              onChange={(e) => setLC("hero_youtube_url", e.target.value)}
+              placeholder="https://www.youtube.com/watch?v=... hoặc https://youtu.be/..."
+              className="w-full bg-background border border-border rounded-md px-3 py-2 text-sm" />
+            <p className="text-[11px] text-muted-foreground">Video sẽ phát tự động (đã tắt tiếng) làm nền hero trên trang nhà hàng.</p>
+          </div>
+        ) : (
+          <div className="grid md:grid-cols-3 gap-3">
+            {Array.from({ length: 3 }).map((_, i) => {
+              const slides = (lc.hero_slides ?? []) as { image: string; title: string }[];
+              const slide = slides[i] ?? { image: "", title: "" };
+              const updateSlide = (patch: Partial<{ image: string; title: string }>) => {
+                const next = [...slides];
+                next[i] = { ...slide, ...patch };
+                setLC("hero_slides", next);
+              };
+              return (
+                <div key={i} className="space-y-2">
+                  <ImageUploader bucket="restaurant-images" folder={`${r.id}/hero`}
+                    value={slide.image || null} aspect="aspect-video"
+                    onChange={(url) => updateSlide({ image: url ?? "" })} />
+                  <input value={slide.title}
+                    onChange={(e) => updateSlide({ title: e.target.value })}
+                    placeholder={`Tiêu đề slide ${i + 1}`}
+                    className="w-full bg-background border border-border rounded-md px-3 py-2 text-sm" />
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
       <div className="md:col-span-2">
         <label className="text-xs uppercase tracking-wider text-muted-foreground">Giờ mở cửa</label>
         <div className="space-y-2 mt-2">
