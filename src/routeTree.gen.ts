@@ -23,6 +23,7 @@ import { Route as AccountRouteImport } from './routes/account'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as RSlugRouteImport } from './routes/r.$slug'
 import { Route as PartnerMembershipRouteImport } from './routes/partner.membership'
+import { Route as CuisinesSlugRouteImport } from './routes/cuisines.$slug'
 
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
@@ -94,6 +95,11 @@ const PartnerMembershipRoute = PartnerMembershipRouteImport.update({
   path: '/membership',
   getParentRoute: () => PartnerRoute,
 } as any)
+const CuisinesSlugRoute = CuisinesSlugRouteImport.update({
+  id: '/cuisines/$slug',
+  path: '/cuisines/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -108,6 +114,7 @@ export interface FileRoutesByFullPath {
   '/restaurants': typeof RestaurantsRoute
   '/signature': typeof SignatureRoute
   '/terms': typeof TermsRoute
+  '/cuisines/$slug': typeof CuisinesSlugRoute
   '/partner/membership': typeof PartnerMembershipRoute
   '/r/$slug': typeof RSlugRoute
 }
@@ -124,6 +131,7 @@ export interface FileRoutesByTo {
   '/restaurants': typeof RestaurantsRoute
   '/signature': typeof SignatureRoute
   '/terms': typeof TermsRoute
+  '/cuisines/$slug': typeof CuisinesSlugRoute
   '/partner/membership': typeof PartnerMembershipRoute
   '/r/$slug': typeof RSlugRoute
 }
@@ -141,6 +149,7 @@ export interface FileRoutesById {
   '/restaurants': typeof RestaurantsRoute
   '/signature': typeof SignatureRoute
   '/terms': typeof TermsRoute
+  '/cuisines/$slug': typeof CuisinesSlugRoute
   '/partner/membership': typeof PartnerMembershipRoute
   '/r/$slug': typeof RSlugRoute
 }
@@ -159,6 +168,7 @@ export interface FileRouteTypes {
     | '/restaurants'
     | '/signature'
     | '/terms'
+    | '/cuisines/$slug'
     | '/partner/membership'
     | '/r/$slug'
   fileRoutesByTo: FileRoutesByTo
@@ -175,6 +185,7 @@ export interface FileRouteTypes {
     | '/restaurants'
     | '/signature'
     | '/terms'
+    | '/cuisines/$slug'
     | '/partner/membership'
     | '/r/$slug'
   id:
@@ -191,6 +202,7 @@ export interface FileRouteTypes {
     | '/restaurants'
     | '/signature'
     | '/terms'
+    | '/cuisines/$slug'
     | '/partner/membership'
     | '/r/$slug'
   fileRoutesById: FileRoutesById
@@ -208,6 +220,7 @@ export interface RootRouteChildren {
   RestaurantsRoute: typeof RestaurantsRoute
   SignatureRoute: typeof SignatureRoute
   TermsRoute: typeof TermsRoute
+  CuisinesSlugRoute: typeof CuisinesSlugRoute
   RSlugRoute: typeof RSlugRoute
 }
 
@@ -311,6 +324,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PartnerMembershipRouteImport
       parentRoute: typeof PartnerRoute
     }
+    '/cuisines/$slug': {
+      id: '/cuisines/$slug'
+      path: '/cuisines/$slug'
+      fullPath: '/cuisines/$slug'
+      preLoaderRoute: typeof CuisinesSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -338,8 +358,19 @@ const rootRouteChildren: RootRouteChildren = {
   RestaurantsRoute: RestaurantsRoute,
   SignatureRoute: SignatureRoute,
   TermsRoute: TermsRoute,
+  CuisinesSlugRoute: CuisinesSlugRoute,
   RSlugRoute: RSlugRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
