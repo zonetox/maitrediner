@@ -3,6 +3,8 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { Crown, Check, Sparkles, Shield, Zap, Star, ArrowRight, QrCode } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/membership")({
   head: () => ({
@@ -16,55 +18,7 @@ export const Route = createFileRoute("/membership")({
   component: MembershipPublic,
 });
 
-const PLANS = [
-  {
-    id: "monthly",
-    name: "Essential",
-    tagline: "Khởi đầu chuyên nghiệp",
-    duration: "30 ngày",
-    price: 499000,
-    icon: Zap,
-    perks: [
-      "Trang landing page riêng đầy đủ",
-      "Nhận đặt chỗ không giới hạn",
-      "Quản lý menu & ưu đãi",
-      "Hiển thị trong danh bạ Maître",
-      "Hỗ trợ qua email",
-    ],
-  },
-  {
-    id: "quarterly",
-    name: "Signature",
-    tagline: "Lựa chọn được ưa chuộng",
-    duration: "90 ngày",
-    price: 1290000,
-    icon: Star,
-    popular: true,
-    perks: [
-      "Mọi tính năng của Essential",
-      "Ưu tiên hiển thị trong danh sách",
-      "Huy hiệu Signature trên trang",
-      "Báo cáo hiệu quả hàng tuần",
-      "Hỗ trợ ưu tiên 12h",
-    ],
-  },
-  {
-    id: "yearly",
-    name: "Maître",
-    tagline: "Đặc quyền cao cấp",
-    duration: "365 ngày",
-    price: 4490000,
-    icon: Crown,
-    perks: [
-      "Mọi tính năng của Signature",
-      "Hiển thị nổi bật trang chủ",
-      "Phân tích chuyên sâu khách hàng",
-      "Account manager riêng",
-      "Chiến dịch ưu đãi theo mùa",
-      "Tư vấn thương hiệu 1-1",
-    ],
-  },
-];
+const ICONS = [Zap, Star, Crown];
 
 const FAQS = [
   {
@@ -88,6 +42,11 @@ const FAQS = [
 function MembershipPublic() {
   const { user } = useAuth();
   const ctaTo = user ? "/partner/membership" : "/auth";
+  const [plans, setPlans] = useState<any[]>([]);
+  useEffect(() => {
+    supabase.from("membership_plans").select("*").eq("is_active", true).order("sort_order")
+      .then(({ data }) => setPlans(data ?? []));
+  }, []);
 
   return (
     <div className="min-h-screen bg-background text-foreground">
