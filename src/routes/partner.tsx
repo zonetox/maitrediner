@@ -165,9 +165,12 @@ function PartnerPage() {
               </button>
             </div>
             {restaurants.map((r) => (
-              <button key={r.id} onClick={() => setSelected(r)}
+              <button key={r.id} onClick={() => selectRestaurant(r)}
                 className={`w-full text-left p-3 rounded-lg border transition ${selected?.id === r.id ? "border-gold bg-card" : "border-border hover:bg-card"}`}>
-                <div className="font-serif text-sm">{r.name}</div>
+                <div className="font-serif text-sm flex items-center gap-1.5">
+                  {r.name}
+                  {selected?.id === r.id && dirty && <span className="h-1.5 w-1.5 rounded-full bg-amber-400 animate-pulse" title="Có thay đổi chưa lưu" />}
+                </div>
                 <div className="text-xs text-muted-foreground mt-1">{r.is_published ? "Đang công khai" : "Bản nháp"}</div>
               </button>
             ))}
