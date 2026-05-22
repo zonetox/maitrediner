@@ -121,13 +121,19 @@ function PartnerPage() {
     const { data: all } = await supabase.from("restaurants").select("*").eq("owner_id", user!.id);
     setRestaurants(all ?? []);
     setSelected(data);
+    setSavedSnapshot(JSON.stringify(data));
   }
 
   async function saveRestaurant() {
     if (!selected) return;
     const { id, created_at, updated_at, owner_id, ...payload } = selected;
     const { error } = await supabase.from("restaurants").update(payload).eq("id", id);
-    if (error) toast.error(error.message); else { toast.success("Đã lưu"); load(); }
+    if (error) toast.error(error.message);
+    else {
+      toast.success("Đã lưu thay đổi");
+      setSavedSnapshot(JSON.stringify(selected));
+      load();
+    }
   }
 
   async function deleteRestaurant() {
