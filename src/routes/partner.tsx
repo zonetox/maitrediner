@@ -377,10 +377,25 @@ function InfoTab({ r, setR }: any) {
       </div>
       <Field label="Địa chỉ" value={r.address} onChange={(v: any) => setR({ ...r, address: v })} />
       <Field label="Điện thoại" value={r.phone} onChange={(v: any) => setR({ ...r, phone: v })} />
-      <Field label="Mức giá" value={r.price_range} onChange={(v: any) => setR({ ...r, price_range: v })} />
+      <Field label="Mức giá ký hiệu (₫₫₫₫)" value={r.price_range} onChange={(v: any) => setR({ ...r, price_range: v })} />
       <Field label="Email" value={r.email} onChange={(v: any) => setR({ ...r, email: v })} />
+      <Field label="Giá ước tính / khách – từ (VNĐ)" type="number" value={r.price_per_guest_min ?? ""} onChange={(v: any) => setR({ ...r, price_per_guest_min: v === "" ? null : Number(v) })} />
+      <Field label="Giá ước tính / khách – đến (VNĐ)" type="number" value={r.price_per_guest_max ?? ""} onChange={(v: any) => setR({ ...r, price_per_guest_max: v === "" ? null : Number(v) })} />
       <div className="md:col-span-2">
         <Field label="Mô tả ngắn" textarea value={r.short_description} onChange={(v: any) => setR({ ...r, short_description: v })} />
+      </div>
+
+      {/* Fine-dining policies */}
+      <div className="md:col-span-2 p-5 rounded-xl border border-gold/30 bg-card/40 grid md:grid-cols-3 gap-4">
+        <div className="md:col-span-3 -mb-1">
+          <label className="text-xs uppercase tracking-wider text-gold flex items-center gap-2">
+            <Sparkles className="h-3 w-3" /> Thông tin "vô hình nhưng quan trọng"
+          </label>
+          <p className="text-[11px] text-muted-foreground mt-1">Hiển thị ở trang nhà hàng để thực khách cao cấp chuẩn bị trước.</p>
+        </div>
+        <Field label="Quy định trang phục (Dress code)" textarea value={r.dress_code ?? ""} onChange={(v: any) => setR({ ...r, dress_code: v })} />
+        <Field label="Chính sách hủy bàn" textarea value={r.cancellation_policy ?? ""} onChange={(v: any) => setR({ ...r, cancellation_policy: v })} />
+        <Field label="Chính sách đặt cọc" textarea value={r.deposit_policy ?? ""} onChange={(v: any) => setR({ ...r, deposit_policy: v })} />
       </div>
 
       {/* Amenities */}
