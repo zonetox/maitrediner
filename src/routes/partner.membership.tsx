@@ -12,37 +12,13 @@ export const Route = createFileRoute("/partner/membership")({
   component: MembershipPage,
 });
 
-const PLANS = [
-  {
-    id: "monthly",
-    name: "Essential",
-    duration_days: 30,
-    price: 499000,
-    perks: ["Trang landing đầy đủ", "Nhận đặt chỗ không giới hạn", "Quản lý menu & ưu đãi", "Hỗ trợ email"],
-  },
-  {
-    id: "quarterly",
-    name: "Signature",
-    duration_days: 90,
-    price: 1290000,
-    perks: ["Mọi tính năng Essential", "Ưu tiên hiển thị danh sách", "Huy hiệu Signature", "Hỗ trợ ưu tiên"],
-    popular: true,
-  },
-  {
-    id: "yearly",
-    name: "Maître",
-    duration_days: 365,
-    price: 4490000,
-    perks: ["Mọi tính năng Signature", "Hiển thị nhà hàng nổi bật trang chủ", "Báo cáo phân tích chi tiết", "Account manager riêng"],
-  },
-];
-
 function MembershipPage() {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   const [restaurants, setRestaurants] = useState<any[]>([]);
   const [restaurantId, setRestaurantId] = useState<string>("");
-  const [plan, setPlan] = useState(PLANS[1]);
+  const [plans, setPlans] = useState<any[]>([]);
+  const [plan, setPlan] = useState<any>(null);
   const [proofUrl, setProofUrl] = useState("");
   const [note, setNote] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -50,7 +26,13 @@ function MembershipPage() {
   const [pay, setPay] = useState<any>(null);
   useEffect(() => {
     supabase.from("payment_settings").select("*").eq("id", true).maybeSingle().then(({ data }) => setPay(data));
+    supabase.from("membership_plans").select("*").eq("is_active", true).order("sort_order").then(({ data }) => {
+      setPlans(data ?? []);
+      const popular = data?.find((p: any) => p.is_popular) ?? data?.[0];
+      if (popular) setPlan(popular);
+    });
   }, []);
+
 
   useEffect(() => {
     if (!loading && !user) navigate({ to: "/auth" });
@@ -77,6 +59,7 @@ function MembershipPage() {
 
   async function submit() {
     if (!user || !restaurantId) return toast.error("Chọn nhà hàng");
+    if (!plan) return toast.error("Chọn gói thành viên");
     setSubmitting(true);
     const { error } = await supabase.from("membership_payments").insert({
       user_id: user.id,
@@ -92,6 +75,7 @@ function MembershipPage() {
     toast.success("Đã gửi yêu cầu. Admin sẽ duyệt trong 24 giờ.");
     setProofUrl(""); setNote("");
   }
+
 
   if (loading) return <div className="min-h-screen bg-background" />;
   if (!user) return null;
@@ -145,31 +129,34 @@ function MembershipPage() {
 
         {/* Plans */}
         <div className="grid md:grid-cols-3 gap-4 mb-10">
-          {PLANS.map((p) => (
+          {plans.map((p: any) => (
             <button
               key={p.id}
               onClick={() => setPlan(p)}
               className={`text-left rounded-2xl border p-6 transition relative ${
-                plan.id === p.id ? "border-gold bg-gold/5 shadow-gold" : "border-border bg-card hover:border-gold/40"
+                plan?.id === p.id ? "border-gold bg-gold/5 shadow-gold" : "border-border bg-card hover:border-gold/40"
               }`}
             >
-              {p.popular && (
+              {p.is_popular && (
                 <span className="absolute -top-2 right-4 text-xs px-3 py-0.5 rounded-full bg-gradient-gold text-primary-foreground">
                   Phổ biến
                 </span>
               )}
               <div className="font-serif text-xl">{p.name}</div>
               <div className="mt-3 mb-4">
-                <span className="font-serif text-3xl text-gold">{(p.price / 1000).toFixed(0)}K</span>
+                <span className="font-serif text-3xl text-gold">{(Number(p.price) / 1000).toFixed(0)}K</span>
                 <span className="text-muted-foreground text-sm"> / {p.duration_days} ngày</span>
               </div>
               <ul className="space-y-2 text-sm text-muted-foreground">
-                {p.perks.map((perk) => (
+                {(p.perks ?? []).map((perk: string) => (
                   <li key={perk} className="flex gap-2"><Check className="h-4 w-4 text-gold mt-0.5 shrink-0" />{perk}</li>
                 ))}
               </ul>
             </button>
           ))}
+          {plans.length === 0 && (
+            <p className="text-sm text-muted-foreground italic md:col-span-3">Admin chưa cấu hình gói thành viên.</p>
+          )}
         </div>
 
         {/* Payment */}
@@ -187,8 +174,8 @@ function MembershipPage() {
               {pay?.bank_name && <Row label="Ngân hàng" value={pay.bank_name} />}
               {pay?.account_no && <Row label="Số tài khoản" value={pay.account_no} />}
               {pay?.account_holder && <Row label="Chủ tài khoản" value={pay.account_holder} />}
-              <Row label="Số tiền" value={`${plan.price.toLocaleString("vi-VN")} đ`} highlight />
-              <Row label="Nội dung" value={`MAITRE ${selectedRestaurant?.slug ?? ""} ${plan.name}`} />
+              {plan && <Row label="Số tiền" value={`${Number(plan.price).toLocaleString("vi-VN")} đ`} highlight />}
+              {plan && <Row label="Nội dung" value={`MAITRE ${selectedRestaurant?.slug ?? ""} ${plan.name}`} />}
               {pay?.instructions && <p className="text-xs text-muted-foreground mt-3 whitespace-pre-line">{pay.instructions}</p>}
             </div>
           </div>
@@ -221,15 +208,16 @@ function MembershipPage() {
               </div>
               <button
                 onClick={submit}
-                disabled={submitting || !restaurantId}
+                disabled={submitting || !restaurantId || !plan}
                 className="w-full px-5 py-3 rounded-full bg-gradient-gold text-primary-foreground font-medium hover:shadow-gold transition disabled:opacity-50"
               >
-                {submitting ? "Đang gửi…" : `Gửi yêu cầu duyệt (${plan.name})`}
+                {submitting ? "Đang gửi…" : `Gửi yêu cầu duyệt${plan ? ` (${plan.name})` : ""}`}
               </button>
               <div className="text-xs text-muted-foreground flex gap-2"><AlertCircle className="h-4 w-4 shrink-0 mt-0.5" /> Gói sẽ được kích hoạt sau khi admin duyệt thanh toán.</div>
             </div>
           </div>
         </div>
+
 
         {/* History */}
         <h3 className="font-serif text-xl mb-4 flex items-center gap-2"><Clock className="h-5 w-5 text-gold" /> Lịch sử thanh toán</h3>
