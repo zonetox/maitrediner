@@ -787,12 +787,12 @@ function DealsTab({ restaurantId, deals, reload }: any) {
         {deals.length === 0 && <p className="text-muted-foreground text-sm col-span-full">Chưa có ưu đãi.</p>}
       </div>
 
-      {editing && <DealModal deal={editing} onClose={() => setEditing(null)} onSave={save} />}
+      {editing && <DealModal deal={editing} restaurantId={restaurantId} onClose={() => setEditing(null)} onSave={save} />}
     </div>
   );
 }
 
-function DealModal({ deal, onClose, onSave }: any) {
+function DealModal({ deal, restaurantId, onClose, onSave }: any) {
   const [form, setForm] = useState<any>(deal);
   return (
     <div className="fixed inset-0 z-[60] bg-background/85 backdrop-blur overflow-y-auto p-4" onClick={onClose}>
