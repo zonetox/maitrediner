@@ -9,7 +9,7 @@ import { notify } from "@/lib/notify.functions";
 import {
   MapPin, Phone, Clock, Heart, Calendar, Sparkles, Mail,
   Utensils, Wine, ChefHat, Star, ArrowRight, X, ChevronLeft, ChevronRight, Tag, Bookmark,
-  Shirt, Receipt, AlertCircle,
+  Shirt, AlertCircle,
 } from "lucide-react";
 import { toast } from "sonner";
 
