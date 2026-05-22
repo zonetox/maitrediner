@@ -246,7 +246,6 @@ function PartnerPage() {
                   { k: "info", l: "Thông tin & Landing page", badge: 0 },
                   { k: "menu", l: `Menu (${menu.length})`, badge: 0 },
                   { k: "bookings", l: `Đặt chỗ (${bookings.length})`, badge: pendingBookings },
-                  { k: "orders", l: `Đơn món (${orders.length})`, badge: pendingOrders },
                   { k: "deals", l: `Ưu đãi (${deals.length})`, badge: 0 },
                 ] as { k: Tab; l: string; badge: number }[]).map((t) => (
                   <button key={t.k} onClick={() => setTab(t.k)}
@@ -263,7 +262,6 @@ function PartnerPage() {
               {tab === "info" && <InfoTab r={selected} setR={setSelected} />}
               {tab === "menu" && <MenuTab restaurantId={selected.id} menu={menu} reload={reload} />}
               {tab === "bookings" && <BookingsTab bookings={bookings} restaurantId={selected.id} reload={reload} />}
-              {tab === "orders" && <OrdersTab orders={orders} restaurantId={selected.id} reload={reload} />}
               {tab === "deals" && <DealsTab restaurantId={selected.id} deals={deals} reload={reload} />}
             </section>
           ) : (
@@ -767,13 +765,16 @@ function DealsTab({ restaurantId, deals, reload }: any) {
         {deals.map((d: any) => (
           <div key={d.id} className="p-5 rounded-xl bg-card border border-border">
             <div className="flex justify-between gap-3">
-              <div className="flex-1">
+              {d.image_url && (
+                <img src={d.image_url} alt={d.title} className="h-20 w-20 rounded-lg object-cover border border-border shrink-0" />
+              )}
+              <div className="flex-1 min-w-0">
                 <span className="text-xs text-gold">{d.badge}</span>
-                <h4 className="font-serif text-lg mt-1">{d.title}</h4>
-                <p className="text-sm text-muted-foreground mt-1">{d.description}</p>
+                <h4 className="font-serif text-lg mt-1 truncate">{d.title}</h4>
+                <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{d.description}</p>
                 {d.expires_at && <p className="text-xs text-muted-foreground mt-2">Hết hạn: {new Date(d.expires_at).toLocaleDateString("vi-VN")}</p>}
               </div>
-              <div className="flex flex-col gap-2 items-end">
+              <div className="flex flex-col gap-2 items-end shrink-0">
                 <button onClick={() => toggleActive(d)} className={`text-xs px-2 py-1 rounded-full border ${d.is_active ? "border-emerald-500/40 text-emerald-400" : "border-border text-muted-foreground"}`}>
                   {d.is_active ? "Đang hiện" : "Ẩn"}
                 </button>
@@ -786,12 +787,12 @@ function DealsTab({ restaurantId, deals, reload }: any) {
         {deals.length === 0 && <p className="text-muted-foreground text-sm col-span-full">Chưa có ưu đãi.</p>}
       </div>
 
-      {editing && <DealModal deal={editing} onClose={() => setEditing(null)} onSave={save} />}
+      {editing && <DealModal deal={editing} restaurantId={restaurantId} onClose={() => setEditing(null)} onSave={save} />}
     </div>
   );
 }
 
-function DealModal({ deal, onClose, onSave }: any) {
+function DealModal({ deal, restaurantId, onClose, onSave }: any) {
   const [form, setForm] = useState<any>(deal);
   return (
     <div className="fixed inset-0 z-[60] bg-background/85 backdrop-blur overflow-y-auto p-4" onClick={onClose}>
@@ -799,6 +800,10 @@ function DealModal({ deal, onClose, onSave }: any) {
 
         <h3 className="font-serif text-2xl mb-4">{form.id ? "Sửa ưu đãi" : "Thêm ưu đãi"}</h3>
         <div className="space-y-4">
+          <div>
+            <ImageUploader bucket="restaurant-images" folder={`${restaurantId}/deals`} label="Hình đại diện ưu đãi"
+              value={form.image_url || ""} onChange={(url) => setForm({ ...form, image_url: url })} aspect="aspect-video" />
+          </div>
           <Field label="Tiêu đề" value={form.title} onChange={(v: any) => setForm({ ...form, title: v })} />
           <Field label="Mô tả" textarea value={form.description} onChange={(v: any) => setForm({ ...form, description: v })} />
           <div className="grid grid-cols-2 gap-3">

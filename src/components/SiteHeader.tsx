@@ -4,7 +4,6 @@ import { Menu, X, UtensilsCrossed, User } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
 const nav = [
-  { label: "Khám phá", to: "/" },
   { label: "Nhà hàng", to: "/restaurants" },
   { label: "Ưu đãi", to: "/deals" },
   { label: "Gói thành viên", to: "/membership" },
