@@ -317,34 +317,55 @@ function RestaurantPage() {
             {menu.length === 0 ? (
               <p className="text-center text-muted-foreground italic">Đang cập nhật thực đơn...</p>
             ) : (
-              <div className="space-y-16">
+              <div className="space-y-20">
                 {Object.entries(menuByCat).map(([cat, items]) => (
                   <div key={cat}>
-                    <h3 className="font-serif text-2xl text-gold mb-6 tracking-wide">{cat}</h3>
-                    <div className="space-y-2">
+                    <div className="flex items-center gap-4 mb-8">
+                      <div className="h-px flex-1 bg-gradient-to-r from-transparent to-gold/40" />
+                      <h3 className="font-serif text-2xl md:text-3xl text-gold tracking-wide whitespace-nowrap">{cat}</h3>
+                      <div className="h-px flex-1 bg-gradient-to-l from-transparent to-gold/40" />
+                    </div>
+                    <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
                       {items.map((m) => {
                         const imgs: string[] = (m.image_urls?.length ? m.image_urls : (m.image_url ? [m.image_url] : []));
                         return (
-                          <button type="button" key={m.id} onClick={() => setDish(m)}
-                            className="w-full text-left grid md:grid-cols-[80px_1fr_auto] gap-5 items-center p-4 rounded-xl hover:bg-secondary/40 border border-transparent hover:border-border transition group">
-                            {imgs[0] ? (
-                              <div className="hidden md:block w-20 h-20 rounded-lg overflow-hidden bg-card">
-                                <img src={imgs[0]} alt={m.name} className="w-full h-full object-cover group-hover:scale-105 transition" />
+                          <button
+                            type="button"
+                            key={m.id}
+                            onClick={() => setDish(m)}
+                            className="group relative text-left rounded-2xl overflow-hidden bg-gradient-to-b from-card to-card/40 border border-border hover:border-gold/60 transition-all duration-500 hover:-translate-y-1 hover:shadow-[0_20px_60px_-15px_rgba(201,168,76,0.35)]"
+                          >
+                            <div className="relative aspect-[4/3] overflow-hidden bg-secondary/40">
+                              {imgs[0] ? (
+                                <img src={imgs[0]} alt={m.name}
+                                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                              ) : (
+                                <div className="w-full h-full grid place-items-center">
+                                  <Utensils className="h-10 w-10 text-muted-foreground/50" />
+                                </div>
+                              )}
+                              <div className="absolute inset-0 bg-gradient-to-t from-card via-card/20 to-transparent" />
+                              {m.is_signature && (
+                                <span className="absolute top-3 left-3 text-[10px] uppercase tracking-widest text-gold border border-gold/70 bg-card/80 backdrop-blur px-2.5 py-1 rounded-full">
+                                  ★ Signature
+                                </span>
+                              )}
+                              <div className="absolute bottom-3 right-3 bg-card/90 backdrop-blur border border-gold/40 text-gold font-serif text-lg px-3 py-1 rounded-full shadow-lg">
+                                {Number(m.price).toLocaleString("vi-VN")}₫
                               </div>
-                            ) : <div className="hidden md:block w-20 h-20 rounded-lg bg-secondary/40 grid place-items-center"><Utensils className="h-5 w-5 text-muted-foreground" /></div>}
-                            <div className="min-w-0">
-                              <h4 className="font-serif text-xl flex items-center gap-2 flex-wrap group-hover:text-gold transition">
-                                {m.name}
-                                {m.is_signature && (
-                                  <span className="text-[10px] uppercase tracking-widest text-gold border border-gold px-2 py-0.5 rounded-full">
-                                    Signature
-                                  </span>
-                                )}
-                              </h4>
-                              {m.description && <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed line-clamp-2">{m.description}</p>}
                             </div>
-                            <div className="text-gold font-serif text-xl whitespace-nowrap text-right">
-                              {Number(m.price).toLocaleString("vi-VN")}₫
+                            <div className="p-5">
+                              <h4 className="font-serif text-xl group-hover:text-gold transition-colors line-clamp-1">
+                                {m.name}
+                              </h4>
+                              {m.description && (
+                                <p className="text-sm text-muted-foreground mt-2 leading-relaxed line-clamp-2">
+                                  {m.description}
+                                </p>
+                              )}
+                              <div className="mt-4 flex items-center gap-2 text-[11px] uppercase tracking-[0.25em] text-gold/80 opacity-0 group-hover:opacity-100 transition-opacity">
+                                Xem chi tiết <span aria-hidden>→</span>
+                              </div>
                             </div>
                           </button>
                         );
