@@ -43,6 +43,8 @@ function RestaurantPage() {
   const [dish, setDish] = useState<any | null>(null);
   const [deal, setDeal] = useState<any | null>(null);
   const [lightbox, setLightbox] = useState<{ list: string[]; index: number } | null>(null);
+  const [isFav, setIsFav] = useState(false);
+  const [savedDeals, setSavedDeals] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     (async () => {
@@ -60,39 +62,48 @@ function RestaurantPage() {
     })();
   }, [slug]);
 
+  // Load favorite state for current user
+  useEffect(() => {
+    (async () => {
+      if (!user || !r) { setIsFav(false); setSavedDeals(new Set()); return; }
+      const { data } = await supabase
+        .from("favorites")
+        .select("restaurant_id, deal_id")
+        .eq("user_id", user.id);
+      const favs = data ?? [];
+      setIsFav(favs.some((f: any) => f.restaurant_id === r.id));
+      setSavedDeals(new Set(favs.filter((f: any) => f.deal_id).map((f: any) => f.deal_id)));
+    })();
+  }, [user, r]);
+
   async function addFavorite() {
     if (!user) return toast.error("Vui lòng đăng nhập để lưu yêu thích");
-    const { data: existing } = await supabase
-      .from("favorites")
-      .select("id")
-      .eq("user_id", user.id)
-      .eq("restaurant_id", r.id)
-      .maybeSingle();
-    if (existing) {
-      const { error } = await supabase.from("favorites").delete().eq("id", existing.id);
+    if (isFav) {
+      const { error } = await supabase.from("favorites").delete().eq("user_id", user.id).eq("restaurant_id", r.id);
       if (error) return toast.error(error.message);
+      setIsFav(false);
       return toast.success("Đã bỏ khỏi yêu thích");
     }
     const { error } = await supabase.from("favorites").insert({ user_id: user.id, restaurant_id: r.id });
-    if (error) toast.error(error.message); else toast.success("Đã lưu vào yêu thích");
+    if (error) return toast.error(error.message);
+    setIsFav(true);
+    toast.success("Đã lưu vào yêu thích");
   }
 
   async function saveDeal(id: string) {
     if (!user) return toast.error("Vui lòng đăng nhập để lưu ưu đãi");
-    const { data: existing } = await supabase
-      .from("favorites")
-      .select("id")
-      .eq("user_id", user.id)
-      .eq("deal_id", id)
-      .maybeSingle();
-    if (existing) {
-      const { error } = await supabase.from("favorites").delete().eq("id", existing.id);
+    if (savedDeals.has(id)) {
+      const { error } = await supabase.from("favorites").delete().eq("user_id", user.id).eq("deal_id", id);
       if (error) return toast.error(error.message);
+      setSavedDeals((s) => { const n = new Set(s); n.delete(id); return n; });
       return toast.success("Đã bỏ ưu đãi khỏi yêu thích");
     }
     const { error } = await supabase.from("favorites").insert({ user_id: user.id, deal_id: id });
-    if (error) toast.error(error.message); else toast.success("Đã lưu ưu đãi");
+    if (error) return toast.error(error.message);
+    setSavedDeals((s) => new Set(s).add(id));
+    toast.success("Đã lưu ưu đãi");
   }
+
 
   if (loading) return <div className="min-h-screen bg-background" />;
   if (!r) return (
@@ -185,10 +196,21 @@ function RestaurantPage() {
                   <Phone className="h-4 w-4" /> Gọi nhà hàng
                 </a>
               )}
-              <button onClick={addFavorite} className="px-8 py-4 rounded-full border border-border hover:border-gold flex items-center gap-2 transition">
-                <Heart className="h-4 w-4" /> Lưu
+              <button onClick={addFavorite}
+                className={`px-8 py-4 rounded-full border flex items-center gap-2 transition ${isFav ? "border-gold bg-gold/10 text-gold" : "border-border hover:border-gold"}`}>
+                <Heart className={`h-4 w-4 ${isFav ? "fill-gold text-gold" : ""}`} /> {isFav ? "Đã lưu" : "Lưu"}
               </button>
             </div>
+            {Array.isArray(r.amenities) && r.amenities.length > 0 && (
+              <div className="mt-8 flex flex-wrap gap-2">
+                {r.amenities.map((a: string) => (
+                  <span key={a} className="text-xs px-3 py-1.5 rounded-full bg-background/60 backdrop-blur border border-gold/30 text-foreground/90">
+                    {a}
+                  </span>
+                ))}
+              </div>
+            )}
+
           </div>
         </section>
 
@@ -277,16 +299,24 @@ function RestaurantPage() {
                 </div>
               </div>
               <div className="grid md:grid-cols-3 gap-6">
-                {deals.map((d) => (
-                  <button type="button" key={d.id} onClick={() => setDeal(d)}
-                    className="relative text-left p-8 rounded-2xl bg-card border border-border hover:border-gold transition group overflow-hidden">
+                {deals.map((d) => {
+                  const saved = savedDeals.has(d.id);
+                  return (
+                  <div role="button" tabIndex={0} key={d.id} onClick={() => setDeal(d)}
+                    onKeyDown={(e) => { if (e.key === "Enter") setDeal(d); }}
+                    className="relative text-left p-8 rounded-2xl bg-card border border-border hover:border-gold transition group overflow-hidden cursor-pointer">
                     <div className="absolute -top-10 -right-10 h-32 w-32 rounded-full bg-gradient-gold opacity-10 blur-2xl group-hover:opacity-20 transition" />
+                    <button type="button" onClick={(e) => { e.stopPropagation(); saveDeal(d.id); }}
+                      title={saved ? "Bỏ lưu ưu đãi" : "Lưu ưu đãi"}
+                      className={`absolute top-4 right-4 h-9 w-9 grid place-items-center rounded-full border transition ${saved ? "border-gold bg-gold/15 text-gold" : "border-border bg-background/60 hover:border-gold hover:text-gold"}`}>
+                      <Bookmark className={`h-4 w-4 ${saved ? "fill-gold" : ""}`} />
+                    </button>
                     {d.badge && (
                       <span className="text-[10px] tracking-widest uppercase px-2 py-1 rounded-full border border-gold text-gold">
                         {d.badge}
                       </span>
                     )}
-                    <h3 className="font-serif text-2xl mt-4 group-hover:text-gold transition">{d.title}</h3>
+                    <h3 className="font-serif text-2xl mt-4 group-hover:text-gold transition pr-10">{d.title}</h3>
                     {d.description && <p className="text-sm text-muted-foreground mt-3 leading-relaxed line-clamp-3">{d.description}</p>}
                     <div className="flex items-center justify-between mt-6 pt-4 border-t border-border text-xs">
                       {d.expires_at ? (
@@ -296,8 +326,10 @@ function RestaurantPage() {
                       ) : <span />}
                       <span className="text-gold inline-flex items-center gap-1">Chi tiết <ArrowRight className="h-3 w-3" /></span>
                     </div>
-                  </button>
-                ))}
+                  </div>
+                  );
+                })}
+
               </div>
             </div>
           </section>
