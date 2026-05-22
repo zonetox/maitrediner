@@ -801,10 +801,8 @@ function DealModal({ deal, onClose, onSave }: any) {
         <h3 className="font-serif text-2xl mb-4">{form.id ? "Sửa ưu đãi" : "Thêm ưu đãi"}</h3>
         <div className="space-y-4">
           <div>
-            <label className="text-xs uppercase tracking-wider text-muted-foreground">Hình đại diện ưu đãi</label>
-            <div className="mt-2">
-              <ImageUploader value={form.image_url || ""} onChange={(url) => setForm({ ...form, image_url: url })} aspect="aspect-video" />
-            </div>
+            <ImageUploader bucket="restaurant-images" folder={`${restaurantId}/deals`} label="Hình đại diện ưu đãi"
+              value={form.image_url || ""} onChange={(url) => setForm({ ...form, image_url: url })} aspect="aspect-video" />
           </div>
           <Field label="Tiêu đề" value={form.title} onChange={(v: any) => setForm({ ...form, title: v })} />
           <Field label="Mô tả" textarea value={form.description} onChange={(v: any) => setForm({ ...form, description: v })} />
