@@ -23,8 +23,7 @@ function AdminPage() {
   const [profiles, setProfiles] = useState<any[]>([]);
   const [userRoles, setUserRoles] = useState<any[]>([]);
   const [bookings, setBookings] = useState<any[]>([]);
-  const [orders, setOrders] = useState<any[]>([]);
-  const [stats, setStats] = useState({ restaurants: 0, users: 0, pending: 0, bookings: 0, orders: 0 });
+  const [stats, setStats] = useState({ restaurants: 0, users: 0, pending: 0, bookings: 0 });
 
   useEffect(() => {
     if (!loading && !user) navigate({ to: "/auth" });
