@@ -750,7 +750,8 @@ function BookingModal({ r, menu, onClose, user }: any) {
     e.preventDefault();
     if (!form.date || !form.time) return toast.error("Vui lòng chọn ngày và giờ");
     setSubmitting(true);
-    const booking_at = `${form.date}T${form.time}`;
+    // Lưu kèm offset +07:00 (giờ Việt Nam) để dashboard & email hiển thị nhất quán
+    const booking_at = `${form.date}T${form.time}:00+07:00`;
     const preorderNote = selectedItems.length
       ? `\n\n— Món đặt trước —\n${selectedItems.map((m: any) => `• ${m.name} x${preorder[m.id]} — ${Number(m.price * preorder[m.id]).toLocaleString("vi-VN")}₫`).join("\n")}\nTạm tính: ${preorderTotal.toLocaleString("vi-VN")}₫`
       : "";
@@ -765,6 +766,19 @@ function BookingModal({ r, menu, onClose, user }: any) {
     if (row) notifyFn({ data: { type: "booking", restaurantId: r.id, recordId: row.id } }).catch(() => {});
     onClose();
   }
+
+  // Khung giờ đặt chỗ 30' từ 10:00 đến 22:30
+  const timeSlots = (() => {
+    const arr: { label: string; value: string }[] = [];
+    for (let h = 10; h <= 22; h++) {
+      for (const m of [0, 30]) {
+        const v = `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+        arr.push({ label: v, value: v });
+      }
+    }
+    return arr;
+  })();
+
 
   return (
     <div className="fixed inset-0 z-[80] bg-background/85 backdrop-blur grid place-items-center p-3" onClick={onClose}>
@@ -793,9 +807,13 @@ function BookingModal({ r, menu, onClose, user }: any) {
             </label>
             <label className="relative">
               <span className="absolute -top-2 left-2 px-1 bg-card text-[9px] uppercase tracking-widest text-muted-foreground">Giờ</span>
-              <input required type="time" step={900} value={form.time} onChange={(e) => setForm({ ...form, time: e.target.value })}
-                className="w-full px-3 py-2.5 rounded-lg bg-background border border-border focus:border-gold outline-none text-sm [color-scheme:dark]" />
+              <select required value={form.time} onChange={(e) => setForm({ ...form, time: e.target.value })}
+                className="w-full px-3 py-2.5 rounded-lg bg-background border border-border focus:border-gold outline-none text-sm appearance-none cursor-pointer">
+                <option value="">--:--</option>
+                {timeSlots.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
+              </select>
             </label>
+
             <label className="relative">
               <span className="absolute -top-2 left-2 px-1 bg-card text-[9px] uppercase tracking-widest text-muted-foreground">Khách</span>
               <input required type="number" min={1} max={50} value={form.party_size}

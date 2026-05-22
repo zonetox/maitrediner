@@ -53,7 +53,7 @@ export const notify = createServerFn({ method: "POST" })
     if (data.type === "booking" && data.recordId) {
       const { data: b } = await supabaseAdmin.from("bookings").select("*").eq("id", data.recordId).maybeSingle();
       if (!b) return { ok: false, skipped: "no_record" };
-      const when = new Date(b.booking_at).toLocaleString("vi-VN");
+      const when = new Date(b.booking_at).toLocaleString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh", hour12: false });
       const guestHtml = wrap(`Đã nhận yêu cầu đặt chỗ tại ${r.name}`, `
         <p>Xin chào <b>${escapeHtml(b.guest_name)}</b>,</p>
         <p>Chúng tôi đã nhận yêu cầu đặt chỗ của bạn. Nhà hàng sẽ liên hệ xác nhận trong thời gian sớm nhất.</p>

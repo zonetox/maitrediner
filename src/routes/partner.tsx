@@ -662,7 +662,7 @@ function BookingsTab({ bookings, restaurantId, reload }: any) {
         <div key={b.id} className="p-5 rounded-xl bg-card border border-border flex flex-wrap justify-between gap-3">
           <div>
             <div className="flex items-center gap-2"><Calendar className="h-4 w-4 text-gold" /><span className="font-serif text-lg">{b.guest_name}</span></div>
-            <p className="text-sm text-muted-foreground mt-1">{new Date(b.booking_at).toLocaleString("vi-VN")} · {b.party_size} khách</p>
+            <p className="text-sm text-muted-foreground mt-1">{new Date(b.booking_at).toLocaleString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh", hour12: false })} · {b.party_size} khách</p>
             <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1"><Phone className="h-3 w-3" /> <a href={`tel:${b.guest_phone}`} className="hover:text-gold">{b.guest_phone}</a>{b.guest_email && <span className="ml-2">· {b.guest_email}</span>}</p>
             {b.notes && <p className="text-xs text-muted-foreground mt-2 italic">"{b.notes}"</p>}
           </div>
