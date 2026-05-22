@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { SiteHeader } from "@/components/SiteHeader";
-import { Shield, Users, Store, CreditCard, CheckCircle2, XCircle, Star, Eye, EyeOff, ArrowRight, Calendar, ShoppingBag, Settings as SettingsIcon, Save, Plus, Trash2, Utensils, MapPin } from "lucide-react";
+import { Shield, Users, Store, CreditCard, CheckCircle2, XCircle, Star, Eye, EyeOff, ArrowRight, Calendar, Save, Plus, Trash2, Utensils, MapPin, Sparkles } from "lucide-react";
 import { ImageUploader } from "@/components/ImageUploader";
 import { toast } from "sonner";
 
