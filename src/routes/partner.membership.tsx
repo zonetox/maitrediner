@@ -12,37 +12,13 @@ export const Route = createFileRoute("/partner/membership")({
   component: MembershipPage,
 });
 
-const PLANS = [
-  {
-    id: "monthly",
-    name: "Essential",
-    duration_days: 30,
-    price: 499000,
-    perks: ["Trang landing đầy đủ", "Nhận đặt chỗ không giới hạn", "Quản lý menu & ưu đãi", "Hỗ trợ email"],
-  },
-  {
-    id: "quarterly",
-    name: "Signature",
-    duration_days: 90,
-    price: 1290000,
-    perks: ["Mọi tính năng Essential", "Ưu tiên hiển thị danh sách", "Huy hiệu Signature", "Hỗ trợ ưu tiên"],
-    popular: true,
-  },
-  {
-    id: "yearly",
-    name: "Maître",
-    duration_days: 365,
-    price: 4490000,
-    perks: ["Mọi tính năng Signature", "Hiển thị nhà hàng nổi bật trang chủ", "Báo cáo phân tích chi tiết", "Account manager riêng"],
-  },
-];
-
 function MembershipPage() {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   const [restaurants, setRestaurants] = useState<any[]>([]);
   const [restaurantId, setRestaurantId] = useState<string>("");
-  const [plan, setPlan] = useState(PLANS[1]);
+  const [plans, setPlans] = useState<any[]>([]);
+  const [plan, setPlan] = useState<any>(null);
   const [proofUrl, setProofUrl] = useState("");
   const [note, setNote] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -50,7 +26,13 @@ function MembershipPage() {
   const [pay, setPay] = useState<any>(null);
   useEffect(() => {
     supabase.from("payment_settings").select("*").eq("id", true).maybeSingle().then(({ data }) => setPay(data));
+    supabase.from("membership_plans").select("*").eq("is_active", true).order("sort_order").then(({ data }) => {
+      setPlans(data ?? []);
+      const popular = data?.find((p: any) => p.is_popular) ?? data?.[0];
+      if (popular) setPlan(popular);
+    });
   }, []);
+
 
   useEffect(() => {
     if (!loading && !user) navigate({ to: "/auth" });
