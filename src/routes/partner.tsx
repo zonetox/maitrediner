@@ -302,7 +302,7 @@ function CreateRestaurantModal({ onClose, onCreate }: any) {
   );
 }
 
-function Field({ label, value, onChange, textarea }: any) {
+function Field({ label, value, onChange, textarea, type }: any) {
   return (
     <div>
       <label className="text-xs uppercase tracking-wider text-muted-foreground">{label}</label>
@@ -310,7 +310,7 @@ function Field({ label, value, onChange, textarea }: any) {
         <textarea value={value ?? ""} onChange={(e) => onChange(e.target.value)} rows={4}
           className="w-full mt-2 px-4 py-3 rounded-lg bg-card border border-border focus:border-gold outline-none" />
       ) : (
-        <input value={value ?? ""} onChange={(e) => onChange(e.target.value)}
+        <input type={type ?? "text"} value={value ?? ""} onChange={(e) => onChange(e.target.value)}
           className="w-full mt-2 px-4 py-3 rounded-lg bg-card border border-border focus:border-gold outline-none" />
       )}
     </div>
