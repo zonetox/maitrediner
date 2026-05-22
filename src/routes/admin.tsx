@@ -12,7 +12,7 @@ export const Route = createFileRoute("/admin")({
   component: AdminPage,
 });
 
-type Tab = "overview" | "restaurants" | "payments" | "users" | "bookings" | "orders" | "directory" | "settings";
+type Tab = "overview" | "restaurants" | "payments" | "users" | "bookings" | "directory" | "settings";
 
 function AdminPage() {
   const { user, loading, hasRole, roles } = useAuth();
