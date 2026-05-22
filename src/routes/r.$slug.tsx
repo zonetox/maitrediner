@@ -586,6 +586,72 @@ function Lightbox({ list, index, onClose, onIndex }: { list: string[]; index: nu
   );
 }
 
+function extractYouTubeId(url: string): string | null {
+  if (!url) return null;
+  const m = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|v\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/);
+  return m ? m[1] : null;
+}
+
+function HeroMedia({ r, lc, cover, gallery, onZoom }: { r: any; lc: any; cover: string; gallery: string[]; onZoom: (list: string[], i: number) => void }) {
+  const ytId = lc.use_youtube ? extractYouTubeId(lc.hero_youtube_url ?? "") : null;
+  const slides: { image: string; title: string }[] = (lc.hero_slides ?? []).filter((s: any) => s && s.image);
+  const [idx, setIdx] = useState(0);
+
+  useEffect(() => {
+    if (ytId || slides.length < 2) return;
+    const t = setInterval(() => setIdx((i) => (i + 1) % slides.length), 6000);
+    return () => clearInterval(t);
+  }, [ytId, slides.length]);
+
+  if (ytId) {
+    return (
+      <>
+        <iframe
+          className="absolute inset-0 w-full h-full pointer-events-none"
+          src={`https://www.youtube.com/embed/${ytId}?autoplay=1&mute=1&controls=0&loop=1&playlist=${ytId}&modestbranding=1&playsinline=1&rel=0`}
+          title={r.name}
+          allow="autoplay; encrypted-media"
+          style={{ border: 0 }}
+        />
+        <div className="absolute inset-0 bg-background/30" />
+      </>
+    );
+  }
+
+  if (slides.length > 0) {
+    return (
+      <>
+        {slides.map((s, i) => (
+          <img key={i} src={s.image} alt={s.title || r.name}
+            onClick={() => onZoom(slides.map((x) => x.image), i)}
+            className={`absolute inset-0 w-full h-full object-cover scale-105 cursor-zoom-in transition-opacity duration-1000 ${i === idx ? "opacity-100" : "opacity-0"}`} />
+        ))}
+        {slides[idx]?.title && (
+          <div className="absolute top-24 right-6 md:right-10 z-10 max-w-xs text-right">
+            <span className="text-[10px] tracking-[0.3em] uppercase text-gold">Slide {idx + 1} / {slides.length}</span>
+            <p className="font-serif text-lg md:text-2xl mt-1 text-foreground/90 italic">{slides[idx].title}</p>
+          </div>
+        )}
+        {slides.length > 1 && (
+          <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-10 flex gap-2">
+            {slides.map((_, i) => (
+              <button key={i} onClick={() => setIdx(i)}
+                className={`h-1.5 rounded-full transition-all ${i === idx ? "w-8 bg-gold" : "w-2 bg-foreground/30 hover:bg-foreground/60"}`}
+                aria-label={`Slide ${i + 1}`} />
+            ))}
+          </div>
+        )}
+      </>
+    );
+  }
+
+  return (
+    <img src={cover} alt={r.name} className="absolute inset-0 w-full h-full object-cover scale-105 cursor-zoom-in"
+      onClick={() => onZoom([cover, ...gallery], 0)} />
+  );
+}
+
+
 function BookingModal({ r, menu, onClose, user }: any) {
   const notifyFn = useServerFn(notify);
   const [form, setForm] = useState({
