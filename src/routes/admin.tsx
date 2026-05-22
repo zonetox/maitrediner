@@ -480,3 +480,112 @@ function fmtDate(d: string | null) {
   if (!d) return "—";
   return new Date(d).toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric" });
 }
+
+function DirectoryTab() {
+  const [cuisines, setCuisines] = useState<any[]>([]);
+  const [locations, setLocations] = useState<any[]>([]);
+  const [newCuisine, setNewCuisine] = useState({ name: "", icon: "Utensils" });
+  const [newLocation, setNewLocation] = useState("");
+
+  async function load() {
+    const [{ data: cu }, { data: lo }] = await Promise.all([
+      supabase.from("cuisine_categories").select("*").order("sort_order"),
+      supabase.from("locations").select("*").order("sort_order"),
+    ]);
+    setCuisines(cu ?? []); setLocations(lo ?? []);
+  }
+  useEffect(() => { load(); }, []);
+
+  function slugify(s: string) {
+    return s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+      .replace(/đ/g, "d").replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+  }
+
+  async function addCuisine() {
+    if (!newCuisine.name.trim()) return;
+    const { error } = await supabase.from("cuisine_categories").insert({
+      name: newCuisine.name.trim(), slug: slugify(newCuisine.name), icon: newCuisine.icon || null,
+      sort_order: cuisines.length + 1,
+    });
+    if (error) return toast.error(error.message);
+    setNewCuisine({ name: "", icon: "Utensils" }); load();
+  }
+  async function removeCuisine(id: string) {
+    if (!confirm("Xoá danh mục này?")) return;
+    await supabase.from("cuisine_categories").delete().eq("id", id); load();
+  }
+  async function toggleCuisine(c: any) {
+    await supabase.from("cuisine_categories").update({ is_active: !c.is_active }).eq("id", c.id); load();
+  }
+  async function addLocation() {
+    if (!newLocation.trim()) return;
+    const { error } = await supabase.from("locations").insert({
+      name: newLocation.trim(), slug: slugify(newLocation), sort_order: locations.length + 1,
+    });
+    if (error) return toast.error(error.message);
+    setNewLocation(""); load();
+  }
+  async function removeLocation(id: string) {
+    if (!confirm("Xoá địa điểm này?")) return;
+    await supabase.from("locations").delete().eq("id", id); load();
+  }
+  async function toggleLocation(l: any) {
+    await supabase.from("locations").update({ is_active: !l.is_active }).eq("id", l.id); load();
+  }
+
+  return (
+    <div className="grid lg:grid-cols-2 gap-6">
+      <Panel title={<span className="flex items-center gap-2"><Utensils className="h-4 w-4 text-gold" /> Danh mục nhà hàng</span> as any}>
+        <div className="flex gap-2 mb-4">
+          <input value={newCuisine.name} onChange={(e) => setNewCuisine({ ...newCuisine, name: e.target.value })}
+            placeholder="Tên danh mục (vd: Hải sản cao cấp)" className="flex-1 bg-background border border-border rounded-md px-3 py-2 text-sm" />
+          <input value={newCuisine.icon} onChange={(e) => setNewCuisine({ ...newCuisine, icon: e.target.value })}
+            placeholder="Icon (Lucide)" className="w-32 bg-background border border-border rounded-md px-3 py-2 text-sm font-mono" />
+          <button onClick={addCuisine} className="px-4 py-2 rounded-md bg-gradient-gold text-primary-foreground text-sm inline-flex items-center gap-1">
+            <Plus className="h-3 w-3" /> Thêm
+          </button>
+        </div>
+        <p className="text-[10px] text-muted-foreground mb-3">Icon dùng tên từ lucide.dev (vd: Utensils, Fish, Beef, Wine, Pizza, Soup, ChefHat).</p>
+        <div className="space-y-2">
+          {cuisines.map((c) => (
+            <div key={c.id} className="flex items-center gap-3 p-2 rounded-md border border-border bg-card/50">
+              <span className="text-xs text-muted-foreground font-mono w-20 truncate">{c.icon ?? "—"}</span>
+              <span className={`flex-1 font-serif ${c.is_active ? "" : "line-through text-muted-foreground"}`}>{c.name}</span>
+              <button onClick={() => toggleCuisine(c)} className="text-xs text-muted-foreground hover:text-gold">
+                {c.is_active ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+              </button>
+              <button onClick={() => removeCuisine(c.id)} className="text-muted-foreground hover:text-destructive">
+                <Trash2 className="h-4 w-4" />
+              </button>
+            </div>
+          ))}
+          {cuisines.length === 0 && <p className="text-sm text-muted-foreground italic">Chưa có danh mục.</p>}
+        </div>
+      </Panel>
+
+      <Panel title={<span className="flex items-center gap-2"><MapPin className="h-4 w-4 text-gold" /> Địa điểm</span> as any}>
+        <div className="flex gap-2 mb-4">
+          <input value={newLocation} onChange={(e) => setNewLocation(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addLocation(); } }}
+            placeholder="Tên địa điểm (vd: Nha Trang)" className="flex-1 bg-background border border-border rounded-md px-3 py-2 text-sm" />
+          <button onClick={addLocation} className="px-4 py-2 rounded-md bg-gradient-gold text-primary-foreground text-sm inline-flex items-center gap-1">
+            <Plus className="h-3 w-3" /> Thêm
+          </button>
+        </div>
+        <div className="space-y-2">
+          {locations.map((l) => (
+            <div key={l.id} className="flex items-center gap-3 p-2 rounded-md border border-border bg-card/50">
+              <span className={`flex-1 font-serif ${l.is_active ? "" : "line-through text-muted-foreground"}`}>{l.name}</span>
+              <button onClick={() => toggleLocation(l)} className="text-xs text-muted-foreground hover:text-gold">
+                {l.is_active ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+              </button>
+              <button onClick={() => removeLocation(l.id)} className="text-muted-foreground hover:text-destructive">
+                <Trash2 className="h-4 w-4" />
+              </button>
+            </div>
+          ))}
+          {locations.length === 0 && <p className="text-sm text-muted-foreground italic">Chưa có địa điểm.</p>}
+        </div>
+      </Panel>
+    </div>
+  );
