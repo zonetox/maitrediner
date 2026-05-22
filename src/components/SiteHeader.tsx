@@ -5,6 +5,7 @@ import { useAuth } from "@/hooks/useAuth";
 
 const nav = [
   { label: "Nhà hàng", to: "/restaurants" },
+  { label: "Signature", to: "/signature" },
   { label: "Ưu đãi", to: "/deals" },
   { label: "Gói thành viên", to: "/membership" },
 ];
