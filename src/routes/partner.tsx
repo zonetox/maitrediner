@@ -574,8 +574,9 @@ function DealsTab({ restaurantId, deals, reload }: any) {
 function DealModal({ deal, onClose, onSave }: any) {
   const [form, setForm] = useState<any>(deal);
   return (
-    <div className="fixed inset-0 z-[60] bg-background/85 backdrop-blur grid place-items-center p-4" onClick={onClose}>
-      <div onClick={(e) => e.stopPropagation()} className="bg-card border border-border rounded-2xl p-6 max-w-lg w-full shadow-elegant">
+    <div className="fixed inset-0 z-[60] bg-background/85 backdrop-blur overflow-y-auto p-4" onClick={onClose}>
+      <div onClick={(e) => e.stopPropagation()} className="bg-card border border-border rounded-2xl p-6 max-w-lg w-full shadow-elegant my-8 mx-auto max-h-[calc(100vh-4rem)] overflow-y-auto">
+
         <h3 className="font-serif text-2xl mb-4">{form.id ? "Sửa ưu đãi" : "Thêm ưu đãi"}</h3>
         <div className="space-y-4">
           <Field label="Tiêu đề" value={form.title} onChange={(v: any) => setForm({ ...form, title: v })} />
