@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { SiteHeader } from "@/components/SiteHeader";
-import { Heart, Calendar, Tag, MapPin, ShoppingBag, X, Trash2 } from "lucide-react";
+import { Heart, Calendar, Tag, MapPin, X, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/account")({
@@ -11,7 +11,7 @@ export const Route = createFileRoute("/account")({
   component: AccountPage,
 });
 
-type Tab = "favorites" | "bookings" | "orders" | "deals" | "profile";
+type Tab = "favorites" | "bookings" | "deals" | "profile";
 
 function AccountPage() {
   const { user, loading } = useAuth();
@@ -19,7 +19,7 @@ function AccountPage() {
   const [tab, setTab] = useState<Tab>("favorites");
   const [favs, setFavs] = useState<any[]>([]);
   const [bookings, setBookings] = useState<any[]>([]);
-  const [orders, setOrders] = useState<any[]>([]);
+  
   const [savedDeals, setSavedDeals] = useState<any[]>([]);
   const [profile, setProfile] = useState<any>({ full_name: "", phone: "" });
 
@@ -29,16 +29,15 @@ function AccountPage() {
 
   async function loadAll() {
     if (!user) return;
-    const [f, b, o, p] = await Promise.all([
+    const [f, b, p] = await Promise.all([
       supabase.from("favorites").select("*, restaurants(*), deals(*, restaurants(name, slug))").eq("user_id", user.id),
       supabase.from("bookings").select("*, restaurants(name, slug)").eq("user_id", user.id).order("booking_at", { ascending: false }),
-      supabase.from("orders").select("*, restaurants(name, slug)").eq("user_id", user.id).order("created_at", { ascending: false }),
       supabase.from("profiles").select("*").eq("id", user.id).single(),
     ]);
     setFavs((f.data ?? []).filter((x: any) => x.restaurant_id));
     setSavedDeals((f.data ?? []).filter((x: any) => x.deal_id));
     setBookings(b.data ?? []);
-    setOrders(o.data ?? []);
+    
     if (p.data) setProfile(p.data);
   }
 
@@ -81,7 +80,6 @@ function AccountPage() {
               { k: "favorites", l: `Yêu thích (${favs.length})` },
               { k: "deals", l: `Ưu đãi đã lưu (${savedDeals.length})` },
               { k: "bookings", l: `Đặt chỗ (${bookings.length})` },
-              { k: "orders", l: `Đơn món (${orders.length})` },
               { k: "profile", l: "Hồ sơ" },
             ].map((t) => (
               <button
@@ -160,34 +158,6 @@ function AccountPage() {
             </div>
           )}
 
-          {tab === "orders" && (
-            <div className="space-y-3">
-              {orders.length === 0 && <EmptyState icon={ShoppingBag} text="Chưa có đơn món nào." />}
-              {orders.map((o) => (
-                <div key={o.id} className="p-5 rounded-xl bg-card border border-border">
-                  <div className="flex flex-wrap justify-between gap-3 mb-3">
-                    <div>
-                      <Link to="/r/$slug" params={{ slug: o.restaurants?.slug ?? "" }} className="font-serif text-lg hover:text-gold">{o.restaurants?.name}</Link>
-                      <p className="text-xs text-muted-foreground">{new Date(o.created_at).toLocaleString("vi-VN")}</p>
-                    </div>
-                    <div className="text-right">
-                      <span className={`text-xs px-3 py-1 rounded-full ${statusBadge(o.status)}`}>{statusLabel(o.status)}</span>
-                      <div className="text-gold font-serif text-xl mt-1">{Number(o.total_amount).toLocaleString("vi-VN")}₫</div>
-                    </div>
-                  </div>
-                  <div className="border-t border-border pt-3 space-y-1">
-                    {Array.isArray(o.items) && o.items.map((it: any, i: number) => (
-                      <div key={i} className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">{it.qty}× {it.name}</span>
-                        <span>{(it.price * it.qty).toLocaleString("vi-VN")}₫</span>
-                      </div>
-                    ))}
-                  </div>
-                  {o.notes && <p className="text-xs text-muted-foreground mt-2 italic">"{o.notes}"</p>}
-                </div>
-              ))}
-            </div>
-          )}
 
           {tab === "profile" && (
             <div className="max-w-md space-y-4">
