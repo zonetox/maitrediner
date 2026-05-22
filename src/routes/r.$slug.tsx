@@ -196,10 +196,21 @@ function RestaurantPage() {
                   <Phone className="h-4 w-4" /> Gọi nhà hàng
                 </a>
               )}
-              <button onClick={addFavorite} className="px-8 py-4 rounded-full border border-border hover:border-gold flex items-center gap-2 transition">
-                <Heart className="h-4 w-4" /> Lưu
+              <button onClick={addFavorite}
+                className={`px-8 py-4 rounded-full border flex items-center gap-2 transition ${isFav ? "border-gold bg-gold/10 text-gold" : "border-border hover:border-gold"}`}>
+                <Heart className={`h-4 w-4 ${isFav ? "fill-gold text-gold" : ""}`} /> {isFav ? "Đã lưu" : "Lưu"}
               </button>
             </div>
+            {Array.isArray(r.amenities) && r.amenities.length > 0 && (
+              <div className="mt-8 flex flex-wrap gap-2">
+                {r.amenities.map((a: string) => (
+                  <span key={a} className="text-xs px-3 py-1.5 rounded-full bg-background/60 backdrop-blur border border-gold/30 text-foreground/90">
+                    {a}
+                  </span>
+                ))}
+              </div>
+            )}
+
           </div>
         </section>
 
