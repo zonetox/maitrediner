@@ -335,6 +335,7 @@ function AdminPage() {
           </Table>
         )}
 
+        {tab === "directory" && <DirectoryTab />}
         {tab === "settings" && <SettingsTab />}
       </main>
     </div>
