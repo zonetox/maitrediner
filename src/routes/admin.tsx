@@ -316,6 +316,7 @@ function AdminPage() {
 
 
         {tab === "directory" && <DirectoryTab />}
+        {tab === "plans" && <PlansTab />}
         {tab === "settings" && <SettingsTab />}
       </main>
     </div>
