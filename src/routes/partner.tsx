@@ -391,7 +391,41 @@ function InfoTab({ r, setR }: any) {
         <h3 className="font-serif text-xl mb-4 text-gold">Nội dung Landing page</h3>
       </div>
       <Field label="Tagline (Hero)" value={lc.hero_tagline} onChange={(v: any) => setLC("hero_tagline", v)} />
-      <Field label="Giờ mở cửa" value={lc.hours} onChange={(v: any) => setLC("hours", v)} />
+      <div className="md:col-span-2">
+        <label className="text-xs uppercase tracking-wider text-muted-foreground">Giờ mở cửa</label>
+        <div className="space-y-2 mt-2">
+          {((lc.hours_list as { day: string; time: string }[]) ?? []).map((row, i) => (
+            <div key={i} className="flex gap-2">
+              <input value={row.day}
+                onChange={(e) => {
+                  const next = [...(lc.hours_list ?? [])];
+                  next[i] = { ...next[i], day: e.target.value };
+                  setLC("hours_list", next);
+                }}
+                placeholder="Vd: Thứ 2 – Thứ 5"
+                className="w-1/3 bg-background border border-border rounded-md px-3 py-2 text-sm" />
+              <input value={row.time}
+                onChange={(e) => {
+                  const next = [...(lc.hours_list ?? [])];
+                  next[i] = { ...next[i], time: e.target.value };
+                  setLC("hours_list", next);
+                }}
+                placeholder="Vd: 11:30 – 14:30 · 18:00 – 22:30"
+                className="flex-1 bg-background border border-border rounded-md px-3 py-2 text-sm" />
+              <button type="button"
+                onClick={() => {
+                  const next = [...(lc.hours_list ?? [])];
+                  next.splice(i, 1);
+                  setLC("hours_list", next);
+                }}
+                className="px-3 rounded-md border border-border text-muted-foreground hover:text-destructive">×</button>
+            </div>
+          ))}
+          <button type="button"
+            onClick={() => setLC("hours_list", [...((lc.hours_list as any[]) ?? []), { day: "", time: "" }])}
+            className="text-sm text-gold hover:underline">+ Thêm khung giờ</button>
+        </div>
+      </div>
       <Field label="Tên bếp trưởng" value={lc.chef_name} onChange={(v: any) => setLC("chef_name", v)} />
       <Field label="Chức danh bếp trưởng" value={lc.chef_title} onChange={(v: any) => setLC("chef_title", v)} />
       <div className="md:col-span-2">
