@@ -3,17 +3,19 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
-import { Search, MapPin, Utensils, Star, Heart, SlidersHorizontal } from "lucide-react";
+import { LuxSelect } from "@/components/LuxSelect";
+import { Search, MapPin, Utensils, Star, Heart, SlidersHorizontal, X, Sparkles } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 
-type Search = { q?: string; cuisine?: string; city?: string };
+type SearchParams = { q?: string; cuisine?: string; city?: string; amenities?: string };
 
 export const Route = createFileRoute("/restaurants")({
-  validateSearch: (s: Record<string, unknown>): Search => ({
+  validateSearch: (s: Record<string, unknown>): SearchParams => ({
     q: typeof s.q === "string" ? s.q : undefined,
     cuisine: typeof s.cuisine === "string" ? s.cuisine : undefined,
     city: typeof s.city === "string" ? s.city : undefined,
+    amenities: typeof s.amenities === "string" ? s.amenities : undefined,
   }),
   head: () => ({
     meta: [
@@ -33,12 +35,35 @@ function RestaurantsPage() {
   const [q, setQ] = useState(params.q ?? "");
   const [cuisine, setCuisine] = useState(params.cuisine ?? "");
   const [city, setCity] = useState(params.city ?? "");
+  const [amenities, setAmenities] = useState<string[]>(
+    params.amenities ? params.amenities.split(",").filter(Boolean) : [],
+  );
+
+  const [cuisinesList, setCuisinesList] = useState<string[]>([]);
+  const [citiesList, setCitiesList] = useState<string[]>([]);
+  const [amenitiesList, setAmenitiesList] = useState<string[]>([]);
+
+  useEffect(() => {
+    (async () => {
+      const [{ data: cu }, { data: lo }, { data: rs }] = await Promise.all([
+        supabase.from("cuisine_categories").select("name").eq("is_active", true).order("sort_order"),
+        supabase.from("locations").select("name").eq("is_active", true).order("sort_order"),
+        supabase.from("restaurants").select("amenities").eq("is_published", true),
+      ]);
+      setCuisinesList(cu?.map((c: any) => c.name) ?? []);
+      setCitiesList(lo?.map((c: any) => c.name) ?? []);
+      const set = new Set<string>();
+      (rs ?? []).forEach((r: any) => (r.amenities || []).forEach((a: string) => a && set.add(a)));
+      setAmenitiesList(Array.from(set).sort());
+    })();
+  }, []);
 
   useEffect(() => {
     setQ(params.q ?? "");
     setCuisine(params.cuisine ?? "");
     setCity(params.city ?? "");
-  }, [params.q, params.cuisine, params.city]);
+    setAmenities(params.amenities ? params.amenities.split(",").filter(Boolean) : []);
+  }, [params.q, params.cuisine, params.city, params.amenities]);
 
   useEffect(() => {
     (async () => {
@@ -47,18 +72,36 @@ function RestaurantsPage() {
       if (params.q) query = query.ilike("name", `%${params.q}%`);
       if (params.cuisine) query = query.ilike("cuisine_type", `%${params.cuisine}%`);
       if (params.city) query = query.ilike("city", `%${params.city}%`);
+      if (params.amenities) {
+        const arr = params.amenities.split(",").filter(Boolean);
+        if (arr.length) query = query.contains("amenities", arr);
+      }
       const { data } = await query.order("is_featured", { ascending: false });
       setItems(data ?? []);
       setLoading(false);
     })();
-  }, [params.q, params.cuisine, params.city]);
+  }, [params.q, params.cuisine, params.city, params.amenities]);
 
-  function apply(e: React.FormEvent) {
-    e.preventDefault();
+  function apply(e?: React.FormEvent) {
+    e?.preventDefault();
     navigate({
       to: "/restaurants",
-      search: { q: q || undefined, cuisine: cuisine || undefined, city: city || undefined } as any,
+      search: {
+        q: q || undefined,
+        cuisine: cuisine || undefined,
+        city: city || undefined,
+        amenities: amenities.length ? amenities.join(",") : undefined,
+      } as any,
     });
+  }
+
+  function toggleAmenity(a: string) {
+    setAmenities((cur) => (cur.includes(a) ? cur.filter((x) => x !== a) : [...cur, a]));
+  }
+
+  function clearAll() {
+    setQ(""); setCuisine(""); setCity(""); setAmenities([]);
+    navigate({ to: "/restaurants", search: {} as any });
   }
 
   async function fav(id: string) {
@@ -67,6 +110,8 @@ function RestaurantsPage() {
     if (error) toast.error(error.message);
     else toast.success("Đã lưu vào yêu thích");
   }
+
+  const hasFilters = !!(params.q || params.cuisine || params.city || params.amenities);
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -83,28 +128,61 @@ function RestaurantsPage() {
             </span>
           </div>
 
-          <form onSubmit={apply} className="bg-card border border-border rounded-2xl p-2 mb-10 grid md:grid-cols-[1.4fr_1fr_1fr_auto] gap-2">
+          <form onSubmit={apply} className="bg-card/80 backdrop-blur-md border border-border rounded-2xl p-2 mb-4 grid md:grid-cols-[1.4fr_1fr_1fr_auto] gap-2 shadow-elegant">
             <div className="flex items-center gap-3 px-4 py-3">
               <Search className="h-4 w-4 text-gold" />
               <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Tên nhà hàng..." className="bg-transparent outline-none text-sm flex-1" />
             </div>
-            <div className="flex items-center gap-3 px-4 py-3 border-l border-border">
-              <Utensils className="h-4 w-4 text-gold" />
-              <select value={cuisine} onChange={(e) => setCuisine(e.target.value)} className="bg-transparent outline-none text-sm flex-1 text-muted-foreground appearance-none cursor-pointer">
-                <option value="">Loại nhà hàng</option>
-                <option>Fine dining</option><option>Omakase</option><option>Steakhouse</option>
-                <option>Pháp</option><option>Ý</option><option>Việt</option>
-              </select>
+            <div className="border-l border-border">
+              <LuxSelect
+                value={cuisine}
+                onChange={setCuisine}
+                placeholder="Loại nhà hàng"
+                options={cuisinesList.map((c) => ({ label: c, value: c }))}
+                icon={<Utensils className="h-4 w-4" />}
+              />
             </div>
-            <div className="flex items-center gap-3 px-4 py-3 border-l border-border">
-              <MapPin className="h-4 w-4 text-gold" />
-              <select value={city} onChange={(e) => setCity(e.target.value)} className="bg-transparent outline-none text-sm flex-1 text-muted-foreground appearance-none cursor-pointer">
-                <option value="">Địa điểm</option>
-                <option>TP.HCM</option><option>Hà Nội</option><option>Đà Nẵng</option>
-              </select>
+            <div className="border-l border-border">
+              <LuxSelect
+                value={city}
+                onChange={setCity}
+                placeholder="Địa điểm"
+                options={citiesList.map((c) => ({ label: c, value: c }))}
+                icon={<MapPin className="h-4 w-4" />}
+              />
             </div>
             <button className="bg-gradient-gold text-primary-foreground rounded-xl px-8 font-medium">Lọc</button>
           </form>
+
+          {amenitiesList.length > 0 && (
+            <div className="mb-10">
+              <div className="flex items-center gap-2 mb-3">
+                <Sparkles className="h-3.5 w-3.5 text-gold" />
+                <span className="text-xs tracking-[0.25em] uppercase text-muted-foreground">Tiện ích</span>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {amenitiesList.map((a) => {
+                  const active = amenities.includes(a);
+                  return (
+                    <button
+                      key={a}
+                      type="button"
+                      onClick={() => { toggleAmenity(a); setTimeout(() => apply(), 0); }}
+                      className={`px-3.5 py-1.5 rounded-full text-xs font-serif tracking-wide border transition ${active ? "bg-gradient-gold text-primary-foreground border-transparent shadow-gold" : "border-border text-muted-foreground hover:border-gold hover:text-gold"}`}
+                    >
+                      {a}
+                    </button>
+                  );
+                })}
+                {hasFilters && (
+                  <button type="button" onClick={clearAll}
+                    className="px-3.5 py-1.5 rounded-full text-xs border border-border text-muted-foreground hover:text-destructive hover:border-destructive transition inline-flex items-center gap-1">
+                    <X className="h-3 w-3" /> Xoá bộ lọc
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
 
           {loading ? (
             <p className="text-muted-foreground text-center py-20">Đang tải...</p>
@@ -148,6 +226,16 @@ function RestaurantsPage() {
                     <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
                       <MapPin className="h-3 w-3" /> {r.address ? `${r.address}, ` : ""}{r.city ?? "Việt Nam"}
                     </p>
+                    {Array.isArray(r.amenities) && r.amenities.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5 mt-3">
+                        {r.amenities.slice(0, 3).map((a: string) => (
+                          <span key={a} className="text-[10px] tracking-wide uppercase px-2 py-0.5 rounded-full border border-border text-muted-foreground">{a}</span>
+                        ))}
+                        {r.amenities.length > 3 && (
+                          <span className="text-[10px] text-muted-foreground">+{r.amenities.length - 3}</span>
+                        )}
+                      </div>
+                    )}
                   </Link>
                 </article>
               ))}
