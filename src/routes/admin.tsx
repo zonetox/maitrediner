@@ -30,26 +30,23 @@ function AdminPage() {
   }, [loading, user, navigate]);
 
   async function loadAll() {
-    const [r, p, pr, ur, b, o] = await Promise.all([
+    const [r, p, pr, ur, b] = await Promise.all([
       supabase.from("restaurants").select("*").order("created_at", { ascending: false }),
       supabase.from("membership_payments").select("*, restaurants(name, slug)").order("created_at", { ascending: false }),
       supabase.from("profiles").select("*").order("created_at", { ascending: false }),
       supabase.from("user_roles").select("*"),
       supabase.from("bookings").select("*, restaurants(name)").order("created_at", { ascending: false }).limit(100),
-      supabase.from("orders").select("*, restaurants(name)").order("created_at", { ascending: false }).limit(100),
     ]);
     setRestaurants(r.data ?? []);
     setPayments(p.data ?? []);
     setProfiles(pr.data ?? []);
     setUserRoles(ur.data ?? []);
     setBookings(b.data ?? []);
-    setOrders(o.data ?? []);
     setStats({
       restaurants: r.data?.length ?? 0,
       users: pr.data?.length ?? 0,
       pending: (p.data ?? []).filter((x: any) => x.status === "pending").length,
       bookings: b.data?.length ?? 0,
-      orders: o.data?.length ?? 0,
     });
   }
 
