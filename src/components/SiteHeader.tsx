@@ -41,23 +41,25 @@ export function SiteHeader() {
           ))}
         </nav>
         <div className="hidden md:flex items-center gap-3 text-sm">
-          <ThemeSwitcher />
+          <div className={scrolled ? "" : "[&_button]:text-white/80 [&_button]:hover:text-white"}>
+            <ThemeSwitcher />
+          </div>
           {user ? (
             <>
               {hasRole("admin") && (
-                <Link to="/admin" className="text-muted-foreground hover:text-gold">Admin</Link>
+                <Link to="/admin" className={scrolled ? "text-muted-foreground hover:text-gold" : "text-white/80 hover:text-white drop-shadow-sm"}>Admin</Link>
               )}
               {hasRole("restaurant_owner") && (
-                <Link to="/partner" className="text-muted-foreground hover:text-gold">Quản trị</Link>
+                <Link to="/partner" className={scrolled ? "text-muted-foreground hover:text-gold" : "text-white/80 hover:text-white drop-shadow-sm"}>Quản trị</Link>
               )}
-              <Link to="/account" className="flex items-center gap-2 text-muted-foreground hover:text-foreground">
+              <Link to="/account" className={`flex items-center gap-2 ${scrolled ? "text-muted-foreground hover:text-foreground" : "text-white/80 hover:text-white drop-shadow-sm"}`}>
                 <User className="h-4 w-4" /> Tài khoản
               </Link>
-              <button onClick={signOut} className="text-muted-foreground hover:text-foreground">Đăng xuất</button>
+              <button onClick={signOut} className={scrolled ? "text-muted-foreground hover:text-foreground" : "text-white/80 hover:text-white drop-shadow-sm"}>Đăng xuất</button>
             </>
           ) : (
             <>
-              <button onClick={() => navigate({ to: "/auth" })} className="text-muted-foreground hover:text-foreground transition">Đăng nhập</button>
+              <button onClick={() => navigate({ to: "/auth" })} className={`transition ${scrolled ? "text-muted-foreground hover:text-foreground" : "text-white/80 hover:text-white drop-shadow-sm"}`}>Đăng nhập</button>
               <button
                 onClick={() => navigate({ to: "/auth", search: { mode: "register", as: "restaurant" } })}
                 className="px-4 py-2 rounded-full bg-gradient-gold text-primary-foreground font-medium hover:shadow-gold transition"
@@ -67,7 +69,7 @@ export function SiteHeader() {
             </>
           )}
         </div>
-        <button className="md:hidden text-foreground" onClick={() => setOpen(!open)} aria-label="menu">
+        <button className={`md:hidden ${scrolled ? "text-foreground" : "text-white drop-shadow-sm"}`} onClick={() => setOpen(!open)} aria-label="menu">
           {open ? <X /> : <Menu />}
         </button>
       </div>
