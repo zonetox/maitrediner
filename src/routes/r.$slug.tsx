@@ -780,7 +780,7 @@ function HeroMedia({ r, lc, cover, gallery, onZoom }: { r: any; lc: any; cover: 
     return (
       <>
         {slides.map((s, i) => (
-          <img key={i} src={s.image} alt={s.title || r.name}
+          <img key={i} src={img(s.image, { w: 1920, q: 78 })} alt={s.title || r.name}
             loading={i === 0 ? "eager" : "lazy"} decoding="async"
             fetchPriority={i === 0 ? "high" : "low" as any}
             onClick={() => onZoom(slides.map((x) => x.image), i)}
@@ -806,7 +806,7 @@ function HeroMedia({ r, lc, cover, gallery, onZoom }: { r: any; lc: any; cover: 
   }
 
   return (
-    <img src={cover} alt={r.name} className="absolute inset-0 w-full h-full object-cover scale-105 cursor-zoom-in"
+    <img src={img(cover, { w: 1920, q: 78 })} alt={r.name} loading="eager" decoding="async" fetchPriority={"high" as any} className="absolute inset-0 w-full h-full object-cover scale-105 cursor-zoom-in"
       onClick={() => onZoom([cover, ...gallery], 0)} />
   );
 }
