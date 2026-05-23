@@ -7,6 +7,7 @@ import {
   useRouter,
   HeadContent,
   Scripts,
+  ScriptOnce,
 } from "@tanstack/react-router";
 
 import appCss from "../styles.css?url";
@@ -70,11 +71,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   errorComponent: ErrorComponent,
 });
 
+const themeScript = `(function(){try{var t=localStorage.getItem("maitre-theme");if(t&&t!=="gold")document.documentElement.setAttribute("data-theme",t);}catch(e){}})();`;
+
 function RootShell({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="vi">
+    <html lang="vi" suppressHydrationWarning>
       <head><HeadContent /></head>
-      <body>{children}<Scripts /></body>
+      <body><ScriptOnce>{themeScript}</ScriptOnce>{children}<Scripts /></body>
     </html>
   );
 }
