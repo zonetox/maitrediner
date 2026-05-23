@@ -164,7 +164,7 @@ function RestaurantPage() {
       <SiteHeader />
       <main>
         {/* HERO */}
-        <section className="relative min-h-[92vh] flex items-end pb-20 overflow-hidden">
+        <section className="relative flex min-h-[100svh] items-end overflow-hidden pt-28 pb-20 md:pt-32 lg:min-h-[108svh] lg:pt-36">
           <HeroMedia r={r} lc={lc} cover={cover} gallery={gallery} onZoom={openImage} />
           <div className="absolute inset-0 bg-gradient-hero pointer-events-none" />
           <div className="absolute inset-0 bg-gradient-to-t from-background via-background/30 to-transparent pointer-events-none" />
