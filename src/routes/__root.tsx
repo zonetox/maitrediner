@@ -44,9 +44,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Gourmet — Thế giới nhà hàng cao cấp" },
-      { property: "og:title", content: "Gourmet — Thế giới nhà hàng cao cấp" },
-      { name: "twitter:title", content: "Gourmet — Thế giới nhà hàng cao cấp" },
+      { title: "MaisonDining — Thế giới nhà hàng cao cấp" },
+      { property: "og:title", content: "MaisonDining — Thế giới nhà hàng cao cấp" },
+      { name: "twitter:title", content: "MaisonDining — Thế giới nhà hàng cao cấp" },
       { name: "description", content: "Trải nghiệm ẩm thực tinh tế từ hàng ngàn nhà hàng cap cấp." },
       { property: "og:description", content: "Trải nghiệm ẩm thực tinh tế từ hàng ngàn nhà hàng cap cấp." },
       { name: "twitter:description", content: "Trải nghiệm ẩm thực tinh tế từ hàng ngàn nhà hàng cap cấp." },
