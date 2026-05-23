@@ -28,14 +28,14 @@ export function SiteHeader() {
     <header className={`fixed top-0 inset-x-0 z-50 transition-all duration-500 ${scrolled ? "backdrop-blur-md bg-background/70 border-b border-border" : "bg-transparent border-transparent backdrop-blur-none"}`}>
       <div className="mx-auto max-w-7xl px-6 h-16 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2 group">
-          <UtensilsCrossed className="h-5 w-5 text-gold" />
-          <span className="font-serif text-xl tracking-wide">
+          <UtensilsCrossed className={`h-5 w-5 ${scrolled ? "text-gold" : "text-gold"}`} />
+          <span className={`font-serif text-xl tracking-wide ${scrolled ? "text-foreground" : "text-white drop-shadow-sm"}`}>
             Maître<span className="text-gold">.</span>
           </span>
         </Link>
         <nav className="hidden md:flex items-center gap-8 text-sm">
           {nav.map((n) => (
-            <Link key={n.label} to={n.to as any} className="text-muted-foreground hover:text-foreground transition-colors">
+            <Link key={n.label} to={n.to as any} className={`transition-colors ${scrolled ? "text-muted-foreground hover:text-foreground" : "text-white/80 hover:text-white drop-shadow-sm"}`}>
               {n.label}
             </Link>
           ))}
