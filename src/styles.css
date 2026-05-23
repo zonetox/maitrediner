@@ -83,6 +83,27 @@
   --card-foreground: oklch(0.95 0.02 80);
 }
 
+/* Theme variants — remap accent + gold tokens so existing utility classes auto-switch */
+:root[data-theme="emerald"] {
+  --primary: oklch(0.6 0.13 165);
+  --accent: oklch(0.6 0.13 165);
+  --ring: oklch(0.6 0.13 165);
+  --gold: oklch(0.62 0.13 165);
+  --gold-soft: oklch(0.48 0.1 165);
+  --gradient-gold: linear-gradient(135deg, oklch(0.62 0.13 165), oklch(0.42 0.09 175));
+  --shadow-gold: 0 20px 60px -20px oklch(0.55 0.12 165 / 0.45);
+}
+
+:root[data-theme="midnight"] {
+  --primary: oklch(0.62 0.16 255);
+  --accent: oklch(0.62 0.16 255);
+  --ring: oklch(0.62 0.16 255);
+  --gold: oklch(0.7 0.14 255);
+  --gold-soft: oklch(0.52 0.12 255);
+  --gradient-gold: linear-gradient(135deg, oklch(0.7 0.14 255), oklch(0.4 0.1 260));
+  --shadow-gold: 0 20px 60px -20px oklch(0.5 0.15 255 / 0.5);
+}
+
 @layer base {
   * {
     border-color: var(--color-border);
