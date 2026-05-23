@@ -105,6 +105,7 @@ export function Hero() {
         />
       ))}
       <div className="absolute inset-0 bg-gradient-hero" />
+      <div className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-black/60 via-black/20 to-transparent z-10 pointer-events-none" />
 
       {/* Slide controls */}
       <button
