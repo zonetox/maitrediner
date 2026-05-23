@@ -5,8 +5,8 @@ import { ShieldCheck } from "lucide-react";
 
 export const Route = createFileRoute("/privacy")({
   head: () => ({ meta: [
-    { title: "Chính sách bảo mật — Maître" },
-    { name: "description", content: "Chính sách bảo mật thông tin cá nhân tại Maître." },
+    { title: "Chính sách bảo mật — Maison Dining" },
+    { name: "description", content: "Chính sách bảo mật thông tin cá nhân tại Maison Dining." },
   ]}),
   component: PrivacyPage,
 });
@@ -38,11 +38,11 @@ function PrivacyPage() {
           </section>
           <section>
             <h2 className="font-serif text-2xl text-foreground">Quyền của bạn</h2>
-            <p>Bạn có thể truy cập, chỉnh sửa hoặc xoá thông tin cá nhân trong trang Tài khoản, hoặc liên hệ <a href="mailto:privacy@maitredinner.vn" className="text-gold hover:underline">privacy@maitredinner.vn</a>.</p>
+            <p>Bạn có thể truy cập, chỉnh sửa hoặc xoá thông tin cá nhân trong trang Tài khoản, hoặc liên hệ <a href="mailto:privacy@maisondining.com" className="text-gold hover:underline">privacy@maisondining.com</a>.</p>
           </section>
           <section>
             <h2 className="font-serif text-2xl text-foreground">Cookie</h2>
-            <p>Maître sử dụng cookie cần thiết để duy trì phiên đăng nhập và ghi nhớ tuỳ chọn. Không sử dụng cookie quảng cáo của bên thứ ba.</p>
+            <p>Maison Dining sử dụng cookie cần thiết để duy trì phiên đăng nhập và ghi nhớ tuỳ chọn. Không sử dụng cookie quảng cáo của bên thứ ba.</p>
           </section>
         </div>
       </main>

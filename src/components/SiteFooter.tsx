@@ -9,7 +9,7 @@ export function SiteFooter() {
           <div>
             <div className="flex items-center gap-2 mb-4">
               <UtensilsCrossed className="h-5 w-5 text-gold" />
-              <span className="font-serif text-xl">Maître<span className="text-gold">.</span></span>
+              <span className="font-serif text-xl">Maison Dining<span className="text-gold">.</span></span>
             </div>
             <p className="text-sm text-muted-foreground leading-relaxed">
               Danh bạ nhà hàng cao cấp tuyển chọn. Khám phá, đặt bàn và tận hưởng những trải nghiệm đáng nhớ.
@@ -44,11 +44,11 @@ export function SiteFooter() {
         </div>
         <div className="hairline mb-6" />
         <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-muted-foreground">
-          <p>© {new Date().getFullYear()} Maître. Tuyển chọn từ Việt Nam.</p>
+          <p>© {new Date().getFullYear()} Maison Dining. Tuyển chọn từ Việt Nam.</p>
           <div className="flex gap-6">
             <Link to="/terms" className="hover:text-gold">Điều khoản</Link>
             <Link to="/privacy" className="hover:text-gold">Bảo mật</Link>
-            <a href="mailto:hello@maitredinner.vn" className="hover:text-gold">Liên hệ</a>
+            <a href="mailto:hello@maisondining.com" className="hover:text-gold">Liên hệ</a>
           </div>
         </div>
       </div>

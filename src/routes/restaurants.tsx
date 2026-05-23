@@ -20,8 +20,8 @@ export const Route = createFileRoute("/restaurants")({
   }),
   head: () => ({
     meta: [
-      { title: "Nhà hàng cao cấp — Maître" },
-      { name: "description", content: "Tìm kiếm và khám phá các nhà hàng cao cấp, fine dining, omakase trên Maître." },
+      { title: "Nhà hàng cao cấp — Maison Dining" },
+      { name: "description", content: "Tìm kiếm và khám phá các nhà hàng cao cấp, fine dining, omakase trên Maison Dining." },
     ],
   }),
   component: RestaurantsPage,

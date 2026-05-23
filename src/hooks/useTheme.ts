@@ -7,7 +7,7 @@ export const THEMES: { id: Theme; label: string; swatch: string }[] = [
   { id: "midnight", label: "Midnight", swatch: "oklch(0.5 0.13 255)" },
 ];
 
-const KEY = "maitre-theme";
+const KEY = "maison-theme";
 
 export function applyTheme(t: Theme) {
   if (typeof document === "undefined") return;

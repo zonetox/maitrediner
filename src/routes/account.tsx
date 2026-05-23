@@ -7,7 +7,7 @@ import { Heart, Calendar, Tag, MapPin, X, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/account")({
-  head: () => ({ meta: [{ title: "Tài khoản — Maître" }] }),
+  head: () => ({ meta: [{ title: "Tài khoản — Maison Dining" }] }),
   component: AccountPage,
 });
 

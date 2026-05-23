@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { UtensilsCrossed, KeyRound, ArrowLeft } from "lucide-react";
 
 export const Route = createFileRoute("/reset-password")({
-  head: () => ({ meta: [{ title: "Đặt lại mật khẩu — Maître" }] }),
+  head: () => ({ meta: [{ title: "Đặt lại mật khẩu — Maison Dining" }] }),
   component: ResetPasswordPage,
 });
 
@@ -60,7 +60,7 @@ function ResetPasswordPage() {
       <div className="hidden lg:flex flex-col justify-between p-12 bg-secondary/40 border-r border-border">
         <Link to="/" className="flex items-center gap-2">
           <UtensilsCrossed className="h-5 w-5 text-gold" />
-          <span className="font-serif text-xl">Maître<span className="text-gold">.</span></span>
+          <span className="font-serif text-xl">Maison Dining<span className="text-gold">.</span></span>
         </Link>
         <div>
           <span className="text-xs tracking-[0.3em] uppercase text-gold">Bảo mật</span>
@@ -71,7 +71,7 @@ function ResetPasswordPage() {
             Chúng tôi sẽ gửi liên kết đặt lại mật khẩu đến email của bạn. Liên kết có hiệu lực trong 1 giờ.
           </p>
         </div>
-        <p className="text-xs text-muted-foreground">© Maître {new Date().getFullYear()}</p>
+        <p className="text-xs text-muted-foreground">© Maison Dining {new Date().getFullYear()}</p>
       </div>
 
       <div className="flex flex-col justify-center px-6 sm:px-12 py-12">

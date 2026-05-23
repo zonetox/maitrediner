@@ -17,7 +17,7 @@ const SLIDES = [
     title: "Khám phá những bàn tiệc",
     italic: "đáng nhớ nhất",
     suffix: "thành phố.",
-    sub: "Từ omakase tinh tế, fine dining Pháp đến những steakhouse cổ điển — Maître quy tụ những nhà hàng được tuyển chọn kỹ lưỡng.",
+    sub: "Từ omakase tinh tế, fine dining Pháp đến những steakhouse cổ điển — Maison Dining quy tụ những nhà hàng được tuyển chọn kỹ lưỡng.",
   },
   {
     img: hero2,

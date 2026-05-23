@@ -30,7 +30,7 @@ export function SiteHeader() {
         <Link to="/" className="flex items-center gap-2 group">
           <UtensilsCrossed className={`h-5 w-5 ${scrolled ? "text-gold" : "text-gold"}`} />
           <span className={`font-serif text-xl tracking-wide ${scrolled ? "text-foreground" : "text-white drop-shadow-sm"}`}>
-            Maître<span className="text-gold">.</span>
+            Maison Dining<span className="text-gold">.</span>
           </span>
         </Link>
         <nav className="hidden md:flex items-center gap-8 text-sm">

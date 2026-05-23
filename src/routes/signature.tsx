@@ -9,7 +9,7 @@ import { LuxSelect } from "@/components/LuxSelect";
 export const Route = createFileRoute("/signature")({
   head: () => ({
     meta: [
-      { title: "Signature — Món ăn đáng để đặt bàn | Maître" },
+      { title: "Signature — Món ăn đáng để đặt bàn | Maison Dining" },
       { name: "description", content: "Bộ sưu tập món signature do các bếp trưởng tinh tuyển — mỗi nhà hàng một món đại diện." },
       { property: "og:title", content: "Signature — Món ăn đáng để đặt bàn" },
       { property: "og:description", content: "Khám phá những món signature đặc trưng từ các nhà hàng cao cấp." },
