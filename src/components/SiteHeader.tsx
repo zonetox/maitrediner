@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Menu, X, UtensilsCrossed, User } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { ThemeSwitcher } from "@/components/ThemeSwitcher";
