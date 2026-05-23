@@ -87,7 +87,7 @@ export function Hero() {
   }
 
   return (
-    <section className="relative min-h-[100vh] flex items-end pb-20 overflow-hidden">
+    <section className="relative min-h-[100svh] lg:min-h-[112vh] flex items-end pt-28 pb-24 overflow-hidden">
       {SLIDES.map((s, i) => (
         <img
           key={i}
