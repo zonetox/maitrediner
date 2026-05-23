@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { notify } from "@/lib/notify.functions";
+import { img } from "@/lib/img";
 import {
   MapPin, Phone, Clock, Heart, Calendar, Sparkles, Mail,
   Utensils, Wine, ChefHat, Star, ArrowRight, X, ChevronLeft, ChevronRight, Tag, Bookmark,
@@ -15,12 +16,36 @@ import { toast } from "sonner";
 
 export const Route = createFileRoute("/r/$slug")({
   component: RestaurantPage,
-  head: ({ params }) => ({
-    meta: [
-      { title: `${params.slug} — Maître` },
-      { name: "description", content: "Trải nghiệm ẩm thực tinh tế tại nhà hàng được tuyển chọn trên Maître." },
-    ],
-  }),
+  loader: async ({ params }) => {
+    const { data } = await supabase
+      .from("restaurants")
+      .select("name, short_description, cover_image_url, landing_content")
+      .eq("slug", params.slug)
+      .maybeSingle();
+    const lc: any = data?.landing_content || {};
+    const heroSlides: any[] = Array.isArray(lc.hero_slides) ? lc.hero_slides : [];
+    const lcp = heroSlides[0]?.image || data?.cover_image_url || null;
+    return { name: data?.name ?? params.slug, desc: data?.short_description ?? null, lcp };
+  },
+  head: ({ loaderData, params }) => {
+    const title = `${loaderData?.name ?? params.slug} — Maître`;
+    const desc = loaderData?.desc || "Trải nghiệm ẩm thực tinh tế tại nhà hàng được tuyển chọn trên Maître.";
+    const meta: any[] = [
+      { title },
+      { name: "description", content: desc },
+      { property: "og:title", content: title },
+      { property: "og:description", content: desc },
+    ];
+    if (loaderData?.lcp) {
+      meta.push({ property: "og:image", content: loaderData.lcp });
+      meta.push({ name: "twitter:image", content: loaderData.lcp });
+    }
+    const links: any[] = [];
+    if (loaderData?.lcp) {
+      links.push({ rel: "preload", as: "image", href: img(loaderData.lcp, { w: 1920, q: 78 }), fetchpriority: "high" });
+    }
+    return { meta, links };
+  },
 });
 
 const FALLBACK_GALLERY = [
