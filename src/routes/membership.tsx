@@ -9,9 +9,9 @@ import { supabase } from "@/integrations/supabase/client";
 export const Route = createFileRoute("/membership")({
   head: () => ({
     meta: [
-      { title: "Gói thành viên — Maître" },
-      { name: "description", content: "Các gói thành viên dành cho nhà hàng cao cấp tham gia hệ sinh thái Maître." },
-      { property: "og:title", content: "Gói thành viên Maître" },
+      { title: "Gói thành viên — Maison Dining" },
+      { name: "description", content: "Các gói thành viên dành cho nhà hàng cao cấp tham gia hệ sinh thái Maison Dining." },
+      { property: "og:title", content: "Gói thành viên Maison Dining" },
       { property: "og:description", content: "Hiện diện sang trọng, nhận đặt chỗ và phát triển thương hiệu nhà hàng." },
     ],
   }),
@@ -27,15 +27,15 @@ const FAQS = [
   },
   {
     q: "Hình thức thanh toán?",
-    a: "Hiện tại Maître hỗ trợ chuyển khoản qua mã QR ngân hàng. Đội ngũ admin sẽ xác minh và kích hoạt gói trong vòng 24 giờ.",
+    a: "Hiện tại Maison Dining hỗ trợ chuyển khoản qua mã QR ngân hàng. Đội ngũ admin sẽ xác minh và kích hoạt gói trong vòng 24 giờ.",
   },
   {
     q: "Có hợp đồng ràng buộc không?",
     a: "Không. Bạn có thể chọn gói theo tháng/quý/năm và ngừng gia hạn bất kỳ lúc nào.",
   },
   {
-    q: "Maître có nhận hoa hồng trên đơn đặt bàn không?",
-    a: "Không. Mọi đặt chỗ và doanh thu thuộc về nhà hàng. Maître chỉ thu phí gói thành viên.",
+    q: "Maison Dining có nhận hoa hồng trên đơn đặt bàn không?",
+    a: "Không. Mọi đặt chỗ và doanh thu thuộc về nhà hàng. Maison Dining chỉ thu phí gói thành viên.",
   },
 ];
 
@@ -61,7 +61,7 @@ function MembershipPublic() {
               <Sparkles className="h-3 w-3" /> Membership
             </span>
             <h1 className="font-serif text-5xl md:text-7xl mt-6 leading-[1.05]">
-              Hiện diện <span className="text-gradient-gold">sang trọng</span><br />trên Maître
+              Hiện diện <span className="text-gradient-gold">sang trọng</span><br />trên Maison Dining
             </h1>
             <p className="text-lg md:text-xl text-muted-foreground mt-6 max-w-2xl mx-auto leading-relaxed">
               Trang landing riêng, nhận đặt chỗ trực tiếp, không hoa hồng — chỉ thanh toán gói thành viên đơn giản.
@@ -173,7 +173,7 @@ function MembershipPublic() {
             {[
               { i: Shield, t: "Cam kết minh bạch", d: "Không hoa hồng ẩn, không phí khởi tạo. Chỉ một khoản phí thành viên duy nhất." },
               { i: QrCode, t: "Thanh toán đơn giản", d: "Chuyển khoản qua mã QR ngân hàng VietQR. Kích hoạt nhanh trong 24 giờ." },
-              { i: Crown, t: "Định vị cao cấp", d: "Maître chỉ tuyển chọn các nhà hàng fine dining, omakase, bistro chất lượng." },
+              { i: Crown, t: "Định vị cao cấp", d: "Maison Dining chỉ tuyển chọn các nhà hàng fine dining, omakase, bistro chất lượng." },
             ].map((b) => (
               <div key={b.t} className="p-8 rounded-2xl border border-border bg-card">
                 <b.i className="h-7 w-7 text-gold mb-5" />
@@ -211,7 +211,7 @@ function MembershipPublic() {
           <div className="relative mx-auto max-w-3xl px-6 text-center">
             <Crown className="h-10 w-10 text-gold mx-auto mb-6" />
             <h2 className="font-serif text-4xl md:text-6xl leading-tight">
-              Sẵn sàng đưa nhà hàng<br />của bạn lên <span className="text-gradient-gold">Maître?</span>
+              Sẵn sàng đưa nhà hàng<br />của bạn lên <span className="text-gradient-gold">Maison Dining?</span>
             </h2>
             <p className="text-muted-foreground mt-6 text-lg">
               Bắt đầu 30 ngày miễn phí. Không cần thẻ tín dụng.

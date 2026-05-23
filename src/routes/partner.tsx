@@ -10,7 +10,7 @@ import { ImageUploader, MultiImageUploader } from "@/components/ImageUploader";
 import { notify } from "@/lib/notify.functions";
 
 export const Route = createFileRoute("/partner")({
-  head: () => ({ meta: [{ title: "Quản trị nhà hàng — Maître" }] }),
+  head: () => ({ meta: [{ title: "Quản trị nhà hàng — Maison Dining" }] }),
   component: PartnerPage,
 });
 
@@ -267,7 +267,7 @@ function PartnerPage() {
           ) : (
             <section className="grid place-items-center min-h-[60vh] text-center">
               <div>
-                <h2 className="font-serif text-3xl">Chào mừng đến với Maître Partner</h2>
+                <h2 className="font-serif text-3xl">Chào mừng đến với Maison Dining Partner</h2>
                 <p className="text-muted-foreground mt-3 mb-6">Tạo nhà hàng đầu tiên để bắt đầu 30 ngày dùng thử.</p>
                 <button onClick={() => setCreateOpen(true)} className="px-6 py-3 rounded-full bg-gradient-gold text-primary-foreground font-medium">+ Tạo nhà hàng</button>
               </div>
@@ -554,7 +554,7 @@ function InfoTab({ r, setR }: any) {
       <div className="md:col-span-2 flex items-center gap-3 mt-2">
         <input type="checkbox" id="pub" checked={r.is_published} onChange={(e) => setR({ ...r, is_published: e.target.checked })}
           className="h-4 w-4 accent-[var(--color-gold)]" />
-        <label htmlFor="pub" className="text-sm">Công khai trên Maître (nhớ bấm "Lưu" sau khi đổi)</label>
+        <label htmlFor="pub" className="text-sm">Công khai trên Maison Dining (nhớ bấm "Lưu" sau khi đổi)</label>
       </div>
     </div>
   );

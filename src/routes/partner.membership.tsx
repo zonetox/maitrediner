@@ -8,7 +8,7 @@ import { ImageUploader } from "@/components/ImageUploader";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/partner/membership")({
-  head: () => ({ meta: [{ title: "Nâng cấp gói — Maître" }] }),
+  head: () => ({ meta: [{ title: "Nâng cấp gói — Maison Dining" }] }),
   component: MembershipPage,
 });
 

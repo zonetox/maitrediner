@@ -33,7 +33,7 @@ function wrap(title: string, body: string) {
     <h2 style="color:#d4af37;font-family:Georgia,serif;margin:0 0 12px">${title}</h2>
     ${body}
     <hr style="border:none;border-top:1px solid #2a2a2a;margin:24px 0"/>
-    <p style="font-size:12px;color:#888;margin:0">Maître — Danh bạ nhà hàng cao cấp</p>
+    <p style="font-size:12px;color:#888;margin:0">Maison Dining — Danh bạ nhà hàng cao cấp</p>
   </div></body></html>`;
 }
 
@@ -42,7 +42,7 @@ export const notify = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const { data: settings } = await supabaseAdmin.from("app_settings").select("*").eq("id", true).maybeSingle();
     const apiKey = settings?.resend_api_key;
-    const from = settings?.resend_from || "Maître <onboarding@resend.dev>";
+    const from = settings?.resend_from || "Maison Dining <onboarding@resend.dev>";
     if (!apiKey) return { ok: false, skipped: "no_api_key" };
 
     const { data: r } = await supabaseAdmin.from("restaurants").select("name, email, slug").eq("id", data.restaurantId).maybeSingle();
@@ -63,7 +63,7 @@ export const notify = createServerFn({ method: "POST" })
         <p><b>Thời gian:</b> ${when} · <b>Số khách:</b> ${b.party_size}</p>
         ${b.notes ? `<p><b>Ghi chú:</b> ${escapeHtml(b.notes)}</p>` : ""}`);
       if (b.guest_email) { await sendEmail(apiKey, from, b.guest_email, `Đã nhận yêu cầu đặt chỗ — ${r.name}`, guestHtml); sent.push("guest"); }
-      if (r.email) { await sendEmail(apiKey, from, r.email, `[Maître] Đặt chỗ mới — ${b.guest_name}`, ownerHtml); sent.push("owner"); }
+      if (r.email) { await sendEmail(apiKey, from, r.email, `[Maison Dining] Đặt chỗ mới — ${b.guest_name}`, ownerHtml); sent.push("owner"); }
     }
 
     if (data.type === "order" && data.recordId) {
@@ -86,7 +86,7 @@ export const notify = createServerFn({ method: "POST" })
         const em = u?.user?.email;
         if (em) { await sendEmail(apiKey, from, em, `Đã nhận yêu cầu đặt món — ${r.name}`, guestHtml); sent.push("guest"); }
       }
-      if (r.email) { await sendEmail(apiKey, from, r.email, `[Maître] Đơn món mới`, ownerHtml); sent.push("owner"); }
+      if (r.email) { await sendEmail(apiKey, from, r.email, `[Maison Dining] Đơn món mới`, ownerHtml); sent.push("owner"); }
     }
 
     if ((data.type === "booking_status" || data.type === "order_status") && data.recordId && data.newStatus) {

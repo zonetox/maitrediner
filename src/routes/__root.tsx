@@ -71,7 +71,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   errorComponent: ErrorComponent,
 });
 
-const themeScript = `(function(){try{var t=localStorage.getItem("maitre-theme");if(t&&t!=="gold")document.documentElement.setAttribute("data-theme",t);}catch(e){}})();`;
+const themeScript = `(function(){try{var t=localStorage.getItem("maison-theme");if(t&&t!=="gold")document.documentElement.setAttribute("data-theme",t);}catch(e){}})();`;
 
 function RootShell({ children }: { children: React.ReactNode }) {
   return (

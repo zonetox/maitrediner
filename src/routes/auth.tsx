@@ -12,7 +12,7 @@ const searchSchema = z.object({
 
 export const Route = createFileRoute("/auth")({
   validateSearch: searchSchema,
-  head: () => ({ meta: [{ title: "Đăng nhập — Maître" }] }),
+  head: () => ({ meta: [{ title: "Đăng nhập — Maison Dining" }] }),
   component: AuthPage,
 });
 
@@ -64,25 +64,25 @@ function AuthPage() {
       <div className="hidden lg:flex flex-col justify-between p-12 bg-secondary/40 border-r border-border">
         <Link to="/" className="flex items-center gap-2">
           <UtensilsCrossed className="h-5 w-5 text-gold" />
-          <span className="font-serif text-xl">Maître<span className="text-gold">.</span></span>
+          <span className="font-serif text-xl">Maison Dining<span className="text-gold">.</span></span>
         </Link>
         <div>
-          <span className="text-xs tracking-[0.3em] uppercase text-gold">Maître</span>
+          <span className="text-xs tracking-[0.3em] uppercase text-gold">Maison Dining</span>
           <h2 className="font-serif text-5xl mt-3 leading-tight">
             Một bàn tiệc đáng nhớ <span className="italic text-gradient-gold">bắt đầu từ đây.</span>
           </h2>
           <p className="text-muted-foreground mt-6 max-w-md">
-            Đăng ký để lưu nhà hàng yêu thích, nhận ưu đãi sớm, hoặc đưa nhà hàng của bạn lên Maître với 30 ngày dùng thử miễn phí.
+            Đăng ký để lưu nhà hàng yêu thích, nhận ưu đãi sớm, hoặc đưa nhà hàng của bạn lên Maison Dining với 30 ngày dùng thử miễn phí.
           </p>
         </div>
-        <p className="text-xs text-muted-foreground">© Maître {new Date().getFullYear()}</p>
+        <p className="text-xs text-muted-foreground">© Maison Dining {new Date().getFullYear()}</p>
       </div>
 
       <div className="flex flex-col justify-center px-6 sm:px-12 py-12">
         <div className="max-w-md mx-auto w-full">
           <Link to="/" className="lg:hidden flex items-center gap-2 mb-8">
             <UtensilsCrossed className="h-5 w-5 text-gold" />
-            <span className="font-serif text-xl">Maître.</span>
+            <span className="font-serif text-xl">Maison Dining.</span>
           </Link>
 
           <div className="flex bg-secondary rounded-full p-1 text-sm mb-8">

@@ -17,10 +17,10 @@ export const Route = createFileRoute("/cuisines/$slug")({
   },
   head: ({ loaderData }) => ({
     meta: [
-      { title: `${loaderData?.category.name ?? "Phong cách"} — Nhà hàng | Maître` },
-      { name: "description", content: `Khám phá các nhà hàng phong cách ${loaderData?.category.name} trên Maître — không phân biệt địa điểm.` },
-      { property: "og:title", content: `${loaderData?.category.name ?? "Phong cách"} — Nhà hàng | Maître` },
-      { property: "og:description", content: `Khám phá các nhà hàng phong cách ${loaderData?.category.name} trên Maître.` },
+      { title: `${loaderData?.category.name ?? "Phong cách"} — Nhà hàng | Maison Dining` },
+      { name: "description", content: `Khám phá các nhà hàng phong cách ${loaderData?.category.name} trên Maison Dining — không phân biệt địa điểm.` },
+      { property: "og:title", content: `${loaderData?.category.name ?? "Phong cách"} — Nhà hàng | Maison Dining` },
+      { property: "og:description", content: `Khám phá các nhà hàng phong cách ${loaderData?.category.name} trên Maison Dining.` },
     ],
   }),
   errorComponent: ({ error }) => (
@@ -73,7 +73,7 @@ function CuisinePage() {
           <span className="text-xs tracking-[0.3em] uppercase text-gold">Phong cách ẩm thực</span>
           <h1 className="font-serif text-4xl md:text-6xl mt-3">{category.name}</h1>
           <p className="text-muted-foreground mt-4 max-w-2xl mx-auto">
-            Tất cả nhà hàng phong cách <strong className="text-foreground">{category.name}</strong> trên Maître — không phân biệt địa điểm.
+            Tất cả nhà hàng phong cách <strong className="text-foreground">{category.name}</strong> trên Maison Dining — không phân biệt địa điểm.
           </p>
         </div>
 

@@ -11,13 +11,13 @@ import { SiteFooter } from "@/components/SiteFooter";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Maître — Danh bạ nhà hàng cao cấp tuyển chọn" },
+      { title: "Maison Dining — Danh bạ nhà hàng cao cấp tuyển chọn" },
       {
         name: "description",
         content:
           "Khám phá, đặt bàn và lưu ưu đãi tại các nhà hàng fine dining, omakase, steakhouse và bistro hàng đầu Việt Nam.",
       },
-      { property: "og:title", content: "Maître — Danh bạ nhà hàng cao cấp" },
+      { property: "og:title", content: "Maison Dining — Danh bạ nhà hàng cao cấp" },
       { property: "og:description", content: "Tuyển chọn nhà hàng cao cấp, ưu đãi và đặt bàn." },
     ],
   }),

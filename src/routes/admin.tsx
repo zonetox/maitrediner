@@ -8,7 +8,7 @@ import { ImageUploader } from "@/components/ImageUploader";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/admin")({
-  head: () => ({ meta: [{ title: "Admin — Maître" }] }),
+  head: () => ({ meta: [{ title: "Admin — Maison Dining" }] }),
   component: AdminPage,
 });
 
@@ -133,7 +133,7 @@ function AdminPage() {
           <Shield className="h-6 w-6 text-gold" />
           <h1 className="font-serif text-3xl">Bảng điều khiển Admin</h1>
         </div>
-        <p className="text-muted-foreground mb-8">Quản trị toàn bộ hệ thống Maître</p>
+        <p className="text-muted-foreground mb-8">Quản trị toàn bộ hệ thống Maison Dining</p>
 
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
@@ -361,7 +361,7 @@ function labelOf(t: Tab) {
 }
 
 function SettingsTab() {
-  const [app, setApp] = useState<any>({ resend_api_key: "", resend_from: "Maître <onboarding@resend.dev>" });
+  const [app, setApp] = useState<any>({ resend_api_key: "", resend_from: "Maison Dining <onboarding@resend.dev>" });
   const [pay, setPay] = useState<any>({ qr_image_url: "", bank_name: "", account_no: "", account_holder: "", instructions: "" });
   const [showKey, setShowKey] = useState(false);
   useEffect(() => {

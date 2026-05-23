@@ -10,8 +10,8 @@ import { toast } from "sonner";
 export const Route = createFileRoute("/deals")({
   head: () => ({
     meta: [
-      { title: "Ưu đãi nhà hàng — Maître" },
-      { name: "description", content: "Ưu đãi độc quyền từ các nhà hàng cao cấp trên Maître." },
+      { title: "Ưu đãi nhà hàng — Maison Dining" },
+      { name: "description", content: "Ưu đãi độc quyền từ các nhà hàng cao cấp trên Maison Dining." },
     ],
   }),
   component: DealsPage,

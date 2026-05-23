@@ -8,7 +8,7 @@ import { toast } from "sonner";
 const FALLBACK = [
   { id: "f1", badge: "Mới", title: "Tasting menu 7 món - Lumière", description: "Giảm 25% cho đặt bàn từ Chủ nhật đến thứ Tư trong tháng này.", expires_at: null, tag: "-25%" },
   { id: "f2", badge: "Hot", title: "Omakase đôi - Hanami", description: "Tặng kèm chai sake Junmai Daiginjo cho cặp đôi đặt bàn 19:00.", expires_at: null, tag: "Quà tặng" },
-  { id: "f3", badge: "VIP", title: "Brunch cuối tuần - Maison Belle", description: "Free flow champagne cho khách thân thiết Maître hạng Gold.", expires_at: null, tag: "Free flow" },
+  { id: "f3", badge: "VIP", title: "Brunch cuối tuần - Maison Belle", description: "Free flow champagne cho khách thân thiết Maison Dining hạng Gold.", expires_at: null, tag: "Free flow" },
 ];
 
 export function Deals() {
@@ -39,7 +39,7 @@ export function Deals() {
         <div className="flex items-end justify-between mb-12 gap-6 flex-wrap">
           <div>
             <span className="text-xs tracking-[0.3em] uppercase text-gold">Ưu đãi độc quyền</span>
-            <h2 className="font-serif text-4xl md:text-5xl mt-3">Dành riêng cho thành viên Maître</h2>
+            <h2 className="font-serif text-4xl md:text-5xl mt-3">Dành riêng cho thành viên Maison Dining</h2>
           </div>
           <Link to="/deals" className="text-sm text-gold hover:underline inline-flex items-center gap-2">
             Tất cả ưu đãi <ArrowRight className="h-3 w-3" />

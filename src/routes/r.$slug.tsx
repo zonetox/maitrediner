@@ -28,8 +28,8 @@ export const Route = createFileRoute("/r/$slug")({
     return { name: data?.name ?? params.slug, desc: data?.short_description ?? null, lcp };
   },
   head: ({ loaderData, params }) => {
-    const title = `${loaderData?.name ?? params.slug} — Maître`;
-    const desc = loaderData?.desc || "Trải nghiệm ẩm thực tinh tế tại nhà hàng được tuyển chọn trên Maître.";
+    const title = `${loaderData?.name ?? params.slug} — Maison Dining`;
+    const desc = loaderData?.desc || "Trải nghiệm ẩm thực tinh tế tại nhà hàng được tuyển chọn trên Maison Dining.";
     const meta: any[] = [
       { title },
       { name: "description", content: desc },
@@ -177,7 +177,7 @@ function RestaurantPage() {
               <span className="text-xs tracking-[0.3em] uppercase text-gold">{r.cuisine_type || "Fine dining"}</span>
               {r.is_featured && (
                 <span className="text-[10px] tracking-widest uppercase px-2 py-1 rounded-full border border-gold text-gold">
-                  Maître's Pick
+                  Maison Dining's Pick
                 </span>
               )}
             </div>
@@ -653,7 +653,7 @@ function DishModal({ dish, fallback, onClose, onBook, onZoom }: { dish: any; fal
                 </button>
               </div>
               <p className="text-[11px] text-muted-foreground mt-3 text-center italic">
-                Maître là kênh giới thiệu — giao dịch & thanh toán thực hiện trực tiếp tại nhà hàng.
+                Maison Dining là kênh giới thiệu — giao dịch & thanh toán thực hiện trực tiếp tại nhà hàng.
               </p>
             </div>
           </div>
@@ -961,7 +961,7 @@ function BookingModal({ r, menu, onClose, user }: any) {
             </button>
           </div>
           <p className="text-[10px] text-muted-foreground mt-2 italic text-center">
-            Maître chỉ giới thiệu — thanh toán trực tiếp tại nhà hàng.
+            Maison Dining chỉ giới thiệu — thanh toán trực tiếp tại nhà hàng.
           </p>
         </div>
       </form>

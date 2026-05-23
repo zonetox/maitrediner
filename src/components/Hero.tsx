@@ -17,7 +17,7 @@ const SLIDES = [
     title: "Khám phá những bàn tiệc",
     italic: "đáng nhớ nhất",
     suffix: "thành phố.",
-    sub: "Từ omakase tinh tế, fine dining Pháp đến những steakhouse cổ điển — Maître quy tụ những nhà hàng được tuyển chọn kỹ lưỡng.",
+    sub: "Từ omakase tinh tế, fine dining Pháp đến những steakhouse cổ điển — Maison Dining quy tụ những nhà hàng được tuyển chọn kỹ lưỡng.",
   },
   {
     img: hero2,
@@ -87,7 +87,7 @@ export function Hero() {
   }
 
   return (
-    <section className="relative min-h-[100vh] flex items-end pb-20 overflow-hidden">
+    <section className="relative min-h-[100svh] lg:min-h-[112vh] flex items-end pt-28 pb-24 overflow-hidden">
       {SLIDES.map((s, i) => (
         <img
           key={i}
