@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { notify } from "@/lib/notify.functions";
+import { img } from "@/lib/img";
 import {
   MapPin, Phone, Clock, Heart, Calendar, Sparkles, Mail,
   Utensils, Wine, ChefHat, Star, ArrowRight, X, ChevronLeft, ChevronRight, Tag, Bookmark,
@@ -15,12 +16,36 @@ import { toast } from "sonner";
 
 export const Route = createFileRoute("/r/$slug")({
   component: RestaurantPage,
-  head: ({ params }) => ({
-    meta: [
-      { title: `${params.slug} — Maître` },
-      { name: "description", content: "Trải nghiệm ẩm thực tinh tế tại nhà hàng được tuyển chọn trên Maître." },
-    ],
-  }),
+  loader: async ({ params }) => {
+    const { data } = await supabase
+      .from("restaurants")
+      .select("name, short_description, cover_image_url, landing_content")
+      .eq("slug", params.slug)
+      .maybeSingle();
+    const lc: any = data?.landing_content || {};
+    const heroSlides: any[] = Array.isArray(lc.hero_slides) ? lc.hero_slides : [];
+    const lcp = heroSlides[0]?.image || data?.cover_image_url || null;
+    return { name: data?.name ?? params.slug, desc: data?.short_description ?? null, lcp };
+  },
+  head: ({ loaderData, params }) => {
+    const title = `${loaderData?.name ?? params.slug} — Maître`;
+    const desc = loaderData?.desc || "Trải nghiệm ẩm thực tinh tế tại nhà hàng được tuyển chọn trên Maître.";
+    const meta: any[] = [
+      { title },
+      { name: "description", content: desc },
+      { property: "og:title", content: title },
+      { property: "og:description", content: desc },
+    ];
+    if (loaderData?.lcp) {
+      meta.push({ property: "og:image", content: loaderData.lcp });
+      meta.push({ name: "twitter:image", content: loaderData.lcp });
+    }
+    const links: any[] = [];
+    if (loaderData?.lcp) {
+      links.push({ rel: "preload", as: "image", href: img(loaderData.lcp, { w: 1920, q: 78 }), fetchpriority: "high" });
+    }
+    return { meta, links };
+  },
 });
 
 const FALLBACK_GALLERY = [
@@ -146,7 +171,7 @@ function RestaurantPage() {
           <div className="relative mx-auto max-w-7xl px-6 w-full">
             <div className="flex items-center gap-3 mb-6">
               {r.logo_url && (
-                <img src={r.logo_url} alt={`${r.name} logo`} loading="lazy" decoding="async" className="h-12 w-12 rounded-full object-cover border border-gold/40 bg-background/40 backdrop-blur" />
+                <img src={img(r.logo_url, { w: 96, h: 96, q: 80 })} alt={`${r.name} logo`} loading="lazy" decoding="async" className="h-12 w-12 rounded-full object-cover border border-gold/40 bg-background/40 backdrop-blur" />
               )}
               <span className="h-px w-12 bg-gold" />
               <span className="text-xs tracking-[0.3em] uppercase text-gold">{r.cuisine_type || "Fine dining"}</span>
@@ -252,7 +277,7 @@ function RestaurantPage() {
               </div>
               <div className="relative aspect-[4/5] overflow-hidden rounded-2xl cursor-zoom-in"
                 onClick={() => openImage(gallery, 0)}>
-                <img src={gallery[0]} alt="" loading="lazy" decoding="async" className="absolute inset-0 w-full h-full object-cover" />
+                <img src={img(gallery[0], { w: 800, h: 1000, q: 78 })} alt="" loading="lazy" decoding="async" className="absolute inset-0 w-full h-full object-cover" />
                 <div className="absolute inset-0 bg-gradient-to-t from-background/40 to-transparent" />
               </div>
             </div>
@@ -308,8 +333,10 @@ function RestaurantPage() {
                     className="group text-left">
                     <div className="aspect-[4/5] overflow-hidden rounded-2xl bg-card">
                       <img
-                        src={s.image_url || gallery[(i + 1) % gallery.length]}
+                        src={img(s.image_url || gallery[(i + 1) % gallery.length], { w: 700, h: 875, q: 78 })}
                         alt={s.name}
+                        loading="lazy"
+                        decoding="async"
                         className="w-full h-full object-cover group-hover:scale-105 transition duration-700"
                       />
                     </div>
@@ -350,7 +377,7 @@ function RestaurantPage() {
                     className="group relative flex flex-col h-full rounded-2xl bg-card border border-border hover:border-gold hover:-translate-y-1 transition overflow-hidden cursor-pointer">
                     <div className="relative aspect-[16/10] overflow-hidden bg-secondary/40">
                       {d.image_url ? (
-                        <img src={d.image_url} alt={d.title} loading="lazy" decoding="async"
+                        <img src={img(d.image_url, { w: 700, h: 440, q: 78 })} alt={d.title} loading="lazy" decoding="async"
                           className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition duration-700" />
                       ) : (
                         <div className="absolute inset-0 bg-gradient-to-br from-gold/20 via-card to-background grid place-items-center">
@@ -424,7 +451,7 @@ function RestaurantPage() {
                           >
                             <div className="relative aspect-[4/3] overflow-hidden bg-secondary/40">
                               {imgs[0] ? (
-                                <img src={imgs[0]} alt={m.name} loading="lazy" decoding="async"
+                                <img src={img(imgs[0], { w: 600, h: 450, q: 78 })} alt={m.name} loading="lazy" decoding="async"
                                   className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
                               ) : (
                                 <div className="w-full h-full grid place-items-center">
@@ -489,7 +516,7 @@ function RestaurantPage() {
                 return (
                   <button type="button" key={i} onClick={() => openImage(gallery, i)}
                     className={`group overflow-hidden rounded-xl cursor-zoom-in relative ${spans[i] ?? "col-span-2 row-span-1"}`}>
-                    <img src={src} alt="" loading="lazy" decoding="async"
+                    <img src={img(src, { w: 900, h: 700, q: 78 })} alt="" loading="lazy" decoding="async"
                       className="w-full h-full object-cover group-hover:scale-105 transition duration-700" />
                     <div className="absolute inset-0 bg-gradient-to-t from-background/30 to-transparent opacity-0 group-hover:opacity-100 transition" />
                   </button>
@@ -753,7 +780,7 @@ function HeroMedia({ r, lc, cover, gallery, onZoom }: { r: any; lc: any; cover: 
     return (
       <>
         {slides.map((s, i) => (
-          <img key={i} src={s.image} alt={s.title || r.name}
+          <img key={i} src={img(s.image, { w: 1920, q: 78 })} alt={s.title || r.name}
             loading={i === 0 ? "eager" : "lazy"} decoding="async"
             fetchPriority={i === 0 ? "high" : "low" as any}
             onClick={() => onZoom(slides.map((x) => x.image), i)}
@@ -779,7 +806,7 @@ function HeroMedia({ r, lc, cover, gallery, onZoom }: { r: any; lc: any; cover: 
   }
 
   return (
-    <img src={cover} alt={r.name} className="absolute inset-0 w-full h-full object-cover scale-105 cursor-zoom-in"
+    <img src={img(cover, { w: 1920, q: 78 })} alt={r.name} loading="eager" decoding="async" fetchPriority={"high" as any} className="absolute inset-0 w-full h-full object-cover scale-105 cursor-zoom-in"
       onClick={() => onZoom([cover, ...gallery], 0)} />
   );
 }

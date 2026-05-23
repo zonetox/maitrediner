@@ -7,6 +7,7 @@ import { LuxSelect } from "@/components/LuxSelect";
 import { Search, MapPin, Utensils, Star, Heart, SlidersHorizontal, X, Sparkles } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import { img } from "@/lib/img";
 
 type SearchParams = { q?: string; cuisine?: string; city?: string; amenities?: string };
 
@@ -200,7 +201,7 @@ function RestaurantsPage() {
                   <Link to="/r/$slug" params={{ slug: r.slug }} className="block">
                     <div className="relative overflow-hidden rounded-2xl aspect-[4/5] mb-4 bg-secondary">
                       {r.cover_image_url ? (
-                        <img src={r.cover_image_url} alt={r.name} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                        <img src={img(r.cover_image_url, { w: 600, h: 750, q: 78 })} alt={r.name} loading="lazy" decoding="async" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
                       ) : (
                         <div className="absolute inset-0 grid place-items-center text-gold/30">
                           <Utensils className="h-12 w-12" />

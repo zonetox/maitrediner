@@ -2,6 +2,7 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { Menu, X, UtensilsCrossed, User } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { ThemeSwitcher } from "@/components/ThemeSwitcher";
 
 const nav = [
   { label: "Nhà hàng", to: "/restaurants" },
@@ -32,6 +33,7 @@ export function SiteHeader() {
           ))}
         </nav>
         <div className="hidden md:flex items-center gap-3 text-sm">
+          <ThemeSwitcher />
           {user ? (
             <>
               {hasRole("admin") && (
