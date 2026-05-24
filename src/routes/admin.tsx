@@ -361,25 +361,13 @@ function labelOf(t: Tab) {
 }
 
 function SettingsTab() {
-  const [app, setApp] = useState<any>({ resend_api_key: "", resend_from: "Maison Dining <onboarding@resend.dev>" });
   const [pay, setPay] = useState<any>({ qr_image_url: "", bank_name: "", account_no: "", account_holder: "", instructions: "" });
-  const [showKey, setShowKey] = useState(false);
   useEffect(() => {
     (async () => {
-      const [{ data: a }, { data: p }] = await Promise.all([
-        supabase.from("app_settings").select("*").eq("id", true).maybeSingle(),
-        supabase.from("payment_settings").select("*").eq("id", true).maybeSingle(),
-      ]);
-      if (a) setApp(a); if (p) setPay(p);
+      const { data: p } = await supabase.from("payment_settings").select("*").eq("id", true).maybeSingle();
+      if (p) setPay(p);
     })();
   }, []);
-  async function saveApp() {
-    const { error } = await supabase.from("app_settings").update({
-      resend_api_key: app.resend_api_key, resend_from: app.resend_from, updated_at: new Date().toISOString(),
-    }).eq("id", true);
-    if (error) return toast.error(error.message);
-    toast.success("Đã lưu cấu hình email");
-  }
   async function savePay() {
     const { error } = await supabase.from("payment_settings").update({
       qr_image_url: pay.qr_image_url, bank_name: pay.bank_name, account_no: pay.account_no,
@@ -390,27 +378,15 @@ function SettingsTab() {
   }
   return (
     <div className="grid lg:grid-cols-2 gap-6">
-      <Panel title="Resend Email API">
-        <div className="space-y-3 text-sm">
-          <div>
-            <label className="text-xs uppercase tracking-wider text-muted-foreground">API Key (re_...)</label>
-            <div className="flex gap-2 mt-1">
-              <input type={showKey ? "text" : "password"} value={app.resend_api_key ?? ""}
-                onChange={(e) => setApp({ ...app, resend_api_key: e.target.value })}
-                placeholder="re_xxxxxxxxxxxxx"
-                className="flex-1 bg-background border border-border rounded-md px-3 py-2 font-mono text-xs" />
-              <button onClick={() => setShowKey((v) => !v)} className="px-3 rounded-md border border-border text-xs">{showKey ? "Ẩn" : "Hiện"}</button>
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">Lấy tại resend.com/api-keys. Để trống = tắt email thông báo.</p>
-          </div>
-          <div>
-            <label className="text-xs uppercase tracking-wider text-muted-foreground">From</label>
-            <input value={app.resend_from ?? ""} onChange={(e) => setApp({ ...app, resend_from: e.target.value })}
-              className="w-full mt-1 bg-background border border-border rounded-md px-3 py-2" />
-          </div>
-          <button onClick={saveApp} className="px-5 py-2.5 rounded-full bg-gradient-gold text-primary-foreground text-sm font-medium inline-flex items-center gap-2">
-            <Save className="h-3 w-3" /> Lưu
-          </button>
+      <Panel title="Email thông báo (Resend)">
+        <div className="space-y-2 text-sm text-muted-foreground">
+          <p>
+            API key Resend hiện được lưu an toàn trong <b>Lovable Cloud → Secrets</b> dưới tên <code className="text-gold">RESEND_API_KEY</code>
+            (và <code className="text-gold">RESEND_FROM</code> tuỳ chọn cho địa chỉ gửi).
+          </p>
+          <p>
+            Để cập nhật key, vào mục Secrets của dự án — không còn lưu trong cơ sở dữ liệu để giảm rủi ro lộ key.
+          </p>
         </div>
       </Panel>
       <Panel title="QR thanh toán gói thành viên">
