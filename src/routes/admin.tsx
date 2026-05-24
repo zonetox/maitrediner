@@ -12,7 +12,7 @@ export const Route = createFileRoute("/admin")({
   component: AdminPage,
 });
 
-type Tab = "overview" | "restaurants" | "payments" | "plans" | "users" | "bookings" | "directory" | "settings";
+type Tab = "overview" | "restaurants" | "payments" | "plans" | "users" | "bookings" | "directory" | "site" | "settings";
 
 function AdminPage() {
   const { user, loading, hasRole, roles } = useAuth();
@@ -145,7 +145,7 @@ function AdminPage() {
 
         {/* Tabs */}
         <div className="border-b border-border mb-6 flex gap-6 overflow-x-auto">
-          {(["overview", "restaurants", "payments", "plans", "users", "bookings", "directory", "settings"] as Tab[]).map((t) => (
+          {(["overview", "restaurants", "payments", "plans", "users", "bookings", "directory", "site", "settings"] as Tab[]).map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
@@ -317,6 +317,7 @@ function AdminPage() {
 
         {tab === "directory" && <DirectoryTab />}
         {tab === "plans" && <PlansTab />}
+        {tab === "site" && <SiteTab />}
         {tab === "settings" && <SettingsTab />}
       </main>
     </div>
@@ -357,7 +358,7 @@ function Table({ head, children }: any) {
 }
 
 function labelOf(t: Tab) {
-  return { overview: "Tổng quan", restaurants: "Nhà hàng", payments: "Thanh toán gói", plans: "Gói thành viên", users: "Người dùng", bookings: "Đặt chỗ", directory: "Danh mục & Địa điểm", settings: "Cấu hình" }[t];
+  return { overview: "Tổng quan", restaurants: "Nhà hàng", payments: "Thanh toán gói", plans: "Gói thành viên", users: "Người dùng", bookings: "Đặt chỗ", directory: "Danh mục & Địa điểm", site: "Header & Footer", settings: "Cấu hình" }[t];
 }
 
 function SettingsTab() {
