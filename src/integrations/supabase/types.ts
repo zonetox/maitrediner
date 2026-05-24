@@ -47,20 +47,14 @@ export type Database = {
       app_settings: {
         Row: {
           id: boolean
-          resend_api_key: string | null
-          resend_from: string | null
           updated_at: string
         }
         Insert: {
           id?: boolean
-          resend_api_key?: string | null
-          resend_from?: string | null
           updated_at?: string
         }
         Update: {
           id?: boolean
-          resend_api_key?: string | null
-          resend_from?: string | null
           updated_at?: string
         }
         Relationships: []
