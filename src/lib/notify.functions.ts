@@ -40,9 +40,8 @@ function wrap(title: string, body: string) {
 export const notify = createServerFn({ method: "POST" })
   .inputValidator((d: Payload) => d)
   .handler(async ({ data }) => {
-    const { data: settings } = await supabaseAdmin.from("app_settings").select("*").eq("id", true).maybeSingle();
-    const apiKey = settings?.resend_api_key;
-    const from = settings?.resend_from || "Maison Dining <onboarding@resend.dev>";
+    const apiKey = process.env.RESEND_API_KEY;
+    const from = process.env.RESEND_FROM || "Maison Dining <onboarding@resend.dev>";
     if (!apiKey) return { ok: false, skipped: "no_api_key" };
 
     const { data: r } = await supabaseAdmin.from("restaurants").select("name, email, slug").eq("id", data.restaurantId).maybeSingle();
