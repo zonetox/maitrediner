@@ -3,19 +3,15 @@ import { useEffect, useState } from "react";
 import { Menu, X, UtensilsCrossed, User } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { ThemeSwitcher } from "@/components/ThemeSwitcher";
-
-const nav = [
-  { label: "Nhà hàng", to: "/restaurants" },
-  { label: "Signature", to: "/signature" },
-  { label: "Ưu đãi", to: "/deals" },
-  { label: "Gói thành viên", to: "/membership" },
-];
+import { useSiteSettings } from "@/hooks/useSiteSettings";
+import { SmartLink } from "@/components/SmartLink";
 
 export function SiteHeader() {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const { user, hasRole, signOut } = useAuth();
   const navigate = useNavigate();
+  const { brand_name, header_nav } = useSiteSettings();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 50);
@@ -28,16 +24,16 @@ export function SiteHeader() {
     <header className={`fixed top-0 inset-x-0 z-50 transition-all duration-500 ${scrolled ? "backdrop-blur-md bg-background/70 border-b border-border" : "bg-transparent border-transparent backdrop-blur-none"}`}>
       <div className="mx-auto max-w-7xl px-6 h-16 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2 group">
-          <UtensilsCrossed className={`h-5 w-5 ${scrolled ? "text-gold" : "text-gold"}`} />
+          <UtensilsCrossed className="h-5 w-5 text-gold" />
           <span className={`font-serif text-xl tracking-wide ${scrolled ? "text-foreground" : "text-white drop-shadow-sm"}`}>
-            Maison Dining<span className="text-gold">.</span>
+            {brand_name}<span className="text-gold">.</span>
           </span>
         </Link>
         <nav className="hidden md:flex items-center gap-8 text-sm">
-          {nav.map((n) => (
-            <Link key={n.label} to={n.to as any} className={`transition-colors ${scrolled ? "text-muted-foreground hover:text-foreground" : "text-white/80 hover:text-white drop-shadow-sm"}`}>
+          {header_nav.map((n) => (
+            <SmartLink key={n.label} to={n.to} className={`transition-colors ${scrolled ? "text-muted-foreground hover:text-foreground" : "text-white/80 hover:text-white drop-shadow-sm"}`}>
               {n.label}
-            </Link>
+            </SmartLink>
           ))}
         </nav>
         <div className="hidden md:flex items-center gap-3 text-sm">
@@ -75,10 +71,10 @@ export function SiteHeader() {
       </div>
       {open && (
         <div className="md:hidden border-t border-border bg-background px-6 py-4 space-y-3">
-          {nav.map((n) => (
-            <Link key={n.label} to={n.to as any} className="block text-muted-foreground" onClick={() => setOpen(false)}>
+          {header_nav.map((n) => (
+            <SmartLink key={n.label} to={n.to} className="block text-muted-foreground" onClick={() => setOpen(false)}>
               {n.label}
-            </Link>
+            </SmartLink>
           ))}
           {user ? (
             <>
