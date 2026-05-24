@@ -1,7 +1,20 @@
-import { Link } from "@tanstack/react-router";
-import { UtensilsCrossed, Instagram, Facebook, Youtube } from "lucide-react";
+import { UtensilsCrossed, Instagram, Facebook, Youtube, Music2 } from "lucide-react";
+import { useSiteSettings } from "@/hooks/useSiteSettings";
+import { SmartLink } from "@/components/SmartLink";
+
+const ICON_MAP = {
+  instagram: Instagram,
+  facebook: Facebook,
+  youtube: Youtube,
+  tiktok: Music2,
+} as const;
 
 export function SiteFooter() {
+  const s = useSiteSettings();
+  const year = new Date().getFullYear();
+  const copyright = s.copyright.replace("{year}", String(year));
+  const socials = Object.entries(s.socials ?? {}).filter(([, v]) => v && String(v).trim().length > 0);
+
   return (
     <footer className="border-t border-border pt-20 pb-10">
       <div className="mx-auto max-w-7xl px-6">
@@ -9,46 +22,54 @@ export function SiteFooter() {
           <div>
             <div className="flex items-center gap-2 mb-4">
               <UtensilsCrossed className="h-5 w-5 text-gold" />
-              <span className="font-serif text-xl">Maison Dining<span className="text-gold">.</span></span>
+              <span className="font-serif text-xl">
+                {s.brand_name}<span className="text-gold">.</span>
+              </span>
             </div>
-            <p className="text-sm text-muted-foreground leading-relaxed">
-              Danh bạ nhà hàng cao cấp tuyển chọn. Khám phá, đặt bàn và tận hưởng những trải nghiệm đáng nhớ.
-            </p>
+            <p className="text-sm text-muted-foreground leading-relaxed">{s.brand_tagline}</p>
           </div>
-          <div>
-            <h4 className="text-sm font-medium mb-4 text-gold">Khám phá</h4>
-            <ul className="space-y-2 text-sm text-muted-foreground">
-              <li><Link to="/restaurants" className="hover:text-gold">Nhà hàng</Link></li>
-              <li><Link to="/deals" className="hover:text-gold">Ưu đãi</Link></li>
-              <li><Link to="/account" className="hover:text-gold">Yêu thích</Link></li>
-            </ul>
-          </div>
-          <div>
-            <h4 className="text-sm font-medium mb-4 text-gold">Đối tác</h4>
-            <ul className="space-y-2 text-sm text-muted-foreground">
-              <li><Link to="/auth" search={{ mode: "register", as: "restaurant" } as any} className="hover:text-gold">Đăng ký nhà hàng</Link></li>
-              <li><Link to="/membership" className="hover:text-gold">Gói thành viên</Link></li>
-              <li><Link to="/partner" className="hover:text-gold">Quản trị</Link></li>
-            </ul>
-          </div>
+
+          {s.footer_columns.slice(0, 2).map((col) => (
+            <div key={col.title}>
+              <h4 className="text-sm font-medium mb-4 text-gold">{col.title}</h4>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                {col.links.map((l) => (
+                  <li key={l.label}>
+                    <SmartLink to={l.to} className="hover:text-gold">{l.label}</SmartLink>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+
           <div>
             <h4 className="text-sm font-medium mb-4 text-gold">Theo dõi</h4>
             <div className="flex gap-3">
-              {[Instagram, Facebook, Youtube].map((Icon, i) => (
-                <a key={i} href="#" aria-label="social" className="h-10 w-10 rounded-full border border-border grid place-items-center hover:border-gold hover:text-gold transition">
-                  <Icon className="h-4 w-4" />
-                </a>
-              ))}
+              {socials.length === 0 && (
+                <p className="text-xs text-muted-foreground">Chưa cấu hình mạng xã hội.</p>
+              )}
+              {socials.map(([key, url]) => {
+                const Icon = (ICON_MAP as any)[key] ?? Instagram;
+                return (
+                  <a key={key} href={url as string} target="_blank" rel="noreferrer noopener" aria-label={key}
+                    className="h-10 w-10 rounded-full border border-border grid place-items-center hover:border-gold hover:text-gold transition">
+                    <Icon className="h-4 w-4" />
+                  </a>
+                );
+              })}
             </div>
           </div>
         </div>
         <div className="hairline mb-6" />
         <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-muted-foreground">
-          <p>© {new Date().getFullYear()} Maison Dining. Tuyển chọn từ Việt Nam.</p>
+          <p>{copyright}</p>
           <div className="flex gap-6">
-            <Link to="/terms" className="hover:text-gold">Điều khoản</Link>
-            <Link to="/privacy" className="hover:text-gold">Bảo mật</Link>
-            <a href="mailto:hello@maisondining.com" className="hover:text-gold">Liên hệ</a>
+            {s.bottom_links.map((l) => (
+              <SmartLink key={l.label} to={l.to} className="hover:text-gold">{l.label}</SmartLink>
+            ))}
+            {s.contact_email && (
+              <a href={`mailto:${s.contact_email}`} className="hover:text-gold">Liên hệ</a>
+            )}
           </div>
         </div>
       </div>

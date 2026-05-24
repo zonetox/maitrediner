@@ -6,13 +6,14 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { Shield, Users, Store, CreditCard, CheckCircle2, XCircle, Star, Eye, EyeOff, ArrowRight, Calendar, Save, Plus, Trash2, Utensils, MapPin, Sparkles, Crown, Edit3 } from "lucide-react";
 import { ImageUploader } from "@/components/ImageUploader";
 import { toast } from "sonner";
+import { invalidateSiteSettings } from "@/hooks/useSiteSettings";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({ meta: [{ title: "Admin — Maison Dining" }] }),
   component: AdminPage,
 });
 
-type Tab = "overview" | "restaurants" | "payments" | "plans" | "users" | "bookings" | "directory" | "settings";
+type Tab = "overview" | "restaurants" | "payments" | "plans" | "users" | "bookings" | "directory" | "site" | "settings";
 
 function AdminPage() {
   const { user, loading, hasRole, roles } = useAuth();
@@ -145,7 +146,7 @@ function AdminPage() {
 
         {/* Tabs */}
         <div className="border-b border-border mb-6 flex gap-6 overflow-x-auto">
-          {(["overview", "restaurants", "payments", "plans", "users", "bookings", "directory", "settings"] as Tab[]).map((t) => (
+          {(["overview", "restaurants", "payments", "plans", "users", "bookings", "directory", "site", "settings"] as Tab[]).map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
@@ -317,6 +318,7 @@ function AdminPage() {
 
         {tab === "directory" && <DirectoryTab />}
         {tab === "plans" && <PlansTab />}
+        {tab === "site" && <SiteTab />}
         {tab === "settings" && <SettingsTab />}
       </main>
     </div>
@@ -357,7 +359,7 @@ function Table({ head, children }: any) {
 }
 
 function labelOf(t: Tab) {
-  return { overview: "Tổng quan", restaurants: "Nhà hàng", payments: "Thanh toán gói", plans: "Gói thành viên", users: "Người dùng", bookings: "Đặt chỗ", directory: "Danh mục & Địa điểm", settings: "Cấu hình" }[t];
+  return { overview: "Tổng quan", restaurants: "Nhà hàng", payments: "Thanh toán gói", plans: "Gói thành viên", users: "Người dùng", bookings: "Đặt chỗ", directory: "Danh mục & Địa điểm", site: "Header & Footer", settings: "Cấu hình" }[t];
 }
 
 function SettingsTab() {
@@ -763,6 +765,193 @@ function PlansTab() {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+function SiteTab() {
+  const [s, setS] = useState<any>(null);
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase.from("site_settings").select("*").eq("id", true).maybeSingle();
+      setS(data ?? null);
+    })();
+  }, []);
+
+  if (!s) return <div className="text-sm text-muted-foreground">Đang tải…</div>;
+
+  function update(patch: any) { setS({ ...s, ...patch }); }
+  function updateNavAt(i: number, patch: any) {
+    const next = [...(s.header_nav ?? [])];
+    next[i] = { ...next[i], ...patch };
+    update({ header_nav: next });
+  }
+  function removeNav(i: number) {
+    const next = [...(s.header_nav ?? [])]; next.splice(i, 1); update({ header_nav: next });
+  }
+  function addNav() {
+    update({ header_nav: [...(s.header_nav ?? []), { label: "Mới", to: "/" }] });
+  }
+  function updateCol(ci: number, patch: any) {
+    const next = [...(s.footer_columns ?? [])]; next[ci] = { ...next[ci], ...patch }; update({ footer_columns: next });
+  }
+  function updateColLink(ci: number, li: number, patch: any) {
+    const next = [...(s.footer_columns ?? [])];
+    const links = [...(next[ci].links ?? [])];
+    links[li] = { ...links[li], ...patch };
+    next[ci] = { ...next[ci], links };
+    update({ footer_columns: next });
+  }
+  function removeColLink(ci: number, li: number) {
+    const next = [...(s.footer_columns ?? [])];
+    const links = [...(next[ci].links ?? [])]; links.splice(li, 1);
+    next[ci] = { ...next[ci], links }; update({ footer_columns: next });
+  }
+  function addColLink(ci: number) {
+    const next = [...(s.footer_columns ?? [])];
+    const links = [...(next[ci].links ?? []), { label: "Mới", to: "/" }];
+    next[ci] = { ...next[ci], links }; update({ footer_columns: next });
+  }
+  function addCol() {
+    update({ footer_columns: [...(s.footer_columns ?? []), { title: "Cột mới", links: [] }] });
+  }
+  function removeCol(ci: number) {
+    const next = [...(s.footer_columns ?? [])]; next.splice(ci, 1); update({ footer_columns: next });
+  }
+  function updateBottom(i: number, patch: any) {
+    const next = [...(s.bottom_links ?? [])]; next[i] = { ...next[i], ...patch }; update({ bottom_links: next });
+  }
+  function removeBottom(i: number) {
+    const next = [...(s.bottom_links ?? [])]; next.splice(i, 1); update({ bottom_links: next });
+  }
+  function addBottom() {
+    update({ bottom_links: [...(s.bottom_links ?? []), { label: "Mới", to: "/" }] });
+  }
+
+  async function save() {
+    const { error } = await supabase.from("site_settings").update({
+      brand_name: s.brand_name,
+      brand_tagline: s.brand_tagline,
+      contact_email: s.contact_email,
+      header_nav: s.header_nav,
+      footer_columns: s.footer_columns,
+      socials: s.socials,
+      copyright: s.copyright,
+      bottom_links: s.bottom_links,
+      updated_at: new Date().toISOString(),
+    }).eq("id", true);
+    if (error) return toast.error(error.message);
+    toast.success("Đã lưu cấu hình header/footer");
+    invalidateSiteSettings();
+  }
+
+  const inputCls = "w-full bg-background border border-border rounded-md px-3 py-2 text-sm";
+
+  return (
+    <div className="space-y-6">
+      <Panel title="Thương hiệu">
+        <div className="grid md:grid-cols-2 gap-3">
+          <div>
+            <label className="text-xs uppercase tracking-wider text-muted-foreground mb-1 block">Tên thương hiệu</label>
+            <input className={inputCls} value={s.brand_name ?? ""} onChange={(e) => update({ brand_name: e.target.value })} />
+          </div>
+          <div>
+            <label className="text-xs uppercase tracking-wider text-muted-foreground mb-1 block">Email liên hệ</label>
+            <input className={inputCls} value={s.contact_email ?? ""} onChange={(e) => update({ contact_email: e.target.value })} />
+          </div>
+          <div className="md:col-span-2">
+            <label className="text-xs uppercase tracking-wider text-muted-foreground mb-1 block">Mô tả ngắn (footer)</label>
+            <textarea rows={2} className={inputCls} value={s.brand_tagline ?? ""} onChange={(e) => update({ brand_tagline: e.target.value })} />
+          </div>
+        </div>
+      </Panel>
+
+      <Panel title="Menu trên cùng (Header)">
+        <div className="space-y-2">
+          {(s.header_nav ?? []).map((n: any, i: number) => (
+            <div key={i} className="flex gap-2 items-center">
+              <input className={inputCls + " flex-1"} placeholder="Nhãn" value={n.label} onChange={(e) => updateNavAt(i, { label: e.target.value })} />
+              <input className={inputCls + " flex-[2]"} placeholder="/đường-dẫn hoặc https://…" value={n.to} onChange={(e) => updateNavAt(i, { to: e.target.value })} />
+              <button onClick={() => removeNav(i)} className="p-2 text-muted-foreground hover:text-destructive" aria-label="Xoá">
+                <Trash2 className="h-4 w-4" />
+              </button>
+            </div>
+          ))}
+          <button onClick={addNav} className="text-xs text-gold inline-flex items-center gap-1"><Plus className="h-3 w-3" /> Thêm mục</button>
+        </div>
+      </Panel>
+
+      <Panel title="Các cột liên kết ở Footer">
+        <p className="text-xs text-muted-foreground mb-3">Hiện 2 cột đầu tiên trên trang. Cột thứ 3 (Theo dõi) lấy từ Mạng xã hội bên dưới.</p>
+        <div className="space-y-4">
+          {(s.footer_columns ?? []).map((col: any, ci: number) => (
+            <div key={ci} className="rounded-xl border border-border p-3">
+              <div className="flex gap-2 items-center mb-2">
+                <input className={inputCls + " flex-1"} placeholder="Tiêu đề cột" value={col.title}
+                  onChange={(e) => updateCol(ci, { title: e.target.value })} />
+                <button onClick={() => removeCol(ci)} className="p-2 text-muted-foreground hover:text-destructive" aria-label="Xoá cột">
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </div>
+              <div className="space-y-2 pl-2 border-l border-border">
+                {(col.links ?? []).map((l: any, li: number) => (
+                  <div key={li} className="flex gap-2 items-center">
+                    <input className={inputCls + " flex-1"} placeholder="Nhãn" value={l.label} onChange={(e) => updateColLink(ci, li, { label: e.target.value })} />
+                    <input className={inputCls + " flex-[2]"} placeholder="/đường-dẫn hoặc https://…" value={l.to} onChange={(e) => updateColLink(ci, li, { to: e.target.value })} />
+                    <button onClick={() => removeColLink(ci, li)} className="p-2 text-muted-foreground hover:text-destructive" aria-label="Xoá liên kết">
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                ))}
+                <button onClick={() => addColLink(ci)} className="text-xs text-gold inline-flex items-center gap-1"><Plus className="h-3 w-3" /> Thêm liên kết</button>
+              </div>
+            </div>
+          ))}
+          <button onClick={addCol} className="text-xs text-gold inline-flex items-center gap-1"><Plus className="h-3 w-3" /> Thêm cột</button>
+        </div>
+      </Panel>
+
+      <Panel title="Mạng xã hội (Footer)">
+        <div className="grid md:grid-cols-2 gap-3">
+          {(["instagram", "facebook", "youtube", "tiktok"] as const).map((k) => (
+            <div key={k}>
+              <label className="text-xs uppercase tracking-wider text-muted-foreground mb-1 block">{k}</label>
+              <input className={inputCls} placeholder="https://…" value={s.socials?.[k] ?? ""}
+                onChange={(e) => update({ socials: { ...(s.socials ?? {}), [k]: e.target.value } })} />
+            </div>
+          ))}
+        </div>
+        <p className="text-xs text-muted-foreground mt-2">Để trống thì ẩn biểu tượng tương ứng.</p>
+      </Panel>
+
+      <Panel title="Chân trang">
+        <div className="space-y-3">
+          <div>
+            <label className="text-xs uppercase tracking-wider text-muted-foreground mb-1 block">Dòng bản quyền</label>
+            <input className={inputCls} value={s.copyright ?? ""} onChange={(e) => update({ copyright: e.target.value })} />
+            <p className="text-[11px] text-muted-foreground mt-1">Dùng <code>{"{year}"}</code> để chèn năm hiện tại.</p>
+          </div>
+          <div>
+            <label className="text-xs uppercase tracking-wider text-muted-foreground mb-2 block">Liên kết phụ (cạnh bản quyền)</label>
+            {(s.bottom_links ?? []).map((l: any, i: number) => (
+              <div key={i} className="flex gap-2 items-center mb-2">
+                <input className={inputCls + " flex-1"} placeholder="Nhãn" value={l.label} onChange={(e) => updateBottom(i, { label: e.target.value })} />
+                <input className={inputCls + " flex-[2]"} placeholder="/đường-dẫn hoặc https://…" value={l.to} onChange={(e) => updateBottom(i, { to: e.target.value })} />
+                <button onClick={() => removeBottom(i)} className="p-2 text-muted-foreground hover:text-destructive" aria-label="Xoá">
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </div>
+            ))}
+            <button onClick={addBottom} className="text-xs text-gold inline-flex items-center gap-1"><Plus className="h-3 w-3" /> Thêm liên kết</button>
+          </div>
+        </div>
+      </Panel>
+
+      <div className="flex justify-end">
+        <button onClick={save} className="px-6 py-3 rounded-full bg-gradient-gold text-primary-foreground font-medium inline-flex items-center gap-2 hover:shadow-gold">
+          <Save className="h-4 w-4" /> Lưu Header & Footer
+        </button>
+      </div>
     </div>
   );
 }
