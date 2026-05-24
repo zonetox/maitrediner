@@ -25,10 +25,24 @@ const DEFAULTS: SiteSettings = {
     { label: "Ưu đãi", to: "/deals" },
     { label: "Gói thành viên", to: "/membership" },
   ],
-  footer_columns: [],
+  footer_columns: [
+    { title: "Khám phá", links: [
+      { label: "Nhà hàng", to: "/restaurants" },
+      { label: "Ưu đãi", to: "/deals" },
+      { label: "Yêu thích", to: "/account" },
+    ]},
+    { title: "Đối tác", links: [
+      { label: "Đăng ký nhà hàng", to: "/auth?mode=register&as=restaurant" },
+      { label: "Gói thành viên", to: "/membership" },
+      { label: "Quản trị", to: "/partner" },
+    ]},
+  ],
   socials: {},
-  copyright: "© {year} Maison Dining.",
-  bottom_links: [],
+  copyright: "© {year} Maison Dining. Tuyển chọn từ Việt Nam.",
+  bottom_links: [
+    { label: "Điều khoản", to: "/terms" },
+    { label: "Bảo mật", to: "/privacy" },
+  ],
 };
 
 let cache: SiteSettings | null = null;
