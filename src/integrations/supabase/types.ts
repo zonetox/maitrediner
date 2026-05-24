@@ -657,6 +657,45 @@ export type Database = {
         }
         Relationships: []
       }
+      site_settings: {
+        Row: {
+          bottom_links: Json
+          brand_name: string
+          brand_tagline: string
+          contact_email: string
+          copyright: string
+          footer_columns: Json
+          header_nav: Json
+          id: boolean
+          socials: Json
+          updated_at: string
+        }
+        Insert: {
+          bottom_links?: Json
+          brand_name?: string
+          brand_tagline?: string
+          contact_email?: string
+          copyright?: string
+          footer_columns?: Json
+          header_nav?: Json
+          id?: boolean
+          socials?: Json
+          updated_at?: string
+        }
+        Update: {
+          bottom_links?: Json
+          brand_name?: string
+          brand_tagline?: string
+          contact_email?: string
+          copyright?: string
+          footer_columns?: Json
+          header_nav?: Json
+          id?: boolean
+          socials?: Json
+          updated_at?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
