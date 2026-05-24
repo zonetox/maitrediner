@@ -3,42 +3,46 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
-import r1 from "@/assets/restaurant-1.jpg";
-import r2 from "@/assets/restaurant-2.jpg";
-import r3 from "@/assets/restaurant-3.jpg";
-import r4 from "@/assets/restaurant-4.jpg";
-import { Star, MapPin, Heart, ArrowRight } from "lucide-react";
+import { Star, MapPin, Heart, ArrowRight, Utensils } from "lucide-react";
 import { img } from "@/lib/img";
 
-const FALLBACKS = [
-  { img: r1, name: "Lumière", slug: "lumiere-demo", cuisine_type: "Fine dining Pháp", city: "Quận 1, TP.HCM", rating: 4.9, price_range: "₫₫₫₫", id: null as string | null, cover_image_url: r1 },
-  { img: r2, name: "Hanami Omakase", slug: "hanami-demo", cuisine_type: "Omakase Nhật", city: "Tây Hồ, Hà Nội", rating: 4.8, price_range: "₫₫₫₫", id: null, cover_image_url: r2 },
-  { img: r3, name: "The Brass Diner", slug: "brass-demo", cuisine_type: "American Steakhouse", city: "Quận 2, TP.HCM", rating: 4.7, price_range: "₫₫₫", id: null, cover_image_url: r3 },
-  { img: r4, name: "Maison Belle", slug: "maison-demo", cuisine_type: "Bistro châu Âu", city: "Hoàn Kiếm, Hà Nội", rating: 4.9, price_range: "₫₫₫₫", id: null, cover_image_url: r4 },
-];
+type Item = {
+  id: string;
+  name: string;
+  slug: string;
+  cuisine_type: string | null;
+  city: string | null;
+  rating: number | null;
+  price_range: string | null;
+  cover_image_url: string | null;
+  is_featured?: boolean;
+};
 
 export function FeaturedRestaurants() {
   const { user } = useAuth();
-  const [items, setItems] = useState<any[]>(FALLBACKS);
+  const [items, setItems] = useState<Item[] | null>(null);
 
   useEffect(() => {
     (async () => {
       const { data } = await supabase
         .from("restaurants")
-        .select("id, name, slug, cuisine_type, city, address, rating, price_range, cover_image_url")
+        .select("id, name, slug, cuisine_type, city, rating, price_range, cover_image_url, is_featured")
         .eq("is_published", true)
-        .eq("is_featured", true)
+        .order("is_featured", { ascending: false })
+        .order("rating", { ascending: false, nullsFirst: false })
         .limit(4);
-      if (data && data.length > 0) setItems(data);
+      setItems((data ?? []) as Item[]);
     })();
   }, []);
 
-  async function fav(id: string | null) {
-    if (!id) return toast.info("Đây là nhà hàng minh hoạ");
+  async function fav(id: string) {
     if (!user) return toast.error("Vui lòng đăng nhập để lưu");
     const { error } = await supabase.from("favorites").insert({ user_id: user.id, restaurant_id: id });
     if (error) toast.error(error.message); else toast.success("Đã lưu vào yêu thích");
   }
+
+  if (items === null) return null;
+  if (items.length === 0) return null;
 
   return (
     <section className="py-24 border-t border-border">
@@ -46,7 +50,7 @@ export function FeaturedRestaurants() {
         <div className="flex items-end justify-between mb-12 gap-6 flex-wrap">
           <div>
             <span className="text-xs tracking-[0.3em] uppercase text-gold">Tuyển chọn</span>
-            <h2 className="font-serif text-4xl md:text-5xl mt-3">Nhà hàng nổi bật tuần này</h2>
+            <h2 className="font-serif text-4xl md:text-5xl mt-3">Nhà hàng nổi bật</h2>
           </div>
           <Link to="/restaurants" className="text-sm text-gold hover:underline inline-flex items-center gap-2">
             Xem tất cả <ArrowRight className="h-3 w-3" />
@@ -54,16 +58,22 @@ export function FeaturedRestaurants() {
         </div>
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
           {items.map((r) => (
-            <article key={r.slug} className="group">
+            <article key={r.id} className="group">
               <Link to="/r/$slug" params={{ slug: r.slug }} className="block">
                 <div className="relative overflow-hidden rounded-2xl aspect-[4/5] mb-4 bg-secondary">
-                  <img
-                    src={r.cover_image_url ? img(r.cover_image_url, { w: 600, h: 750, q: 78 }) : r.img}
-                    alt={r.name}
-                    loading="lazy"
-                    decoding="async"
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                  />
+                  {r.cover_image_url ? (
+                    <img
+                      src={img(r.cover_image_url, { w: 600, h: 750, q: 78 })}
+                      alt={r.name}
+                      loading="lazy"
+                      decoding="async"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                    />
+                  ) : (
+                    <div className="w-full h-full grid place-items-center text-muted-foreground/40">
+                      <Utensils className="h-10 w-10" />
+                    </div>
+                  )}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
                   <button
                     onClick={(e) => { e.preventDefault(); fav(r.id); }}
@@ -76,7 +86,7 @@ export function FeaturedRestaurants() {
                     <span className="px-2 py-1 rounded-full bg-background/70 backdrop-blur text-foreground">
                       {r.price_range ?? "₫₫₫"}
                     </span>
-                    {r.rating > 0 && (
+                    {r.rating != null && Number(r.rating) > 0 && (
                       <span className="flex items-center gap-1 text-gold">
                         <Star className="h-3 w-3 fill-current" />
                         {Number(r.rating).toFixed(1)}
@@ -85,10 +95,12 @@ export function FeaturedRestaurants() {
                   </div>
                 </div>
                 <h3 className="font-serif text-2xl group-hover:text-gold transition">{r.name}</h3>
-                <p className="text-sm text-muted-foreground mt-1">{r.cuisine_type}</p>
-                <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
-                  <MapPin className="h-3 w-3" /> {r.city}
-                </p>
+                {r.cuisine_type && <p className="text-sm text-muted-foreground mt-1">{r.cuisine_type}</p>}
+                {r.city && (
+                  <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
+                    <MapPin className="h-3 w-3" /> {r.city}
+                  </p>
+                )}
               </Link>
             </article>
           ))}

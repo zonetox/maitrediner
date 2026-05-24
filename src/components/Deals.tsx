@@ -5,15 +5,9 @@ import { useAuth } from "@/hooks/useAuth";
 import { Sparkles, Clock, Tag, Bookmark, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 
-const FALLBACK = [
-  { id: "f1", badge: "Mới", title: "Tasting menu 7 món - Lumière", description: "Giảm 25% cho đặt bàn từ Chủ nhật đến thứ Tư trong tháng này.", expires_at: null, tag: "-25%" },
-  { id: "f2", badge: "Hot", title: "Omakase đôi - Hanami", description: "Tặng kèm chai sake Junmai Daiginjo cho cặp đôi đặt bàn 19:00.", expires_at: null, tag: "Quà tặng" },
-  { id: "f3", badge: "VIP", title: "Brunch cuối tuần - Maison Belle", description: "Free flow champagne cho khách thân thiết Maison Dining hạng Gold.", expires_at: null, tag: "Free flow" },
-];
-
 export function Deals() {
   const { user } = useAuth();
-  const [items, setItems] = useState<any[]>(FALLBACK);
+  const [items, setItems] = useState<any[] | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -22,16 +16,19 @@ export function Deals() {
         .select("id, badge, title, description, expires_at, tag")
         .eq("is_active", true)
         .limit(3);
-      if (data && data.length > 0) setItems(data);
+      setItems(data ?? []);
     })();
   }, []);
 
   async function save(id: string) {
-    if (id.startsWith("f")) return toast.info("Ưu đãi minh hoạ");
     if (!user) return toast.error("Vui lòng đăng nhập để lưu ưu đãi");
     const { error } = await supabase.from("favorites").insert({ user_id: user.id, deal_id: id });
     if (error) toast.error(error.message); else toast.success("Đã lưu ưu đãi");
   }
+
+  if (items === null) return null;
+  if (items.length === 0) return null;
+
 
   return (
     <section className="py-24 border-t border-border">
