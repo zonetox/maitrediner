@@ -154,6 +154,7 @@ function MembershipPage() {
                 <span className="text-muted-foreground text-sm"> / {p.duration_days} ngày</span>
               </div>
               <ul className="space-y-2 text-sm text-muted-foreground">
+                <li className="flex gap-2 text-foreground"><Check className="h-4 w-4 text-gold mt-0.5 shrink-0" />Tối đa <span className="text-gold font-medium">{p.max_restaurants ?? 1}</span> nhà hàng</li>
                 {(p.perks ?? []).map((perk: string) => (
                   <li key={perk} className="flex gap-2"><Check className="h-4 w-4 text-gold mt-0.5 shrink-0" />{perk}</li>
                 ))}

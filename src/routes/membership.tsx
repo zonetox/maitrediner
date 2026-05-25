@@ -126,6 +126,10 @@ function MembershipPublic() {
                       </p>
                     </div>
                     <ul className="space-y-3 text-sm mb-8">
+                      <li className="flex gap-3 text-foreground font-medium">
+                        <Check className="h-4 w-4 text-gold mt-0.5 shrink-0" />
+                        <span>Tạo tối đa <span className="text-gold">{p.max_restaurants ?? 1}</span> nhà hàng · 30 ngày dùng thử miễn phí</span>
+                      </li>
                       {(p.perks ?? []).map((perk: string) => (
                         <li key={perk} className="flex gap-3 text-muted-foreground">
                           <Check className="h-4 w-4 text-gold mt-0.5 shrink-0" />
