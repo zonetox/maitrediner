@@ -110,13 +110,29 @@ function PartnerPage() {
   const reload = () => setRefreshTick((t) => t + 1);
 
   async function createRestaurant(name: string) {
+    // Check quota: sum of max_restaurants across owner's active/trial restaurants. Default trial = 1.
+    const { data: owned } = await supabase.from("restaurants").select("plan_slug, membership_status, trial_ends_at, membership_ends_at").eq("owner_id", user!.id);
+    const now = Date.now();
+    const activeSlugs = (owned ?? []).filter((r: any) => {
+      if (r.membership_status === "active" && (!r.membership_ends_at || new Date(r.membership_ends_at).getTime() > now)) return true;
+      if (r.membership_status === "trial" && r.trial_ends_at && new Date(r.trial_ends_at).getTime() > now) return true;
+      return false;
+    }).map((r: any) => r.plan_slug).filter(Boolean);
+    let quota = 1; // trial baseline
+    if (activeSlugs.length) {
+      const { data: planRows } = await supabase.from("membership_plans").select("slug,max_restaurants").in("slug", activeSlugs);
+      quota = Math.max(quota, ...(planRows ?? []).map((p: any) => p.max_restaurants ?? 1));
+    }
+    if ((owned?.length ?? 0) >= quota) {
+      return toast.error(`Gói hiện tại chỉ cho phép tối đa ${quota} nhà hàng. Vui lòng nâng cấp gói để tạo thêm.`);
+    }
     const slug = slugify(name) + "-" + Math.random().toString(36).slice(2, 6);
     const { data, error } = await supabase.from("restaurants").insert({
       owner_id: user!.id, name, slug, is_published: false,
       landing_content: { hero_tagline: "Trải nghiệm ẩm thực đáng nhớ", story: "Câu chuyện của chúng tôi...", hours: "11:00 - 22:00 hằng ngày" },
     }).select().single();
     if (error) return toast.error(error.message);
-    toast.success("Đã tạo nhà hàng");
+    toast.success("Đã tạo nhà hàng — bắt đầu 30 ngày dùng thử miễn phí");
     setCreateOpen(false);
     const { data: all } = await supabase.from("restaurants").select("*").eq("owner_id", user!.id);
     setRestaurants(all ?? []);

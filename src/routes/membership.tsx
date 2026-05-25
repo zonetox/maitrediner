@@ -41,12 +41,17 @@ const FAQS = [
 
 function MembershipPublic() {
   const { user } = useAuth();
-  const ctaTo = user ? "/partner/membership" : "/auth";
   const [plans, setPlans] = useState<any[]>([]);
   useEffect(() => {
     supabase.from("membership_plans").select("*").eq("is_active", true).order("sort_order")
       .then(({ data }) => setPlans(data ?? []));
   }, []);
+
+  function ctaFor(slug?: string) {
+    if (user) return { to: "/partner/membership" as const, search: slug ? { plan: slug } : {} };
+    return { to: "/auth" as const, search: { mode: "register" as const, as: "restaurant" as const, ...(slug ? { plan: slug } : {}) } };
+  }
+  const heroCta = ctaFor();
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -67,7 +72,7 @@ function MembershipPublic() {
               Trang landing riêng, nhận đặt chỗ trực tiếp, không hoa hồng — chỉ thanh toán gói thành viên đơn giản.
             </p>
             <div className="flex flex-wrap justify-center gap-3 mt-10">
-              <Link to={ctaTo} className="px-8 py-4 rounded-full bg-gradient-gold text-primary-foreground font-medium hover:shadow-gold transition flex items-center gap-2">
+              <Link to={heroCta.to} search={heroCta.search as any} className="px-8 py-4 rounded-full bg-gradient-gold text-primary-foreground font-medium hover:shadow-gold transition flex items-center gap-2">
                 Bắt đầu 30 ngày miễn phí <ArrowRight className="h-4 w-4" />
               </Link>
               <a href="#plans" className="px-8 py-4 rounded-full border border-border hover:border-gold transition">
@@ -121,6 +126,10 @@ function MembershipPublic() {
                       </p>
                     </div>
                     <ul className="space-y-3 text-sm mb-8">
+                      <li className="flex gap-3 text-foreground font-medium">
+                        <Check className="h-4 w-4 text-gold mt-0.5 shrink-0" />
+                        <span>Tạo tối đa <span className="text-gold">{p.max_restaurants ?? 1}</span> nhà hàng · 30 ngày dùng thử miễn phí</span>
+                      </li>
                       {(p.perks ?? []).map((perk: string) => (
                         <li key={perk} className="flex gap-3 text-muted-foreground">
                           <Check className="h-4 w-4 text-gold mt-0.5 shrink-0" />
@@ -129,14 +138,15 @@ function MembershipPublic() {
                       ))}
                     </ul>
 
-                    <Link to={ctaTo}
+                    {(() => { const c = ctaFor(p.slug); return (
+                    <Link to={c.to} search={c.search as any}
                       className={`block text-center w-full px-6 py-3 rounded-full font-medium transition ${
                         p.is_popular
                           ? "bg-gradient-gold text-primary-foreground hover:shadow-gold"
                           : "border border-border hover:border-gold"
                       }`}>
                       {user ? "Nâng cấp ngay" : "Bắt đầu dùng thử"}
-                    </Link>
+                    </Link>); })()}
                   </div>
                 );
               })}
@@ -216,7 +226,7 @@ function MembershipPublic() {
             <p className="text-muted-foreground mt-6 text-lg">
               Bắt đầu 30 ngày miễn phí. Không cần thẻ tín dụng.
             </p>
-            <Link to={ctaTo} className="inline-flex items-center gap-2 mt-10 px-10 py-4 rounded-full bg-gradient-gold text-primary-foreground font-medium hover:shadow-gold transition">
+            <Link to={heroCta.to} search={heroCta.search as any} className="inline-flex items-center gap-2 mt-10 px-10 py-4 rounded-full bg-gradient-gold text-primary-foreground font-medium hover:shadow-gold transition">
               Đăng ký nhà hàng <ArrowRight className="h-4 w-4" />
             </Link>
           </div>

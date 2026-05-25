@@ -263,6 +263,7 @@ export type Database = {
           id: string
           note: string | null
           plan_name: string
+          plan_slug: string | null
           proof_image_url: string | null
           restaurant_id: string
           reviewed_at: string | null
@@ -277,6 +278,7 @@ export type Database = {
           id?: string
           note?: string | null
           plan_name: string
+          plan_slug?: string | null
           proof_image_url?: string | null
           restaurant_id: string
           reviewed_at?: string | null
@@ -291,6 +293,7 @@ export type Database = {
           id?: string
           note?: string | null
           plan_name?: string
+          plan_slug?: string | null
           proof_image_url?: string | null
           restaurant_id?: string
           reviewed_at?: string | null
@@ -315,6 +318,7 @@ export type Database = {
           id: string
           is_active: boolean
           is_popular: boolean
+          max_restaurants: number
           name: string
           perks: string[]
           price: number
@@ -329,6 +333,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           is_popular?: boolean
+          max_restaurants?: number
           name: string
           perks?: string[]
           price?: number
@@ -343,6 +348,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           is_popular?: boolean
+          max_restaurants?: number
           name?: string
           perks?: string[]
           price?: number
@@ -588,6 +594,7 @@ export type Database = {
           name: string
           owner_id: string
           phone: string | null
+          plan_slug: string | null
           price_per_guest_max: number | null
           price_per_guest_min: number | null
           price_range: string | null
@@ -617,6 +624,7 @@ export type Database = {
           name: string
           owner_id: string
           phone?: string | null
+          plan_slug?: string | null
           price_per_guest_max?: number | null
           price_per_guest_min?: number | null
           price_range?: string | null
@@ -646,6 +654,7 @@ export type Database = {
           name?: string
           owner_id?: string
           phone?: string | null
+          plan_slug?: string | null
           price_per_guest_max?: number | null
           price_per_guest_min?: number | null
           price_range?: string | null

@@ -8,6 +8,7 @@ import { UtensilsCrossed } from "lucide-react";
 const searchSchema = z.object({
   mode: z.enum(["login", "register"]).optional(),
   as: z.enum(["customer", "restaurant"]).optional(),
+  plan: z.string().optional(),
 });
 
 export const Route = createFileRoute("/auth")({
@@ -45,12 +46,14 @@ function AuthPage() {
           await supabase.from("user_roles").insert({ user_id: data.user.id, role: "restaurant_owner" });
         }
         toast.success("Đăng ký thành công! Đang đăng nhập...");
-        navigate({ to: as === "restaurant" ? "/partner" : "/account" });
+        if (search.plan) navigate({ to: "/partner/membership", search: { plan: search.plan } });
+        else navigate({ to: as === "restaurant" ? "/partner" : "/account" });
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
         toast.success("Chào mừng trở lại!");
-        navigate({ to: as === "restaurant" ? "/partner" : "/account" });
+        if (search.plan) navigate({ to: "/partner/membership", search: { plan: search.plan } });
+        else navigate({ to: as === "restaurant" ? "/partner" : "/account" });
       }
     } catch (err: any) {
       toast.error(err.message ?? "Có lỗi xảy ra");

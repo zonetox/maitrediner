@@ -600,7 +600,7 @@ function DirectoryTab() {
 function PlansTab() {
   const [plans, setPlans] = useState<any[]>([]);
   const [editing, setEditing] = useState<any | null>(null);
-  const empty = { name: "", slug: "", tagline: "", duration_days: 30, price: 0, perks: [] as string[], is_popular: false, is_active: true, sort_order: 0 };
+  const empty = { name: "", slug: "", tagline: "", duration_days: 30, price: 0, max_restaurants: 1, perks: [] as string[], is_popular: false, is_active: true, sort_order: 0 };
 
   async function load() {
     const { data } = await supabase.from("membership_plans").select("*").order("sort_order");
@@ -621,6 +621,7 @@ function PlansTab() {
       tagline: editing.tagline || null,
       duration_days: Number(editing.duration_days) || 30,
       price: Number(editing.price) || 0,
+      max_restaurants: Math.max(1, Number(editing.max_restaurants) || 1),
       perks: (editing.perks ?? []).filter((p: string) => p && p.trim()),
       is_popular: !!editing.is_popular,
       is_active: editing.is_active !== false,
@@ -684,6 +685,7 @@ function PlansTab() {
             <div className="mt-3 mb-3">
               <span className="font-serif text-2xl text-gold">{Number(p.price).toLocaleString("vi-VN")}đ</span>
               <span className="text-muted-foreground text-xs"> / {p.duration_days} ngày</span>
+              <div className="text-xs text-muted-foreground mt-1">Tối đa {p.max_restaurants ?? 1} nhà hàng</div>
             </div>
             <ul className="space-y-1 text-xs text-muted-foreground">
               {(p.perks ?? []).map((perk: string, i: number) => (
@@ -720,7 +722,7 @@ function PlansTab() {
                 <input value={editing.tagline ?? ""} onChange={(e) => setEditing({ ...editing, tagline: e.target.value })}
                   className="w-full mt-1 bg-background border border-border rounded-md px-3 py-2" />
               </div>
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 <div>
                   <label className="text-xs text-muted-foreground uppercase tracking-wider">Giá (VND)</label>
                   <input type="number" value={editing.price ?? 0} onChange={(e) => setEditing({ ...editing, price: e.target.value })}
@@ -729,6 +731,11 @@ function PlansTab() {
                 <div>
                   <label className="text-xs text-muted-foreground uppercase tracking-wider">Thời hạn (ngày)</label>
                   <input type="number" value={editing.duration_days ?? 30} onChange={(e) => setEditing({ ...editing, duration_days: e.target.value })}
+                    className="w-full mt-1 bg-background border border-border rounded-md px-3 py-2" />
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground uppercase tracking-wider">Số nhà hàng tối đa</label>
+                  <input type="number" min={1} value={editing.max_restaurants ?? 1} onChange={(e) => setEditing({ ...editing, max_restaurants: e.target.value })}
                     className="w-full mt-1 bg-background border border-border rounded-md px-3 py-2" />
                 </div>
                 <div>
