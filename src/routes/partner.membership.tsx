@@ -9,12 +9,14 @@ import { toast } from "sonner";
 
 export const Route = createFileRoute("/partner/membership")({
   head: () => ({ meta: [{ title: "Nâng cấp gói — Maison Dining" }] }),
+  validateSearch: (s: Record<string, unknown>) => ({ plan: typeof s.plan === "string" ? s.plan : undefined }),
   component: MembershipPage,
 });
 
 function MembershipPage() {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
+  const { plan: planSlug } = Route.useSearch();
   const [restaurants, setRestaurants] = useState<any[]>([]);
   const [restaurantId, setRestaurantId] = useState<string>("");
   const [plans, setPlans] = useState<any[]>([]);
@@ -27,11 +29,14 @@ function MembershipPage() {
   useEffect(() => {
     supabase.from("payment_settings").select("*").eq("id", true).maybeSingle().then(({ data }) => setPay(data));
     supabase.from("membership_plans").select("*").eq("is_active", true).order("sort_order").then(({ data }) => {
-      setPlans(data ?? []);
-      const popular = data?.find((p: any) => p.is_popular) ?? data?.[0];
-      if (popular) setPlan(popular);
+      const list = data ?? [];
+      setPlans(list);
+      const preselected = planSlug ? list.find((p: any) => p.slug === planSlug) : null;
+      const popular = list.find((p: any) => p.is_popular) ?? list[0];
+      const next = preselected ?? popular;
+      if (next) setPlan(next);
     });
-  }, []);
+  }, [planSlug]);
 
 
   useEffect(() => {
@@ -65,6 +70,7 @@ function MembershipPage() {
       user_id: user.id,
       restaurant_id: restaurantId,
       plan_name: plan.name,
+      plan_slug: plan.slug,
       amount: plan.price,
       duration_days: plan.duration_days,
       proof_image_url: proofUrl || null,
