@@ -41,12 +41,17 @@ const FAQS = [
 
 function MembershipPublic() {
   const { user } = useAuth();
-  const ctaTo = user ? "/partner/membership" : "/auth";
   const [plans, setPlans] = useState<any[]>([]);
   useEffect(() => {
     supabase.from("membership_plans").select("*").eq("is_active", true).order("sort_order")
       .then(({ data }) => setPlans(data ?? []));
   }, []);
+
+  function ctaFor(slug?: string) {
+    if (user) return { to: "/partner/membership" as const, search: slug ? { plan: slug } : {} };
+    return { to: "/auth" as const, search: { mode: "register" as const, as: "restaurant" as const, ...(slug ? { plan: slug } : {}) } };
+  }
+  const heroCta = ctaFor();
 
   return (
     <div className="min-h-screen bg-background text-foreground">
