@@ -59,6 +59,104 @@ export type Database = {
         }
         Relationships: []
       }
+      blog_categories: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          name: string
+          slug: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          slug: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          slug?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      blog_posts: {
+        Row: {
+          author_id: string
+          category_id: string | null
+          content: string
+          cover_image_url: string | null
+          created_at: string
+          excerpt: string | null
+          id: string
+          published_at: string | null
+          reading_minutes: number
+          seo_description: string | null
+          seo_title: string | null
+          slug: string
+          status: string
+          tags: string[]
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          author_id: string
+          category_id?: string | null
+          content?: string
+          cover_image_url?: string | null
+          created_at?: string
+          excerpt?: string | null
+          id?: string
+          published_at?: string | null
+          reading_minutes?: number
+          seo_description?: string | null
+          seo_title?: string | null
+          slug: string
+          status?: string
+          tags?: string[]
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          author_id?: string
+          category_id?: string | null
+          content?: string
+          cover_image_url?: string | null
+          created_at?: string
+          excerpt?: string | null
+          id?: string
+          published_at?: string | null
+          reading_minutes?: number
+          seo_description?: string | null
+          seo_title?: string | null
+          slug?: string
+          status?: string
+          tags?: string[]
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "blog_posts_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "blog_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bookings: {
         Row: {
           booking_at: string
