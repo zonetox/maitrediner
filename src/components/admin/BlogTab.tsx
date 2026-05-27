@@ -261,7 +261,7 @@ function PostsPanel({ posts, cats, onEdit, onNew, reload }: {
             </tr>
           </thead>
           <tbody>
-            {posts.map((p) => {
+            {filtered.map((p) => {
               const cat = cats.find((c) => c.id === p.category_id);
               return (
                 <tr key={p.id} className="border-b border-border last:border-0">
@@ -278,13 +278,16 @@ function PostsPanel({ posts, cats, onEdit, onNew, reload }: {
                   <td className="px-4 text-xs text-muted-foreground">{p.published_at ? new Date(p.published_at).toLocaleDateString("vi-VN") : "—"}</td>
                   <td className="px-4 text-xs text-muted-foreground">{new Date(p.updated_at).toLocaleDateString("vi-VN")}</td>
                   <td className="px-4">
-                    <div className="flex gap-2 justify-end">
+                    <div className="flex gap-2 justify-end items-center">
                       <button onClick={() => togglePublish(p)} title={p.status === "published" ? "Chuyển về nháp" : "Xuất bản"}>
                         {p.status === "published" ? <EyeOff className="h-4 w-4 text-muted-foreground" /> : <Eye className="h-4 w-4 text-gold" />}
                       </button>
                       {p.status === "published" && (
                         <Link to="/blog/$slug" params={{ slug: p.slug }} target="_blank" className="text-xs text-gold">Xem</Link>
                       )}
+                      <button onClick={() => duplicate(p)} title="Nhân bản" className="text-muted-foreground hover:text-gold">
+                        <FileText className="h-4 w-4" />
+                      </button>
                       <button onClick={() => onEdit(p)} className="text-muted-foreground hover:text-gold"><Edit3 className="h-4 w-4" /></button>
                       <button onClick={() => remove(p.id)} className="text-muted-foreground hover:text-destructive"><Trash2 className="h-4 w-4" /></button>
                     </div>
@@ -292,8 +295,10 @@ function PostsPanel({ posts, cats, onEdit, onNew, reload }: {
                 </tr>
               );
             })}
-            {posts.length === 0 && (
-              <tr><td colSpan={6} className="px-4 py-12 text-center text-muted-foreground">Chưa có bài viết nào.</td></tr>
+            {filtered.length === 0 && (
+              <tr><td colSpan={6} className="px-4 py-12 text-center text-muted-foreground">
+                {posts.length === 0 ? "Chưa có bài viết nào." : "Không có bài viết phù hợp bộ lọc."}
+              </td></tr>
             )}
           </tbody>
         </table>
