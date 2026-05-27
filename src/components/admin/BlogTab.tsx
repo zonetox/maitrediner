@@ -3,7 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { ImageUploader } from "@/components/ImageUploader";
-import { Plus, Trash2, Save, Edit3, Eye, EyeOff, FileText, FolderOpen, X } from "lucide-react";
+import { Plus, Trash2, Save, Edit3, Eye, EyeOff, FileText, FolderOpen, X, Search } from "lucide-react";
 import { toast } from "sonner";
 
 type Cat = { id: string; name: string; slug: string; description: string | null; sort_order: number; is_active: boolean };
