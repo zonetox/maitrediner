@@ -165,6 +165,10 @@ function CategoriesPanel({ cats, reload }: { cats: Cat[]; reload: () => void }) 
 function PostsPanel({ posts, cats, onEdit, onNew, reload }: {
   posts: Post[]; cats: Cat[]; onEdit: (p: Post) => void; onNew: () => void; reload: () => void;
 }) {
+  const [q, setQ] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"all" | "published" | "draft">("all");
+  const [catFilter, setCatFilter] = useState<string>("all");
+
   async function remove(id: string) {
     if (!confirm("Xoá bài viết này? Hành động không thể hoàn tác.")) return;
     const { error } = await (supabase as any).from("blog_posts").delete().eq("id", id);
@@ -180,11 +184,66 @@ function PostsPanel({ posts, cats, onEdit, onNew, reload }: {
     if (error) return toast.error(error.message);
     reload();
   }
+  async function duplicate(p: Post) {
+    const newSlug = `${p.slug}-copy-${Date.now().toString(36)}`;
+    const { error } = await (supabase as any).from("blog_posts").insert({
+      title: p.title + " (bản sao)", slug: newSlug, excerpt: p.excerpt, content: p.content,
+      cover_image_url: p.cover_image_url, category_id: p.category_id, status: "draft",
+      seo_title: p.seo_title, seo_description: p.seo_description, tags: p.tags,
+      reading_minutes: p.reading_minutes, author_id: p.author_id,
+    });
+    if (error) return toast.error(error.message);
+    reload(); toast.success("Đã nhân bản");
+  }
+
+  const filtered = posts.filter((p) => {
+    if (statusFilter !== "all" && p.status !== statusFilter) return false;
+    if (catFilter !== "all" && p.category_id !== catFilter) return false;
+    if (q.trim()) {
+      const hay = `${p.title} ${p.slug} ${p.excerpt ?? ""} ${(p.tags ?? []).join(" ")}`.toLowerCase();
+      if (!hay.includes(q.trim().toLowerCase())) return false;
+    }
+    return true;
+  });
+
+  const stats = {
+    total: posts.length,
+    published: posts.filter((p) => p.status === "published").length,
+    draft: posts.filter((p) => p.status === "draft").length,
+  };
+  const ip = "bg-background border border-border rounded-md px-3 py-2 text-sm";
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-4">
-        <p className="text-sm text-muted-foreground">Quản lý bài viết blog phục vụ SEO.</p>
+      <div className="grid grid-cols-3 gap-3 mb-4">
+        <div className="rounded-xl border border-border bg-card p-4">
+          <div className="text-xs text-muted-foreground">Tổng bài</div>
+          <div className="font-serif text-2xl mt-1">{stats.total}</div>
+        </div>
+        <div className="rounded-xl border border-border bg-card p-4">
+          <div className="text-xs text-muted-foreground">Đã xuất bản</div>
+          <div className="font-serif text-2xl mt-1 text-emerald-400">{stats.published}</div>
+        </div>
+        <div className="rounded-xl border border-border bg-card p-4">
+          <div className="text-xs text-muted-foreground">Bản nháp</div>
+          <div className="font-serif text-2xl mt-1 text-gold">{stats.draft}</div>
+        </div>
+      </div>
+
+      <div className="flex flex-wrap gap-2 items-center mb-4">
+        <div className="relative flex-1 min-w-[200px]">
+          <Search className="h-3.5 w-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Tìm theo tiêu đề, slug, tag…" className={ip + " pl-9 w-full"} />
+        </div>
+        <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as any)} className={ip}>
+          <option value="all">Tất cả trạng thái</option>
+          <option value="published">Đã xuất bản</option>
+          <option value="draft">Nháp</option>
+        </select>
+        <select value={catFilter} onChange={(e) => setCatFilter(e.target.value)} className={ip}>
+          <option value="all">Tất cả danh mục</option>
+          {cats.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+        </select>
         <button onClick={onNew} disabled={cats.length === 0} className="px-4 py-2 rounded-md bg-gradient-gold text-primary-foreground text-sm inline-flex items-center gap-1 disabled:opacity-50">
           <Plus className="h-3 w-3" /> Bài viết mới
         </button>
