@@ -128,15 +128,26 @@ export function Hero() {
 
       <div className="relative mx-auto max-w-7xl px-6 w-full">
         <div className="max-w-3xl">
-          <div key={idx} className="animate-fade-in">
-            <div className="flex items-center gap-3 mb-6">
-              <span className="hairline w-12" />
-              <span className="text-xs tracking-[0.3em] uppercase text-gold">{slide.eyebrow}</span>
-            </div>
-            <h1 className="font-serif text-5xl md:text-7xl leading-[1.05] mb-6">
-              {slide.title} <span className="italic text-gradient-gold">{slide.italic}</span> {slide.suffix}
-            </h1>
-            <p className="text-lg text-muted-foreground max-w-xl mb-10">{slide.sub}</p>
+          <div className="relative min-h-[300px] md:min-h-[380px] mb-4">
+            {SLIDES.map((s, i) => (
+              <div
+                key={i}
+                aria-hidden={i !== idx}
+                className={`absolute inset-0 transform-gpu will-change-[opacity,transform] ${
+                  i === idx ? "opacity-100 translate-y-0" : "opacity-0 translate-y-3 pointer-events-none"
+                }`}
+                style={{ transition: "opacity 900ms cubic-bezier(0.4, 0, 0.2, 1), transform 900ms cubic-bezier(0.4, 0, 0.2, 1)" }}
+              >
+                <div className="flex items-center gap-3 mb-6">
+                  <span className="hairline w-12" />
+                  <span className="text-xs tracking-[0.3em] uppercase text-gold">{s.eyebrow}</span>
+                </div>
+                <h1 className="font-serif text-5xl md:text-7xl leading-[1.05] mb-6">
+                  {s.title} <span className="italic text-gradient-gold">{s.italic}</span> {s.suffix}
+                </h1>
+                <p className="text-lg text-muted-foreground max-w-xl">{s.sub}</p>
+              </div>
+            ))}
           </div>
 
           {/* Search */}
