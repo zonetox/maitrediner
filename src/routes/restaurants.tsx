@@ -11,6 +11,36 @@ import { img } from "@/lib/img";
 
 type SearchParams = { q?: string; cuisine?: string; city?: string; amenities?: string };
 
+// Khoảng cách Levenshtein cho fuzzy search
+function levenshtein(a: string, b: string): number {
+  if (a === b) return 0;
+  if (!a.length) return b.length;
+  if (!b.length) return a.length;
+  const dp = Array.from({ length: a.length + 1 }, (_, i) => i);
+  for (let j = 1; j <= b.length; j++) {
+    let prev = dp[0];
+    dp[0] = j;
+    for (let i = 1; i <= a.length; i++) {
+      const tmp = dp[i];
+      dp[i] = a[i - 1] === b[j - 1] ? prev : Math.min(prev, dp[i - 1], dp[i]) + 1;
+      prev = tmp;
+    }
+  }
+  return dp[a.length];
+}
+
+function fuzzyMatch(q: string, text: string): boolean {
+  if (!q || !text) return false;
+  if (text.includes(q)) return true;
+  // Khớp từng từ trong text với khoảng cách ≤ 2 (chịu lỗi gõ nhầm/đảo ký tự)
+  const tolerance = q.length <= 4 ? 1 : q.length <= 7 ? 2 : 3;
+  const words = text.split(/[\s\-_'’.,()]+/).filter(Boolean);
+  return words.some((w) => {
+    if (w.includes(q) || q.includes(w)) return true;
+    return levenshtein(q, w) <= tolerance;
+  });
+}
+
 export const Route = createFileRoute("/restaurants")({
   validateSearch: (s: Record<string, unknown>): SearchParams => ({
     q: typeof s.q === "string" ? s.q : undefined,
