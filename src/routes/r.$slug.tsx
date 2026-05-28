@@ -784,7 +784,11 @@ function HeroMedia({ r, lc, cover, gallery, onZoom }: { r: any; lc: any; cover: 
             loading={i === 0 ? "eager" : "lazy"} decoding="async"
             fetchPriority={i === 0 ? "high" : "low" as any}
             onClick={() => onZoom(slides.map((x) => x.image), i)}
-            className={`absolute inset-0 w-full h-full object-cover scale-105 cursor-zoom-in transition-opacity duration-1000 ${i === idx ? "opacity-100" : "opacity-0"}`} />
+            className={`absolute inset-0 w-full h-full object-cover cursor-zoom-in transform-gpu will-change-[opacity,transform] ${i === idx ? "opacity-100 scale-[1.06]" : "opacity-0 scale-100"}`}
+            style={{
+              transition: "opacity 1600ms cubic-bezier(0.4, 0, 0.2, 1), transform 8000ms ease-out",
+              backfaceVisibility: "hidden",
+            }} />
         ))}
         {slides[idx]?.title && (
           <div className="absolute top-24 right-6 md:right-10 z-10 max-w-xs text-right">
