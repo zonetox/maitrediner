@@ -72,15 +72,45 @@ function RestaurantsPage() {
     (async () => {
       setLoading(true);
       let query = supabase.from("restaurants").select("*").eq("is_published", true);
-      if (params.q) query = query.ilike("name", `%${params.q}%`);
+      if (params.q) {
+        const safe = params.q.replace(/[,()*]/g, " ").trim();
+        // Tìm theo nhiều trường (tên, loại bếp, mô tả, thành phố, địa chỉ)
+        query = query.or(
+          [
+            `name.ilike.%${safe}%`,
+            `cuisine_type.ilike.%${safe}%`,
+            `short_description.ilike.%${safe}%`,
+            `city.ilike.%${safe}%`,
+            `address.ilike.%${safe}%`,
+          ].join(","),
+        );
+      }
       if (params.cuisine) query = query.ilike("cuisine_type", `%${params.cuisine}%`);
       if (params.city) query = query.ilike("city", `%${params.city}%`);
       if (params.amenities) {
         const arr = params.amenities.split(",").filter(Boolean);
         if (arr.length) query = query.contains("amenities", arr);
       }
-      const { data } = await query.order("is_featured", { ascending: false });
-      setItems(data ?? []);
+      let { data } = await query.order("is_featured", { ascending: false });
+      let list = data ?? [];
+
+      // Fallback fuzzy: nếu không có kết quả nhưng có từ khoá, tải toàn bộ rồi
+      // lọc bằng khoảng cách Levenshtein (chịu được lỗi gõ nhầm như "osamake" vs "omasake").
+      if (params.q && list.length === 0) {
+        const { data: all } = await supabase
+          .from("restaurants")
+          .select("*")
+          .eq("is_published", true)
+          .order("is_featured", { ascending: false });
+        const q = params.q.toLowerCase().trim();
+        list = (all ?? []).filter((r: any) => {
+          const haystacks = [r.name, r.cuisine_type, r.short_description, r.city, r.address]
+            .filter(Boolean)
+            .map((s: string) => s.toLowerCase());
+          return haystacks.some((h) => fuzzyMatch(q, h));
+        });
+      }
+      setItems(list);
       setLoading(false);
     })();
   }, [params.q, params.cuisine, params.city, params.amenities]);
