@@ -11,6 +11,36 @@ import { img } from "@/lib/img";
 
 type SearchParams = { q?: string; cuisine?: string; city?: string; amenities?: string };
 
+// Khoảng cách Levenshtein cho fuzzy search
+function levenshtein(a: string, b: string): number {
+  if (a === b) return 0;
+  if (!a.length) return b.length;
+  if (!b.length) return a.length;
+  const dp = Array.from({ length: a.length + 1 }, (_, i) => i);
+  for (let j = 1; j <= b.length; j++) {
+    let prev = dp[0];
+    dp[0] = j;
+    for (let i = 1; i <= a.length; i++) {
+      const tmp = dp[i];
+      dp[i] = a[i - 1] === b[j - 1] ? prev : Math.min(prev, dp[i - 1], dp[i]) + 1;
+      prev = tmp;
+    }
+  }
+  return dp[a.length];
+}
+
+function fuzzyMatch(q: string, text: string): boolean {
+  if (!q || !text) return false;
+  if (text.includes(q)) return true;
+  // Khớp từng từ trong text với khoảng cách ≤ 2 (chịu lỗi gõ nhầm/đảo ký tự)
+  const tolerance = q.length <= 4 ? 1 : q.length <= 7 ? 2 : 3;
+  const words = text.split(/[\s\-_'’.,()]+/).filter(Boolean);
+  return words.some((w) => {
+    if (w.includes(q) || q.includes(w)) return true;
+    return levenshtein(q, w) <= tolerance;
+  });
+}
+
 export const Route = createFileRoute("/restaurants")({
   validateSearch: (s: Record<string, unknown>): SearchParams => ({
     q: typeof s.q === "string" ? s.q : undefined,
@@ -72,15 +102,45 @@ function RestaurantsPage() {
     (async () => {
       setLoading(true);
       let query = supabase.from("restaurants").select("*").eq("is_published", true);
-      if (params.q) query = query.ilike("name", `%${params.q}%`);
+      if (params.q) {
+        const safe = params.q.replace(/[,()*]/g, " ").trim();
+        // Tìm theo nhiều trường (tên, loại bếp, mô tả, thành phố, địa chỉ)
+        query = query.or(
+          [
+            `name.ilike.%${safe}%`,
+            `cuisine_type.ilike.%${safe}%`,
+            `short_description.ilike.%${safe}%`,
+            `city.ilike.%${safe}%`,
+            `address.ilike.%${safe}%`,
+          ].join(","),
+        );
+      }
       if (params.cuisine) query = query.ilike("cuisine_type", `%${params.cuisine}%`);
       if (params.city) query = query.ilike("city", `%${params.city}%`);
       if (params.amenities) {
         const arr = params.amenities.split(",").filter(Boolean);
         if (arr.length) query = query.contains("amenities", arr);
       }
-      const { data } = await query.order("is_featured", { ascending: false });
-      setItems(data ?? []);
+      let { data } = await query.order("is_featured", { ascending: false });
+      let list = data ?? [];
+
+      // Fallback fuzzy: nếu không có kết quả nhưng có từ khoá, tải toàn bộ rồi
+      // lọc bằng khoảng cách Levenshtein (chịu được lỗi gõ nhầm như "osamake" vs "omasake").
+      if (params.q && list.length === 0) {
+        const { data: all } = await supabase
+          .from("restaurants")
+          .select("*")
+          .eq("is_published", true)
+          .order("is_featured", { ascending: false });
+        const q = params.q.toLowerCase().trim();
+        list = (all ?? []).filter((r: any) => {
+          const haystacks = [r.name, r.cuisine_type, r.short_description, r.city, r.address]
+            .filter(Boolean)
+            .map((s: string) => s.toLowerCase());
+          return haystacks.some((h) => fuzzyMatch(q, h));
+        });
+      }
+      setItems(list);
       setLoading(false);
     })();
   }, [params.q, params.cuisine, params.city, params.amenities]);
