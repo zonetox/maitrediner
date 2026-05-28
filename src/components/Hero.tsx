@@ -98,10 +98,13 @@ export function Hero() {
           loading={i === 0 ? "eager" : "lazy"}
           decoding="async"
           fetchPriority={i === 0 ? "high" : "low" as any}
-          className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-[1600ms] ${
-            i === idx ? "opacity-100" : "opacity-0"
+          className={`absolute inset-0 w-full h-full object-cover transform-gpu will-change-[opacity,transform] ${
+            i === idx ? "opacity-100 scale-[1.04]" : "opacity-0 scale-100"
           }`}
-          style={{ transform: i === idx ? "scale(1.04)" : "scale(1)", transition: "opacity 1.6s ease, transform 8s ease" }}
+          style={{
+            transition: "opacity 1800ms cubic-bezier(0.4, 0, 0.2, 1), transform 9000ms ease-out",
+            backfaceVisibility: "hidden",
+          }}
         />
       ))}
       <div className="absolute inset-0 bg-gradient-hero" />
