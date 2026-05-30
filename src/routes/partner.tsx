@@ -27,7 +27,7 @@ function PartnerPage() {
   const [restaurants, setRestaurants] = useState<any[]>([]);
   const [selected, setSelected] = useState<any | null>(null);
   const [savedSnapshot, setSavedSnapshot] = useState<string>("");
-  const [tab, setTab] = useState<Tab>("info");
+  const [tab, setTab] = useState<Tab>("dashboard");
   const [menu, setMenu] = useState<any[]>([]);
   const [bookings, setBookings] = useState<any[]>([]);
   const [orders, setOrders] = useState<any[]>([]);
