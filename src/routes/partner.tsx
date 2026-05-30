@@ -4,7 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { SiteHeader } from "@/components/SiteHeader";
-import { Plus, ExternalLink, Save, Trash2, Calendar, AlertTriangle, Sparkles, Star, ShoppingBag, Phone, Radio } from "lucide-react";
+import { Plus, ExternalLink, Save, Trash2, Calendar, AlertTriangle, Sparkles, Star, ShoppingBag, Phone, Radio, LayoutDashboard, UtensilsCrossed, Tag, Settings, TrendingUp, Clock, CheckCircle2, DollarSign, Users, ChevronRight, Eye, BarChart3 } from "lucide-react";
 import { toast } from "sonner";
 import { ImageUploader, MultiImageUploader } from "@/components/ImageUploader";
 import { notify } from "@/lib/notify.functions";
@@ -19,7 +19,7 @@ function slugify(s: string) {
     .replace(/đ/g, "d").replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
 }
 
-type Tab = "info" | "menu" | "bookings" | "orders" | "deals";
+type Tab = "dashboard" | "info" | "menu" | "bookings" | "orders" | "deals";
 
 function PartnerPage() {
   const { user, loading } = useAuth();
@@ -27,7 +27,7 @@ function PartnerPage() {
   const [restaurants, setRestaurants] = useState<any[]>([]);
   const [selected, setSelected] = useState<any | null>(null);
   const [savedSnapshot, setSavedSnapshot] = useState<string>("");
-  const [tab, setTab] = useState<Tab>("info");
+  const [tab, setTab] = useState<Tab>("dashboard");
   const [menu, setMenu] = useState<any[]>([]);
   const [bookings, setBookings] = useState<any[]>([]);
   const [orders, setOrders] = useState<any[]>([]);
@@ -167,39 +167,104 @@ function PartnerPage() {
   const pendingBookings = bookings.filter((b) => b.status === "pending").length;
   const pendingOrders = orders.filter((o) => o.status === "pending").length;
 
+  const navItems: { k: Tab; l: string; icon: any; badge?: number }[] = [
+    { k: "dashboard", l: "Tổng quan", icon: LayoutDashboard },
+    { k: "bookings", l: "Đặt chỗ", icon: Calendar, badge: pendingBookings },
+    { k: "orders", l: "Đơn món", icon: ShoppingBag, badge: pendingOrders },
+    { k: "menu", l: "Thực đơn", icon: UtensilsCrossed, badge: menu.length },
+    { k: "deals", l: "Ưu đãi", icon: Tag, badge: deals.length },
+    { k: "info", l: "Thông tin & Landing", icon: Settings },
+  ];
+
   return (
     <div className="min-h-screen bg-background text-foreground">
       <SiteHeader />
       <main className="pt-24 pb-20">
-        <div className="mx-auto max-w-7xl px-6 grid lg:grid-cols-[260px_1fr] gap-8">
-          {/* Sidebar */}
-          <aside className="space-y-2">
-            <div className="flex items-center justify-between mb-4">
-              <span className="text-xs uppercase tracking-widest text-gold">Nhà hàng của bạn</span>
-              <button onClick={() => setCreateOpen(true)} className="text-gold hover:scale-110 transition" title="Tạo nhà hàng">
-                <Plus className="h-4 w-4" />
-              </button>
+        <div className="mx-auto max-w-7xl px-4 lg:px-6 grid lg:grid-cols-[280px_1fr] gap-6">
+          {/* ───────── Sidebar ───────── */}
+          <aside className="lg:sticky lg:top-24 lg:self-start space-y-6">
+            {/* Restaurant switcher */}
+            <div>
+              <div className="flex items-center justify-between mb-3 px-1">
+                <span className="text-[10px] uppercase tracking-[0.25em] text-gold font-medium">Nhà hàng</span>
+                <button onClick={() => setCreateOpen(true)} className="h-7 w-7 grid place-items-center rounded-full bg-gold/10 text-gold hover:bg-gold/20 transition" title="Tạo nhà hàng">
+                  <Plus className="h-3.5 w-3.5" />
+                </button>
+              </div>
+              <div className="space-y-1.5">
+                {restaurants.map((r) => (
+                  <button key={r.id} onClick={() => selectRestaurant(r)}
+                    className={`w-full text-left p-3 rounded-xl border transition group ${selected?.id === r.id ? "border-gold bg-gradient-to-br from-gold/10 to-transparent shadow-sm" : "border-border hover:border-gold/50 hover:bg-card"}`}>
+                    <div className="flex items-center gap-2.5">
+                      {r.logo_url ? (
+                        <img src={r.logo_url} alt="" className="h-9 w-9 rounded-lg object-cover border border-border shrink-0" />
+                      ) : (
+                        <div className="h-9 w-9 rounded-lg bg-gradient-gold grid place-items-center text-primary-foreground font-serif text-sm shrink-0">
+                          {r.name?.[0]?.toUpperCase() ?? "?"}
+                        </div>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <div className="font-serif text-sm truncate flex items-center gap-1.5">
+                          {r.name}
+                          {selected?.id === r.id && dirty && <span className="h-1.5 w-1.5 rounded-full bg-amber-400 animate-pulse shrink-0" title="Chưa lưu" />}
+                        </div>
+                        <div className="text-[10px] text-muted-foreground mt-0.5 flex items-center gap-1">
+                          <span className={`h-1.5 w-1.5 rounded-full ${r.is_published ? "bg-emerald-400" : "bg-muted-foreground/40"}`} />
+                          {r.is_published ? "Công khai" : "Bản nháp"}
+                        </div>
+                      </div>
+                    </div>
+                  </button>
+                ))}
+                {restaurants.length === 0 && (
+                  <button onClick={() => setCreateOpen(true)} className="w-full p-5 border border-dashed border-border rounded-xl text-sm text-muted-foreground hover:border-gold hover:text-gold transition">
+                    + Tạo nhà hàng đầu tiên
+                  </button>
+                )}
+              </div>
             </div>
-            {restaurants.map((r) => (
-              <button key={r.id} onClick={() => selectRestaurant(r)}
-                className={`w-full text-left p-3 rounded-lg border transition ${selected?.id === r.id ? "border-gold bg-card" : "border-border hover:bg-card"}`}>
-                <div className="font-serif text-sm flex items-center gap-1.5">
-                  {r.name}
-                  {selected?.id === r.id && dirty && <span className="h-1.5 w-1.5 rounded-full bg-amber-400 animate-pulse" title="Có thay đổi chưa lưu" />}
+
+            {/* Section nav */}
+            {selected && (
+              <div>
+                <span className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground font-medium px-1">Quản lý</span>
+                <nav className="mt-3 space-y-0.5">
+                  {navItems.map((n) => {
+                    const Icon = n.icon;
+                    const active = tab === n.k;
+                    return (
+                      <button key={n.k} onClick={() => setTab(n.k)}
+                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition ${active ? "bg-gold/15 text-gold font-medium" : "text-muted-foreground hover:bg-card hover:text-foreground"}`}>
+                        <Icon className="h-4 w-4 shrink-0" />
+                        <span className="flex-1 text-left">{n.l}</span>
+                        {n.badge !== undefined && n.badge > 0 && (
+                          <span className={`px-1.5 min-w-[20px] h-5 grid place-items-center rounded-full text-[10px] font-semibold ${active ? "bg-gold text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
+                            {n.badge}
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </nav>
+                <div className="mt-4 pt-4 border-t border-border space-y-0.5">
+                  <Link to="/partner/membership" className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-muted-foreground hover:bg-card hover:text-gold transition">
+                    <Sparkles className="h-4 w-4 shrink-0" />
+                    <span className="flex-1 text-left">Gói thành viên</span>
+                    <ChevronRight className="h-3 w-3 opacity-50" />
+                  </Link>
+                  <Link to="/r/$slug" params={{ slug: selected.slug }} target="_blank" className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-muted-foreground hover:bg-card hover:text-foreground transition">
+                    <Eye className="h-4 w-4 shrink-0" />
+                    <span className="flex-1 text-left">Xem trang công khai</span>
+                    <ExternalLink className="h-3 w-3 opacity-50" />
+                  </Link>
                 </div>
-                <div className="text-xs text-muted-foreground mt-1">{r.is_published ? "Đang công khai" : "Bản nháp"}</div>
-              </button>
-            ))}
-            {restaurants.length === 0 && (
-              <button onClick={() => setCreateOpen(true)} className="w-full p-6 border border-dashed border-border rounded-lg text-sm text-muted-foreground hover:border-gold">
-                + Tạo nhà hàng đầu tiên
-              </button>
+              </div>
             )}
           </aside>
 
-          {/* Main */}
+          {/* ───────── Main ───────── */}
           {selected ? (
-            <section className={isExpired ? "opacity-50 pointer-events-none relative" : "relative"}>
+            <section className={isExpired ? "opacity-60 pointer-events-none relative" : "relative"}>
               {isExpired && (
                 <div className="absolute inset-0 z-10 grid place-items-center pointer-events-auto">
                   <div className="bg-card border border-gold rounded-2xl p-8 max-w-md text-center shadow-gold">
@@ -211,45 +276,53 @@ function PartnerPage() {
                 </div>
               )}
 
-              <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
-                <div>
-                  <h1 className="font-serif text-3xl">{selected.name}</h1>
-                  <div className="flex items-center gap-3 mt-2 text-xs flex-wrap">
-                    {selected.membership_status === "trial" && (
-                      <span className="px-2 py-1 rounded-full bg-gold/10 text-gold border border-gold/30 flex items-center gap-1">
-                        <Sparkles className="h-3 w-3" /> Dùng thử · còn {trialDaysLeft} ngày
+              {/* Header card */}
+              <div className="rounded-2xl border border-border bg-gradient-to-br from-card to-card/40 p-5 md:p-6 mb-5">
+                <div className="flex flex-wrap items-start justify-between gap-4">
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1.5">
+                      <span>Quản lý nhà hàng</span>
+                      <ChevronRight className="h-3 w-3" />
+                      <span className="text-foreground">{navItems.find((n) => n.k === tab)?.l}</span>
+                    </div>
+                    <h1 className="font-serif text-2xl md:text-3xl truncate">{selected.name}</h1>
+                    <div className="flex items-center gap-2 mt-2 text-xs flex-wrap">
+                      {selected.membership_status === "trial" && (
+                        <span className="px-2.5 py-1 rounded-full bg-gold/10 text-gold border border-gold/30 flex items-center gap-1.5">
+                          <Sparkles className="h-3 w-3" /> Dùng thử · còn {trialDaysLeft} ngày
+                        </span>
+                      )}
+                      {selected.membership_status === "active" && (
+                        <span className="px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 flex items-center gap-1.5">
+                          <CheckCircle2 className="h-3 w-3" /> Gói thành viên đang hoạt động
+                        </span>
+                      )}
+                      <span className={`px-2.5 py-1 rounded-full border flex items-center gap-1.5 ${selected.is_published ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30" : "bg-muted/40 text-muted-foreground border-border"}`}>
+                        <span className={`h-1.5 w-1.5 rounded-full ${selected.is_published ? "bg-emerald-400" : "bg-muted-foreground"}`} />
+                        {selected.is_published ? "Đang công khai" : "Bản nháp"}
                       </span>
-                    )}
-                    {selected.membership_status === "active" && (
-                      <span className="px-2 py-1 rounded-full bg-green-500/10 text-green-400 border border-green-500/30">Gói thành viên đang hoạt động</span>
-                    )}
-                    {selected.is_published && (
-                      <span className="px-2 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">Đang công khai</span>
-                    )}
+                      <span className="px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 flex items-center gap-1.5">
+                        <Radio className="h-3 w-3 animate-pulse" /> Đồng bộ trực tiếp
+                      </span>
+                    </div>
                   </div>
-                </div>
-                <div className="flex gap-2 flex-wrap">
-                  <Link to="/partner/membership" className="px-4 py-2 rounded-full border border-gold text-gold text-sm flex items-center gap-2 hover:bg-gold/10">
-                    <Sparkles className="h-3 w-3" /> Nâng cấp gói
-                  </Link>
-                  <Link to="/r/$slug" params={{ slug: selected.slug }} target="_blank" className="px-4 py-2 rounded-full border border-border text-sm flex items-center gap-2 hover:border-gold">
-                    <ExternalLink className="h-3 w-3" /> Xem trang
-                  </Link>
-                  <button onClick={deleteRestaurant} className="px-4 py-2 rounded-full border border-border text-sm flex items-center gap-2 hover:border-destructive hover:text-destructive">
-                    <Trash2 className="h-3 w-3" /> Xoá
-                  </button>
-                  <button onClick={saveRestaurant} disabled={!dirty}
-                    className={`px-4 py-2 rounded-full text-sm font-medium flex items-center gap-2 transition-all duration-200 ${dirty ? "bg-gradient-gold text-primary-foreground shadow-gold ring-2 ring-gold/40 hover:scale-105 hover:shadow-lg hover:ring-gold/70 active:scale-95 animate-pulse" : "bg-card border border-border text-muted-foreground hover:border-gold/40 hover:text-foreground"}`}>
-                    <Save className="h-3 w-3" /> {dirty ? "Lưu thay đổi" : "Đã lưu"}
-                  </button>
+                  <div className="flex gap-2 flex-wrap">
+                    <button onClick={deleteRestaurant} className="h-9 px-3 rounded-lg border border-border text-sm flex items-center gap-1.5 hover:border-destructive hover:text-destructive transition">
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                    <button onClick={saveRestaurant} disabled={!dirty}
+                      className={`h-9 px-4 rounded-lg text-sm font-medium flex items-center gap-1.5 transition ${dirty ? "bg-gradient-gold text-primary-foreground shadow-gold ring-2 ring-gold/40 animate-pulse" : "bg-card border border-border text-muted-foreground"}`}>
+                      <Save className="h-3.5 w-3.5" /> {dirty ? "Lưu thay đổi" : "Đã lưu"}
+                    </button>
+                  </div>
                 </div>
               </div>
 
               {dirty && (
-                <div className="sticky top-16 z-20 mb-4 px-4 py-3 rounded-lg border border-amber-400/40 bg-amber-500/10 text-amber-200 text-sm flex items-center justify-between gap-3 backdrop-blur">
+                <div className="sticky top-16 z-20 mb-4 px-4 py-3 rounded-xl border border-amber-400/40 bg-amber-500/10 text-amber-200 text-sm flex items-center justify-between gap-3 backdrop-blur">
                   <span className="flex items-center gap-2">
                     <AlertTriangle className="h-4 w-4 shrink-0" />
-                    Bạn có thay đổi chưa lưu. Đừng quên nhấn <span className="font-semibold text-gold">"Lưu thay đổi"</span> để cập nhật trang nhà hàng.
+                    Bạn có thay đổi chưa lưu.
                   </span>
                   <button onClick={saveRestaurant} className="shrink-0 px-3 py-1.5 rounded-full bg-gradient-gold text-primary-foreground text-xs font-medium inline-flex items-center gap-1.5">
                     <Save className="h-3 w-3" /> Lưu ngay
@@ -257,27 +330,22 @@ function PartnerPage() {
                 </div>
               )}
 
-              <div className="flex gap-2 border-b border-border mb-8 overflow-x-auto">
-                {([
-                  { k: "info", l: "Thông tin & Landing page", badge: 0 },
-                  { k: "menu", l: `Menu (${menu.length})`, badge: 0 },
-                  { k: "bookings", l: `Đặt chỗ (${bookings.length})`, badge: pendingBookings },
-                  { k: "deals", l: `Ưu đãi (${deals.length})`, badge: 0 },
-                ] as { k: Tab; l: string; badge: number }[]).map((t) => (
-                  <button key={t.k} onClick={() => setTab(t.k)}
-                    className={`px-4 py-3 text-sm whitespace-nowrap border-b-2 flex items-center gap-2 ${tab === t.k ? "border-gold" : "border-transparent text-muted-foreground hover:text-foreground"}`}>
-                    {t.l}
-                    {t.badge > 0 && <span className="px-1.5 py-0.5 rounded-full bg-gold text-primary-foreground text-[10px]">{t.badge}</span>}
-                  </button>
-                ))}
-              </div>
-
-              <div className="text-[10px] text-emerald-400 mb-3 inline-flex items-center gap-1.5 px-2 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30">
-                <Radio className="h-3 w-3 animate-pulse" /> Cập nhật trực tiếp
-              </div>
+              {tab === "dashboard" && (
+                <DashboardTab
+                  restaurant={selected}
+                  bookings={bookings}
+                  orders={orders}
+                  menu={menu}
+                  deals={deals}
+                  pendingBookings={pendingBookings}
+                  pendingOrders={pendingOrders}
+                  goTo={setTab}
+                />
+              )}
               {tab === "info" && <InfoTab r={selected} setR={setSelected} />}
               {tab === "menu" && <MenuTab restaurantId={selected.id} menu={menu} reload={reload} />}
               {tab === "bookings" && <BookingsTab bookings={bookings} restaurantId={selected.id} reload={reload} />}
+              {tab === "orders" && <OrdersTab orders={orders} restaurantId={selected.id} reload={reload} />}
               {tab === "deals" && <DealsTab restaurantId={selected.id} deals={deals} reload={reload} />}
             </section>
           ) : (
@@ -293,6 +361,144 @@ function PartnerPage() {
       </main>
 
       {createOpen && <CreateRestaurantModal onClose={() => setCreateOpen(false)} onCreate={createRestaurant} />}
+    </div>
+  );
+}
+
+function DashboardTab({ restaurant, bookings, orders, menu, deals, pendingBookings, pendingOrders, goTo }: any) {
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const todayMs = today.getTime();
+  const bookingsToday = bookings.filter((b: any) => new Date(b.booking_at).getTime() >= todayMs).length;
+  const ordersToday = orders.filter((o: any) => new Date(o.created_at).getTime() >= todayMs);
+  const revenueToday = ordersToday.filter((o: any) => o.status !== "cancelled").reduce((s: number, o: any) => s + Number(o.total_amount || 0), 0);
+  const revenueTotal = orders.filter((o: any) => o.status === "completed").reduce((s: number, o: any) => s + Number(o.total_amount || 0), 0);
+  const upcomingBookings = bookings
+    .filter((b: any) => new Date(b.booking_at).getTime() >= Date.now() && b.status !== "cancelled")
+    .sort((a: any, b: any) => new Date(a.booking_at).getTime() - new Date(b.booking_at).getTime())
+    .slice(0, 5);
+  const recentOrders = orders.slice(0, 5);
+  const activeDeals = deals.filter((d: any) => d.is_active).length;
+  const signatureCount = menu.filter((m: any) => m.is_signature).length;
+
+  const stats = [
+    { l: "Đặt chỗ hôm nay", v: bookingsToday, sub: `${pendingBookings} chờ xác nhận`, icon: Calendar, color: "text-blue-400", bg: "bg-blue-500/10" },
+    { l: "Đơn món hôm nay", v: ordersToday.length, sub: `${pendingOrders} chờ xử lý`, icon: ShoppingBag, color: "text-purple-400", bg: "bg-purple-500/10" },
+    { l: "Doanh thu hôm nay", v: revenueToday.toLocaleString("vi-VN") + "₫", sub: `Tổng: ${revenueTotal.toLocaleString("vi-VN")}₫`, icon: DollarSign, color: "text-emerald-400", bg: "bg-emerald-500/10" },
+    { l: "Món trong thực đơn", v: menu.length, sub: `${signatureCount} món signature`, icon: UtensilsCrossed, color: "text-gold", bg: "bg-gold/10" },
+  ];
+
+  return (
+    <div className="space-y-6">
+      {/* KPI cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        {stats.map((s) => {
+          const Icon = s.icon;
+          return (
+            <div key={s.l} className="p-4 rounded-xl border border-border bg-card hover:border-gold/40 transition">
+              <div className="flex items-center justify-between mb-3">
+                <div className={`h-9 w-9 rounded-lg grid place-items-center ${s.bg}`}>
+                  <Icon className={`h-4 w-4 ${s.color}`} />
+                </div>
+              </div>
+              <div className="text-xs text-muted-foreground">{s.l}</div>
+              <div className="font-serif text-xl md:text-2xl mt-1 truncate">{s.v}</div>
+              <div className="text-[11px] text-muted-foreground mt-1 truncate">{s.sub}</div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Quick actions */}
+      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        {[
+          { l: "Thêm món mới", icon: Plus, tab: "menu" as Tab },
+          { l: "Tạo ưu đãi", icon: Tag, tab: "deals" as Tab },
+          { l: "Sửa thông tin", icon: Settings, tab: "info" as Tab },
+          { l: "Xem đặt chỗ", icon: Calendar, tab: "bookings" as Tab },
+        ].map((a) => {
+          const Icon = a.icon;
+          return (
+            <button key={a.l} onClick={() => goTo(a.tab)} className="p-4 rounded-xl border border-dashed border-border hover:border-gold hover:bg-gold/5 transition flex items-center gap-3 group">
+              <div className="h-9 w-9 rounded-lg bg-gold/10 grid place-items-center text-gold group-hover:scale-110 transition">
+                <Icon className="h-4 w-4" />
+              </div>
+              <span className="text-sm font-medium">{a.l}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="grid lg:grid-cols-2 gap-5">
+        {/* Upcoming bookings */}
+        <div className="p-5 rounded-2xl border border-border bg-card">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-serif text-lg flex items-center gap-2"><Calendar className="h-4 w-4 text-gold" /> Đặt chỗ sắp tới</h3>
+            <button onClick={() => goTo("bookings")} className="text-xs text-gold hover:underline flex items-center gap-1">Xem tất cả <ChevronRight className="h-3 w-3" /></button>
+          </div>
+          <div className="space-y-2">
+            {upcomingBookings.length === 0 && <p className="text-sm text-muted-foreground text-center py-6">Chưa có đặt chỗ sắp tới.</p>}
+            {upcomingBookings.map((b: any) => (
+              <div key={b.id} className="flex items-center gap-3 p-3 rounded-lg bg-background/50 border border-border">
+                <div className="h-10 w-10 rounded-lg bg-gold/10 text-gold grid place-items-center font-serif text-sm shrink-0">
+                  {new Date(b.booking_at).getDate()}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="font-medium text-sm truncate">{b.guest_name}</div>
+                  <div className="text-xs text-muted-foreground flex items-center gap-2">
+                    <Clock className="h-3 w-3" />
+                    {new Date(b.booking_at).toLocaleString("vi-VN", { hour: "2-digit", minute: "2-digit", day: "2-digit", month: "2-digit" })}
+                    <Users className="h-3 w-3 ml-1" /> {b.party_size}
+                  </div>
+                </div>
+                <span className={`text-[10px] px-2 py-1 rounded-full ${b.status === "confirmed" ? "bg-emerald-500/15 text-emerald-400" : "bg-gold/15 text-gold"}`}>
+                  {b.status === "confirmed" ? "Đã xác nhận" : "Chờ"}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Recent orders */}
+        <div className="p-5 rounded-2xl border border-border bg-card">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-serif text-lg flex items-center gap-2"><ShoppingBag className="h-4 w-4 text-gold" /> Đơn món gần đây</h3>
+            <button onClick={() => goTo("orders")} className="text-xs text-gold hover:underline flex items-center gap-1">Xem tất cả <ChevronRight className="h-3 w-3" /></button>
+          </div>
+          <div className="space-y-2">
+            {recentOrders.length === 0 && <p className="text-sm text-muted-foreground text-center py-6">Chưa có đơn món nào.</p>}
+            {recentOrders.map((o: any) => (
+              <div key={o.id} className="flex items-center gap-3 p-3 rounded-lg bg-background/50 border border-border">
+                <div className="flex-1 min-w-0">
+                  <div className="font-medium text-sm truncate">{o.guest_name || "Khách"}</div>
+                  <div className="text-xs text-muted-foreground">
+                    {Array.isArray(o.items) ? o.items.length : 0} món · {new Date(o.created_at).toLocaleString("vi-VN", { hour: "2-digit", minute: "2-digit", day: "2-digit", month: "2-digit" })}
+                  </div>
+                </div>
+                <div className="text-right shrink-0">
+                  <div className="text-sm text-gold font-medium">{Number(o.total_amount).toLocaleString("vi-VN")}₫</div>
+                  <span className={`text-[10px] px-2 py-0.5 rounded-full ${o.status === "completed" ? "bg-emerald-500/15 text-emerald-400" : o.status === "pending" ? "bg-gold/15 text-gold" : "bg-muted text-muted-foreground"}`}>{o.status}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Health/insights row */}
+      <div className="grid sm:grid-cols-3 gap-3">
+        <div className="p-4 rounded-xl border border-border bg-card">
+          <div className="text-xs text-muted-foreground flex items-center gap-1.5"><TrendingUp className="h-3 w-3 text-emerald-400" /> Ưu đãi đang hiển thị</div>
+          <div className="font-serif text-2xl mt-1">{activeDeals}<span className="text-sm text-muted-foreground"> / {deals.length}</span></div>
+        </div>
+        <div className="p-4 rounded-xl border border-border bg-card">
+          <div className="text-xs text-muted-foreground flex items-center gap-1.5"><BarChart3 className="h-3 w-3 text-blue-400" /> Tổng đặt chỗ</div>
+          <div className="font-serif text-2xl mt-1">{bookings.length}</div>
+        </div>
+        <div className="p-4 rounded-xl border border-border bg-card">
+          <div className="text-xs text-muted-foreground flex items-center gap-1.5"><Star className="h-3 w-3 text-gold fill-gold" /> Đánh giá trung bình</div>
+          <div className="font-serif text-2xl mt-1">{Number(restaurant.rating || 0).toFixed(1)}</div>
+        </div>
+      </div>
     </div>
   );
 }
