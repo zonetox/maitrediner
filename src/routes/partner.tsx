@@ -19,7 +19,7 @@ function slugify(s: string) {
     .replace(/đ/g, "d").replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
 }
 
-type Tab = "info" | "menu" | "bookings" | "orders" | "deals";
+type Tab = "dashboard" | "info" | "menu" | "bookings" | "orders" | "deals";
 
 function PartnerPage() {
   const { user, loading } = useAuth();
