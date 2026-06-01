@@ -1,9 +1,13 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { SiteHeader } from "@/components/SiteHeader";
-import { Shield, Users, Store, CreditCard, CheckCircle2, XCircle, Star, Eye, EyeOff, ArrowRight, Calendar, Save, Plus, Trash2, Utensils, MapPin, Sparkles, Crown, Edit3 } from "lucide-react";
+import {
+  Shield, Users, Store, CreditCard, CheckCircle2, XCircle, Star, Eye, EyeOff,
+  ArrowRight, Calendar, Save, Plus, Trash2, Utensils, MapPin, Sparkles, Crown, Edit3,
+  LayoutDashboard, FileText, Settings as SettingsIcon, Layout as LayoutIcon, FolderTree,
+  Search, RefreshCw, Menu as MenuIcon, LogOut, Home, ChevronRight, Bell, TrendingUp,
+} from "lucide-react";
 import { ImageUploader } from "@/components/ImageUploader";
 import { toast } from "sonner";
 import { invalidateSiteSettings } from "@/hooks/useSiteSettings";
@@ -16,6 +20,34 @@ export const Route = createFileRoute("/admin")({
 
 type Tab = "overview" | "restaurants" | "payments" | "plans" | "users" | "bookings" | "directory" | "site" | "blog" | "settings";
 
+const NAV_GROUPS: { title: string; items: { k: Tab; label: string; icon: any }[] }[] = [
+  {
+    title: "Vận hành",
+    items: [
+      { k: "overview", label: "Tổng quan", icon: LayoutDashboard },
+      { k: "payments", label: "Duyệt thanh toán", icon: CreditCard },
+      { k: "bookings", label: "Đặt chỗ", icon: Calendar },
+      { k: "restaurants", label: "Nhà hàng", icon: Store },
+      { k: "users", label: "Người dùng", icon: Users },
+    ],
+  },
+  {
+    title: "Nội dung",
+    items: [
+      { k: "blog", label: "Blog", icon: FileText },
+      { k: "directory", label: "Danh mục & Địa điểm", icon: FolderTree },
+      { k: "site", label: "Header & Footer", icon: LayoutIcon },
+    ],
+  },
+  {
+    title: "Cấu hình",
+    items: [
+      { k: "plans", label: "Gói thành viên", icon: Crown },
+      { k: "settings", label: "Hệ thống", icon: SettingsIcon },
+    ],
+  },
+];
+
 function AdminPage() {
   const { user, loading, hasRole, roles } = useAuth();
   const navigate = useNavigate();
@@ -26,12 +58,18 @@ function AdminPage() {
   const [userRoles, setUserRoles] = useState<any[]>([]);
   const [bookings, setBookings] = useState<any[]>([]);
   const [stats, setStats] = useState({ restaurants: 0, users: 0, pending: 0, bookings: 0 });
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [mobileNav, setMobileNav] = useState(false);
+  const [query, setQuery] = useState("");
+  const [refreshing, setRefreshing] = useState(false);
+  const [lastSync, setLastSync] = useState<Date | null>(null);
 
   useEffect(() => {
     if (!loading && !user) navigate({ to: "/auth" });
   }, [loading, user, navigate]);
 
   async function loadAll() {
+    setRefreshing(true);
     const [r, p, pr, ur, b] = await Promise.all([
       supabase.from("restaurants").select("*").order("created_at", { ascending: false }),
       supabase.from("membership_payments").select("*, restaurants(name, slug)").order("created_at", { ascending: false }),
@@ -50,11 +88,35 @@ function AdminPage() {
       pending: (p.data ?? []).filter((x: any) => x.status === "pending").length,
       bookings: b.data?.length ?? 0,
     });
+    setLastSync(new Date());
+    setRefreshing(false);
   }
 
   useEffect(() => {
     if (user && hasRole("admin")) loadAll();
   }, [user, roles.join(",")]);
+
+  // Search filtering across the active tab
+  const filteredRestaurants = useMemo(() => {
+    if (!query) return restaurants;
+    const q = query.toLowerCase();
+    return restaurants.filter((r) => [r.name, r.slug, r.city, r.cuisine_type].some((v) => v?.toLowerCase().includes(q)));
+  }, [restaurants, query]);
+  const filteredPayments = useMemo(() => {
+    if (!query) return payments;
+    const q = query.toLowerCase();
+    return payments.filter((p) => [p.restaurants?.name, p.plan_name, p.status].some((v) => v?.toLowerCase().includes(q)));
+  }, [payments, query]);
+  const filteredUsers = useMemo(() => {
+    if (!query) return profiles;
+    const q = query.toLowerCase();
+    return profiles.filter((u) => [u.full_name, u.phone, u.id].some((v) => v?.toLowerCase().includes(q)));
+  }, [profiles, query]);
+  const filteredBookings = useMemo(() => {
+    if (!query) return bookings;
+    const q = query.toLowerCase();
+    return bookings.filter((b) => [b.restaurants?.name, b.guest_name, b.guest_phone, b.status].some((v) => v?.toLowerCase().includes(q)));
+  }, [bookings, query]);
 
   if (loading) return <div className="min-h-screen bg-background" />;
   if (!user) return null;
@@ -67,7 +129,6 @@ function AdminPage() {
     }
     return (
       <div className="min-h-screen bg-background">
-        <SiteHeader />
         <div className="pt-32 max-w-2xl mx-auto px-6 text-center">
           <Shield className="h-12 w-12 mx-auto text-gold mb-4" />
           <h1 className="font-serif text-3xl mb-3">Khu vực hạn chế</h1>
@@ -127,219 +188,444 @@ function AdminPage() {
     loadAll();
   }
 
+  async function signOut() {
+    await supabase.auth.signOut();
+    navigate({ to: "/" });
+  }
+
+  const activeMeta = NAV_GROUPS.flatMap((g) => g.items).find((i) => i.k === tab)!;
+  const totalRevenue = payments.filter((p) => p.status === "approved").reduce((s, p) => s + Number(p.amount || 0), 0);
+  const activeRestaurants = restaurants.filter((r) => r.membership_status === "active").length;
+  const trialRestaurants = restaurants.filter((r) => r.membership_status === "trial").length;
+  const todayBookings = bookings.filter((b) => {
+    if (!b.booking_at) return false;
+    const d = new Date(b.booking_at);
+    const t = new Date();
+    return d.toDateString() === t.toDateString();
+  }).length;
+  const showSearch = ["restaurants", "payments", "users", "bookings"].includes(tab);
+
   return (
-    <div className="min-h-screen bg-background">
-      <SiteHeader />
-      <main className="pt-24 pb-20 max-w-7xl mx-auto px-6">
-        <div className="flex items-center gap-3 mb-2">
-          <Shield className="h-6 w-6 text-gold" />
-          <h1 className="font-serif text-3xl">Bảng điều khiển Admin</h1>
+    <div className="min-h-screen bg-muted/20 flex">
+      {/* Sidebar */}
+      <aside
+        className={`${sidebarOpen ? "w-64" : "w-16"} ${mobileNav ? "translate-x-0" : "-translate-x-full md:translate-x-0"} fixed md:sticky top-0 z-40 h-screen border-r border-border bg-card transition-all duration-200 flex flex-col`}
+      >
+        <div className="h-16 px-4 flex items-center justify-between border-b border-border shrink-0">
+          {sidebarOpen ? (
+            <Link to="/" className="flex items-center gap-2 group">
+              <Shield className="h-5 w-5 text-gold" />
+              <span className="font-serif text-lg">Maison <span className="text-gold">Admin</span></span>
+            </Link>
+          ) : (
+            <Shield className="h-5 w-5 text-gold mx-auto" />
+          )}
         </div>
-        <p className="text-muted-foreground mb-8">Quản trị toàn bộ hệ thống Maison Dining</p>
-
-        {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          <StatCard icon={<Store className="h-5 w-5" />} label="Nhà hàng" value={stats.restaurants} />
-          <StatCard icon={<Users className="h-5 w-5" />} label="Người dùng" value={stats.users} />
-          <StatCard icon={<CreditCard className="h-5 w-5" />} label="Chờ duyệt" value={stats.pending} highlight />
-          <StatCard icon={<Calendar className="h-5 w-5" />} label="Đặt chỗ" value={stats.bookings} />
+        <nav className="flex-1 overflow-y-auto py-4 px-2 space-y-6">
+          {NAV_GROUPS.map((g) => (
+            <div key={g.title}>
+              {sidebarOpen && (
+                <div className="px-3 mb-2 text-[10px] uppercase tracking-[0.15em] text-muted-foreground font-medium">{g.title}</div>
+              )}
+              <div className="space-y-1">
+                {g.items.map((it) => {
+                  const Icon = it.icon;
+                  const active = tab === it.k;
+                  const badge = it.k === "payments" && stats.pending > 0 ? stats.pending : null;
+                  return (
+                    <button
+                      key={it.k}
+                      onClick={() => { setTab(it.k); setMobileNav(false); setQuery(""); }}
+                      title={!sidebarOpen ? it.label : undefined}
+                      className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition relative ${
+                        active
+                          ? "bg-gradient-gold text-primary-foreground shadow-gold"
+                          : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                      }`}
+                    >
+                      <Icon className="h-4 w-4 shrink-0" />
+                      {sidebarOpen && <span className="flex-1 text-left truncate">{it.label}</span>}
+                      {badge !== null && (
+                        sidebarOpen ? (
+                          <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${active ? "bg-background/20 text-primary-foreground" : "bg-gold text-primary-foreground"}`}>{badge}</span>
+                        ) : (
+                          <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-gold" />
+                        )
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </nav>
+        <div className="border-t border-border p-3 shrink-0">
+          {sidebarOpen ? (
+            <div className="space-y-2">
+              <div className="px-2 py-2 rounded-lg bg-muted/40">
+                <div className="text-xs text-muted-foreground">Đăng nhập</div>
+                <div className="text-sm font-medium truncate">{user.email}</div>
+              </div>
+              <div className="flex gap-1">
+                <Link to="/" className="flex-1 px-2 py-1.5 rounded-md text-xs hover:bg-muted inline-flex items-center justify-center gap-1.5 text-muted-foreground hover:text-foreground">
+                  <Home className="h-3 w-3" /> Trang chủ
+                </Link>
+                <button onClick={signOut} className="flex-1 px-2 py-1.5 rounded-md text-xs hover:bg-muted inline-flex items-center justify-center gap-1.5 text-muted-foreground hover:text-destructive">
+                  <LogOut className="h-3 w-3" /> Thoát
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button onClick={signOut} className="w-full p-2 text-muted-foreground hover:text-destructive flex justify-center">
+              <LogOut className="h-4 w-4" />
+            </button>
+          )}
         </div>
+      </aside>
 
-        {/* Tabs */}
-        <div className="border-b border-border mb-6 flex gap-6 overflow-x-auto">
-          {(["overview", "restaurants", "payments", "plans", "users", "bookings", "directory", "site", "blog", "settings"] as Tab[]).map((t) => (
-            <button
-              key={t}
-              onClick={() => setTab(t)}
-              className={`pb-3 text-sm whitespace-nowrap border-b-2 transition ${
-                tab === t ? "border-gold text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              {labelOf(t)}
-              {t === "payments" && stats.pending > 0 && (
-                <span className="ml-2 px-2 py-0.5 text-xs rounded-full bg-gold text-primary-foreground">{stats.pending}</span>
+      {/* Mobile overlay */}
+      {mobileNav && (
+        <div onClick={() => setMobileNav(false)} className="fixed inset-0 bg-black/50 z-30 md:hidden" />
+      )}
+
+      {/* Main column */}
+      <div className="flex-1 min-w-0 flex flex-col">
+        {/* Top bar */}
+        <header className="h-16 sticky top-0 z-20 bg-card/80 backdrop-blur border-b border-border px-4 md:px-6 flex items-center gap-3">
+          <button onClick={() => setMobileNav(true)} className="md:hidden p-2 -ml-2 text-muted-foreground"><MenuIcon className="h-5 w-5" /></button>
+          <button onClick={() => setSidebarOpen((v) => !v)} className="hidden md:inline-flex p-2 -ml-2 text-muted-foreground hover:text-foreground"><MenuIcon className="h-5 w-5" /></button>
+
+          <div className="hidden md:flex items-center gap-1.5 text-sm text-muted-foreground">
+            <Shield className="h-3.5 w-3.5 text-gold" />
+            <span>Quản trị</span>
+            <ChevronRight className="h-3 w-3" />
+            <span className="text-foreground font-medium">{activeMeta.label}</span>
+          </div>
+
+          <div className="flex-1" />
+
+          {showSearch && (
+            <div className="relative hidden sm:block">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder={`Tìm trong ${activeMeta.label.toLowerCase()}…`}
+                className="bg-background border border-border rounded-full pl-9 pr-4 py-2 text-sm w-56 lg:w-72 focus:outline-none focus:border-gold transition"
+              />
+            </div>
+          )}
+
+          <button
+            onClick={loadAll}
+            disabled={refreshing}
+            title={lastSync ? `Cập nhật lúc ${lastSync.toLocaleTimeString("vi-VN")}` : "Làm mới"}
+            className="p-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-50"
+          >
+            <RefreshCw className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
+          </button>
+
+          <div className="relative">
+            <button onClick={() => setTab("payments")} className="p-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted">
+              <Bell className="h-4 w-4" />
+              {stats.pending > 0 && (
+                <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-gold animate-pulse" />
               )}
             </button>
-          ))}
-        </div>
-
-        {tab === "overview" && (
-          <div className="grid md:grid-cols-2 gap-6">
-            <Panel title="Thanh toán chờ duyệt">
-              {payments.filter((p) => p.status === "pending").slice(0, 5).map((p) => (
-                <div key={p.id} className="flex items-center justify-between py-3 border-b border-border last:border-0">
-                  <div>
-                    <div className="font-medium">{p.restaurants?.name ?? "—"}</div>
-                    <div className="text-xs text-muted-foreground">{p.plan_name} · {Number(p.amount).toLocaleString("vi-VN")} đ</div>
-                  </div>
-                  <button onClick={() => setTab("payments")} className="text-xs text-gold inline-flex items-center gap-1">Xem <ArrowRight className="h-3 w-3" /></button>
-                </div>
-              ))}
-              {payments.filter((p) => p.status === "pending").length === 0 && (
-                <p className="text-sm text-muted-foreground">Không có thanh toán chờ duyệt.</p>
-              )}
-            </Panel>
-            <Panel title="Nhà hàng mới">
-              {restaurants.slice(0, 5).map((r) => (
-                <div key={r.id} className="flex items-center justify-between py-3 border-b border-border last:border-0">
-                  <div>
-                    <div className="font-medium">{r.name}</div>
-                    <div className="text-xs text-muted-foreground">{r.cuisine_type ?? "—"} · {r.city ?? "—"}</div>
-                  </div>
-                  <span className={`text-xs px-2 py-0.5 rounded-full ${badgeFor(r.membership_status)}`}>{r.membership_status}</span>
-                </div>
-              ))}
-            </Panel>
           </div>
-        )}
+        </header>
 
-        {tab === "restaurants" && (
-          <Table head={["Tên", "Loại", "TP", "Gói", "Hết hạn", "Hiển thị", "Nổi bật", ""]}>
-            {restaurants.map((r) => (
-              <tr key={r.id} className="border-b border-border">
-                <td className="py-3">
-                  <div className="font-medium">{r.name}</div>
-                  <div className="text-xs text-muted-foreground">/{r.slug}</div>
-                </td>
-                <td className="text-sm text-muted-foreground">{r.cuisine_type ?? "—"}</td>
-                <td className="text-sm text-muted-foreground">{r.city ?? "—"}</td>
-                <td><span className={`text-xs px-2 py-0.5 rounded-full ${badgeFor(r.membership_status)}`}>{r.membership_status}</span></td>
-                <td className="text-xs text-muted-foreground">{fmtDate(r.membership_ends_at ?? r.trial_ends_at)}</td>
-                <td>
-                  <button onClick={() => togglePublished(r)} className="text-muted-foreground hover:text-gold">
-                    {r.is_published ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
-                  </button>
-                </td>
-                <td>
-                  <button onClick={() => toggleFeatured(r)}>
-                    <Star className={`h-4 w-4 ${r.is_featured ? "fill-gold text-gold" : "text-muted-foreground"}`} />
-                  </button>
-                </td>
-                <td>
-                  <Link to="/r/$slug" params={{ slug: r.slug }} className="text-xs text-gold hover:underline">Xem</Link>
-                </td>
-              </tr>
-            ))}
-          </Table>
-        )}
-
-        {tab === "payments" && (
-          <Table head={["Nhà hàng", "Gói", "Số tiền", "Ngày", "Chứng từ", "Trạng thái", "Hành động"]}>
-            {payments.map((p) => (
-              <tr key={p.id} className="border-b border-border align-top">
-                <td className="py-3 font-medium">{p.restaurants?.name ?? "—"}</td>
-                <td className="text-sm">{p.plan_name}<div className="text-xs text-muted-foreground">{p.duration_days} ngày</div></td>
-                <td className="text-sm">{Number(p.amount).toLocaleString("vi-VN")} đ</td>
-                <td className="text-xs text-muted-foreground">{fmtDate(p.created_at)}</td>
-                <td>
-                  {p.proof_image_url ? (
-                    <a href={p.proof_image_url} target="_blank" className="text-xs text-gold hover:underline">Xem ảnh</a>
-                  ) : <span className="text-xs text-muted-foreground">—</span>}
-                  {p.note && <div className="text-xs text-muted-foreground mt-1 max-w-[200px]">{p.note}</div>}
-                </td>
-                <td><span className={`text-xs px-2 py-0.5 rounded-full ${payBadge(p.status)}`}>{p.status}</span></td>
-                <td>
-                  {p.status === "pending" ? (
-                    <div className="flex gap-2">
-                      <button onClick={() => approvePayment(p)} className="text-xs px-3 py-1.5 rounded-md bg-gold text-primary-foreground hover:opacity-90 flex items-center gap-1">
-                        <CheckCircle2 className="h-3 w-3" /> Duyệt
-                      </button>
-                      <button onClick={() => rejectPayment(p)} className="text-xs px-3 py-1.5 rounded-md border border-border hover:border-destructive hover:text-destructive flex items-center gap-1">
-                        <XCircle className="h-3 w-3" /> Từ chối
-                      </button>
-                    </div>
-                  ) : (
-                    <span className="text-xs text-muted-foreground">{fmtDate(p.reviewed_at)}</span>
-                  )}
-                </td>
-              </tr>
-            ))}
-            {payments.length === 0 && (
-              <tr><td colSpan={7} className="py-12 text-center text-muted-foreground">Chưa có thanh toán nào.</td></tr>
+        <main className="flex-1 px-4 md:px-6 py-6 max-w-[1600px] w-full mx-auto">
+          {/* Page header */}
+          <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <h1 className="font-serif text-2xl md:text-3xl">{activeMeta.label}</h1>
+              <p className="text-sm text-muted-foreground mt-0.5">{descOf(tab)}</p>
+            </div>
+            {lastSync && (
+              <div className="text-xs text-muted-foreground">
+                Cập nhật: {lastSync.toLocaleTimeString("vi-VN")}
+              </div>
             )}
-          </Table>
-        )}
+          </div>
 
-        {tab === "users" && (
-          <Table head={["Tên", "Số ĐT", "Vai trò", "Ngày tạo", "Quyền"]}>
-            {profiles.map((u) => {
-              const userR = userRoles.filter((x) => x.user_id === u.id).map((x) => x.role);
-              return (
-                <tr key={u.id} className="border-b border-border">
+          {/* Mobile search */}
+          {showSearch && (
+            <div className="sm:hidden mb-4 relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <input value={query} onChange={(e) => setQuery(e.target.value)}
+                placeholder="Tìm kiếm…"
+                className="w-full bg-card border border-border rounded-full pl-9 pr-4 py-2 text-sm" />
+            </div>
+          )}
+
+          {tab === "overview" && (
+            <div className="space-y-6">
+              {/* KPI grid */}
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <KpiCard icon={<Store className="h-4 w-4" />} label="Nhà hàng đang hoạt động" value={activeRestaurants} hint={`${trialRestaurants} dùng thử`} />
+                <KpiCard icon={<Users className="h-4 w-4" />} label="Người dùng" value={stats.users} hint={`${restaurants.length} đối tác`} />
+                <KpiCard icon={<CreditCard className="h-4 w-4" />} label="Chờ duyệt" value={stats.pending} highlight={stats.pending > 0} hint={stats.pending > 0 ? "Cần xử lý" : "Đã sạch"} />
+                <KpiCard icon={<TrendingUp className="h-4 w-4" />} label="Doanh thu (đã duyệt)" value={`${(totalRevenue / 1_000_000).toFixed(1)}M`} hint={`${todayBookings} đặt chỗ hôm nay`} />
+              </div>
+
+              {/* Quick actions */}
+              <Panel title="Thao tác nhanh">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  <QuickAction icon={<CreditCard className="h-4 w-4" />} label="Duyệt thanh toán" badge={stats.pending} onClick={() => setTab("payments")} />
+                  <QuickAction icon={<Store className="h-4 w-4" />} label="Quản lý nhà hàng" onClick={() => setTab("restaurants")} />
+                  <QuickAction icon={<FileText className="h-4 w-4" />} label="Viết bài blog" onClick={() => setTab("blog")} />
+                  <QuickAction icon={<Crown className="h-4 w-4" />} label="Cấu hình gói" onClick={() => setTab("plans")} />
+                </div>
+              </Panel>
+
+              <div className="grid lg:grid-cols-2 gap-6">
+                <Panel title="Thanh toán chờ duyệt" action={
+                  <button onClick={() => setTab("payments")} className="text-xs text-gold inline-flex items-center gap-1">Tất cả <ArrowRight className="h-3 w-3" /></button>
+                }>
+                  {payments.filter((p) => p.status === "pending").slice(0, 5).map((p) => (
+                    <div key={p.id} className="flex items-center justify-between py-3 border-b border-border last:border-0">
+                      <div className="min-w-0">
+                        <div className="font-medium truncate">{p.restaurants?.name ?? "—"}</div>
+                        <div className="text-xs text-muted-foreground">{p.plan_name} · {Number(p.amount).toLocaleString("vi-VN")} đ</div>
+                      </div>
+                      <div className="flex gap-1.5 shrink-0">
+                        <button onClick={() => approvePayment(p)} className="text-[11px] px-2.5 py-1 rounded-md bg-gold/15 text-gold hover:bg-gold/25"><CheckCircle2 className="h-3 w-3 inline" /> Duyệt</button>
+                        <button onClick={() => rejectPayment(p)} className="text-[11px] px-2.5 py-1 rounded-md border border-border hover:border-destructive hover:text-destructive"><XCircle className="h-3 w-3 inline" /></button>
+                      </div>
+                    </div>
+                  ))}
+                  {payments.filter((p) => p.status === "pending").length === 0 && (
+                    <p className="text-sm text-muted-foreground italic">Không còn thanh toán chờ duyệt.</p>
+                  )}
+                </Panel>
+
+                <Panel title="Đặt chỗ gần đây" action={
+                  <button onClick={() => setTab("bookings")} className="text-xs text-gold inline-flex items-center gap-1">Tất cả <ArrowRight className="h-3 w-3" /></button>
+                }>
+                  {bookings.slice(0, 5).map((b) => (
+                    <div key={b.id} className="flex items-center justify-between py-3 border-b border-border last:border-0">
+                      <div className="min-w-0">
+                        <div className="font-medium truncate">{b.guest_name} · {b.party_size} khách</div>
+                        <div className="text-xs text-muted-foreground truncate">{b.restaurants?.name ?? "—"} · {fmtDate(b.booking_at)}</div>
+                      </div>
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-card border border-border shrink-0">{b.status}</span>
+                    </div>
+                  ))}
+                  {bookings.length === 0 && <p className="text-sm text-muted-foreground italic">Chưa có đặt chỗ.</p>}
+                </Panel>
+
+                <Panel title="Nhà hàng mới">
+                  {restaurants.slice(0, 5).map((r) => (
+                    <div key={r.id} className="flex items-center justify-between py-3 border-b border-border last:border-0">
+                      <div className="min-w-0">
+                        <div className="font-medium truncate">{r.name}</div>
+                        <div className="text-xs text-muted-foreground truncate">{r.cuisine_type ?? "—"} · {r.city ?? "—"}</div>
+                      </div>
+                      <span className={`text-xs px-2 py-0.5 rounded-full shrink-0 ${badgeFor(r.membership_status)}`}>{r.membership_status}</span>
+                    </div>
+                  ))}
+                </Panel>
+
+                <Panel title="Phân bổ nhà hàng">
+                  <div className="space-y-3">
+                    <DistRow label="Đang hoạt động" value={activeRestaurants} total={restaurants.length} color="bg-emerald-500" />
+                    <DistRow label="Dùng thử" value={trialRestaurants} total={restaurants.length} color="bg-gold" />
+                    <DistRow label="Hết hạn" value={restaurants.filter((r) => r.membership_status === "expired").length} total={restaurants.length} color="bg-destructive" />
+                    <DistRow label="Đã xuất bản" value={restaurants.filter((r) => r.is_published).length} total={restaurants.length} color="bg-primary" />
+                    <DistRow label="Nổi bật" value={restaurants.filter((r) => r.is_featured).length} total={restaurants.length} color="bg-gold" />
+                  </div>
+                </Panel>
+              </div>
+            </div>
+          )}
+
+          {tab === "restaurants" && (
+            <Table head={["Tên", "Loại", "TP", "Gói", "Hết hạn", "Hiển thị", "Nổi bật", ""]}>
+              {filteredRestaurants.map((r) => (
+                <tr key={r.id} className="border-b border-border hover:bg-muted/30">
                   <td className="py-3">
-                    <div className="font-medium">{u.full_name ?? "—"}</div>
-                    <div className="text-xs text-muted-foreground font-mono">{u.id.slice(0, 8)}…</div>
+                    <div className="font-medium">{r.name}</div>
+                    <div className="text-xs text-muted-foreground">/{r.slug}</div>
                   </td>
-                  <td className="text-sm text-muted-foreground">{u.phone ?? "—"}</td>
+                  <td className="text-sm text-muted-foreground">{r.cuisine_type ?? "—"}</td>
+                  <td className="text-sm text-muted-foreground">{r.city ?? "—"}</td>
+                  <td><span className={`text-xs px-2 py-0.5 rounded-full ${badgeFor(r.membership_status)}`}>{r.membership_status}</span></td>
+                  <td className="text-xs text-muted-foreground">{fmtDate(r.membership_ends_at ?? r.trial_ends_at)}</td>
                   <td>
-                    <div className="flex flex-wrap gap-1">
-                      {userR.map((r) => <span key={r} className="text-xs px-2 py-0.5 rounded-full bg-card border border-border">{r}</span>)}
-                    </div>
+                    <button onClick={() => togglePublished(r)} className="text-muted-foreground hover:text-gold">
+                      {r.is_published ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+                    </button>
                   </td>
-                  <td className="text-xs text-muted-foreground">{fmtDate(u.created_at)}</td>
                   <td>
-                    <div className="flex gap-1 flex-wrap">
-                      {(["admin", "restaurant_owner"] as const).map((role) => {
-                        const has = userR.includes(role);
-                        return (
-                          <button
-                            key={role}
-                            onClick={() => setRole(u.id, role, !has)}
-                            className={`text-xs px-2 py-1 rounded-md border ${has ? "border-gold text-gold" : "border-border text-muted-foreground hover:text-foreground"}`}
-                          >
-                            {has ? "− " : "+ "}{role === "admin" ? "Admin" : "Owner"}
-                          </button>
-                        );
-                      })}
-                    </div>
+                    <button onClick={() => toggleFeatured(r)}>
+                      <Star className={`h-4 w-4 ${r.is_featured ? "fill-gold text-gold" : "text-muted-foreground"}`} />
+                    </button>
+                  </td>
+                  <td>
+                    <Link to="/r/$slug" params={{ slug: r.slug }} className="text-xs text-gold hover:underline">Xem</Link>
                   </td>
                 </tr>
-              );
-            })}
-          </Table>
-        )}
+              ))}
+              {filteredRestaurants.length === 0 && (
+                <tr><td colSpan={8} className="py-12 text-center text-muted-foreground">Không có nhà hàng phù hợp.</td></tr>
+              )}
+            </Table>
+          )}
 
-        {tab === "bookings" && (
-          <Table head={["Nhà hàng", "Khách", "SĐT", "Số người", "Thời gian", "Trạng thái"]}>
-            {bookings.map((b) => (
-              <tr key={b.id} className="border-b border-border">
-                <td className="py-3 font-medium">{b.restaurants?.name ?? "—"}</td>
-                <td className="text-sm">{b.guest_name}</td>
-                <td className="text-sm text-muted-foreground">{b.guest_phone}</td>
-                <td className="text-sm">{b.party_size}</td>
-                <td className="text-xs text-muted-foreground">{fmtDate(b.booking_at)}</td>
-                <td><span className="text-xs px-2 py-0.5 rounded-full bg-card border border-border">{b.status}</span></td>
-              </tr>
-            ))}
-          </Table>
-        )}
+          {tab === "payments" && (
+            <Table head={["Nhà hàng", "Gói", "Số tiền", "Ngày", "Chứng từ", "Trạng thái", "Hành động"]}>
+              {filteredPayments.map((p) => (
+                <tr key={p.id} className="border-b border-border align-top hover:bg-muted/30">
+                  <td className="py-3 font-medium">{p.restaurants?.name ?? "—"}</td>
+                  <td className="text-sm">{p.plan_name}<div className="text-xs text-muted-foreground">{p.duration_days} ngày</div></td>
+                  <td className="text-sm">{Number(p.amount).toLocaleString("vi-VN")} đ</td>
+                  <td className="text-xs text-muted-foreground">{fmtDate(p.created_at)}</td>
+                  <td>
+                    {p.proof_image_url ? (
+                      <a href={p.proof_image_url} target="_blank" className="text-xs text-gold hover:underline">Xem ảnh</a>
+                    ) : <span className="text-xs text-muted-foreground">—</span>}
+                    {p.note && <div className="text-xs text-muted-foreground mt-1 max-w-[200px]">{p.note}</div>}
+                  </td>
+                  <td><span className={`text-xs px-2 py-0.5 rounded-full ${payBadge(p.status)}`}>{p.status}</span></td>
+                  <td>
+                    {p.status === "pending" ? (
+                      <div className="flex gap-2">
+                        <button onClick={() => approvePayment(p)} className="text-xs px-3 py-1.5 rounded-md bg-gold text-primary-foreground hover:opacity-90 flex items-center gap-1">
+                          <CheckCircle2 className="h-3 w-3" /> Duyệt
+                        </button>
+                        <button onClick={() => rejectPayment(p)} className="text-xs px-3 py-1.5 rounded-md border border-border hover:border-destructive hover:text-destructive flex items-center gap-1">
+                          <XCircle className="h-3 w-3" /> Từ chối
+                        </button>
+                      </div>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">{fmtDate(p.reviewed_at)}</span>
+                    )}
+                  </td>
+                </tr>
+              ))}
+              {filteredPayments.length === 0 && (
+                <tr><td colSpan={7} className="py-12 text-center text-muted-foreground">Chưa có thanh toán nào.</td></tr>
+              )}
+            </Table>
+          )}
 
+          {tab === "users" && (
+            <Table head={["Tên", "Số ĐT", "Vai trò", "Ngày tạo", "Quyền"]}>
+              {filteredUsers.map((u) => {
+                const userR = userRoles.filter((x) => x.user_id === u.id).map((x) => x.role);
+                return (
+                  <tr key={u.id} className="border-b border-border hover:bg-muted/30">
+                    <td className="py-3">
+                      <div className="font-medium">{u.full_name ?? "—"}</div>
+                      <div className="text-xs text-muted-foreground font-mono">{u.id.slice(0, 8)}…</div>
+                    </td>
+                    <td className="text-sm text-muted-foreground">{u.phone ?? "—"}</td>
+                    <td>
+                      <div className="flex flex-wrap gap-1">
+                        {userR.map((r) => <span key={r} className="text-xs px-2 py-0.5 rounded-full bg-card border border-border">{r}</span>)}
+                      </div>
+                    </td>
+                    <td className="text-xs text-muted-foreground">{fmtDate(u.created_at)}</td>
+                    <td>
+                      <div className="flex gap-1 flex-wrap">
+                        {(["admin", "restaurant_owner"] as const).map((role) => {
+                          const has = userR.includes(role);
+                          return (
+                            <button
+                              key={role}
+                              onClick={() => setRole(u.id, role, !has)}
+                              className={`text-xs px-2 py-1 rounded-md border ${has ? "border-gold text-gold" : "border-border text-muted-foreground hover:text-foreground"}`}
+                            >
+                              {has ? "− " : "+ "}{role === "admin" ? "Admin" : "Owner"}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+              {filteredUsers.length === 0 && (
+                <tr><td colSpan={5} className="py-12 text-center text-muted-foreground">Không có người dùng phù hợp.</td></tr>
+              )}
+            </Table>
+          )}
 
+          {tab === "bookings" && (
+            <Table head={["Nhà hàng", "Khách", "SĐT", "Số người", "Thời gian", "Trạng thái"]}>
+              {filteredBookings.map((b) => (
+                <tr key={b.id} className="border-b border-border hover:bg-muted/30">
+                  <td className="py-3 font-medium">{b.restaurants?.name ?? "—"}</td>
+                  <td className="text-sm">{b.guest_name}</td>
+                  <td className="text-sm text-muted-foreground">{b.guest_phone}</td>
+                  <td className="text-sm">{b.party_size}</td>
+                  <td className="text-xs text-muted-foreground">{fmtDate(b.booking_at)}</td>
+                  <td><span className="text-xs px-2 py-0.5 rounded-full bg-card border border-border">{b.status}</span></td>
+                </tr>
+              ))}
+              {filteredBookings.length === 0 && (
+                <tr><td colSpan={6} className="py-12 text-center text-muted-foreground">Không có đặt chỗ phù hợp.</td></tr>
+              )}
+            </Table>
+          )}
 
-
-        {tab === "directory" && <DirectoryTab />}
-        {tab === "plans" && <PlansTab />}
-        {tab === "site" && <SiteTab />}
-        {tab === "blog" && <BlogTab />}
-        {tab === "settings" && <SettingsTab />}
-      </main>
+          {tab === "directory" && <DirectoryTab />}
+          {tab === "plans" && <PlansTab />}
+          {tab === "site" && <SiteTab />}
+          {tab === "blog" && <BlogTab />}
+          {tab === "settings" && <SettingsTab />}
+        </main>
+      </div>
     </div>
   );
 }
 
-function StatCard({ icon, label, value, highlight }: any) {
+function KpiCard({ icon, label, value, hint, highlight }: any) {
   return (
-    <div className={`rounded-2xl border p-5 ${highlight ? "border-gold/40 bg-gold/5" : "border-border bg-card"}`}>
-      <div className="flex items-center gap-2 text-muted-foreground text-sm mb-2">{icon}{label}</div>
+    <div className={`rounded-2xl border p-5 transition ${highlight ? "border-gold/40 bg-gold/5" : "border-border bg-card hover:border-gold/30"}`}>
+      <div className="flex items-center gap-2 text-muted-foreground text-xs uppercase tracking-wider mb-3">
+        <span className={highlight ? "text-gold" : ""}>{icon}</span>
+        {label}
+      </div>
       <div className="font-serif text-3xl">{value}</div>
+      {hint && <div className="text-[11px] text-muted-foreground mt-1">{hint}</div>}
     </div>
   );
 }
 
-function Panel({ title, children }: any) {
+function QuickAction({ icon, label, onClick, badge }: any) {
+  return (
+    <button onClick={onClick} className="relative rounded-xl border border-border bg-card hover:border-gold/40 hover:bg-gold/5 px-4 py-4 text-left transition">
+      <div className="flex items-center gap-2 mb-2 text-gold">{icon}</div>
+      <div className="text-sm font-medium">{label}</div>
+      {badge ? <span className="absolute top-2 right-2 text-[10px] bg-gold text-primary-foreground rounded-full px-1.5 py-0.5 font-medium">{badge}</span> : null}
+    </button>
+  );
+}
+
+function DistRow({ label, value, total, color }: any) {
+  const pct = total > 0 ? Math.round((value / total) * 100) : 0;
+  return (
+    <div>
+      <div className="flex justify-between text-xs mb-1">
+        <span className="text-muted-foreground">{label}</span>
+        <span className="font-medium">{value} <span className="text-muted-foreground">({pct}%)</span></span>
+      </div>
+      <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+        <div className={`h-full ${color} transition-all`} style={{ width: `${pct}%` }} />
+      </div>
+    </div>
+  );
+}
+
+function Panel({ title, children, action }: any) {
   return (
     <div className="rounded-2xl border border-border bg-card p-6">
-      <h3 className="font-serif text-lg mb-3">{title}</h3>
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="font-serif text-lg">{title}</h3>
+        {action}
+      </div>
       {children}
     </div>
   );
@@ -349,7 +635,7 @@ function Table({ head, children }: any) {
   return (
     <div className="rounded-2xl border border-border bg-card overflow-x-auto">
       <table className="w-full text-sm">
-        <thead className="text-xs text-muted-foreground uppercase tracking-wider">
+        <thead className="text-xs text-muted-foreground uppercase tracking-wider bg-muted/30">
           <tr className="border-b border-border">
             {head.map((h: string) => <th key={h} className="text-left font-medium px-4 py-3">{h}</th>)}
           </tr>
@@ -360,8 +646,19 @@ function Table({ head, children }: any) {
   );
 }
 
-function labelOf(t: Tab) {
-  return { overview: "Tổng quan", restaurants: "Nhà hàng", payments: "Thanh toán gói", plans: "Gói thành viên", users: "Người dùng", bookings: "Đặt chỗ", directory: "Danh mục & Địa điểm", site: "Header & Footer", blog: "Blog", settings: "Cấu hình" }[t];
+function descOf(t: Tab) {
+  return ({
+    overview: "Tình hình vận hành tổng thể của hệ thống Maison Dining.",
+    restaurants: "Toàn bộ nhà hàng đã đăng ký, trạng thái hiển thị và gói thành viên.",
+    payments: "Duyệt hoặc từ chối thanh toán gói thành viên từ đối tác.",
+    plans: "Tạo và quản lý các gói thành viên hiển thị cho nhà hàng.",
+    users: "Quản lý người dùng và phân quyền hệ thống.",
+    bookings: "Lịch sử đặt chỗ trên toàn bộ nhà hàng.",
+    directory: "Danh mục ẩm thực, địa điểm, tiện ích dùng cho tìm kiếm và bộ lọc.",
+    site: "Cấu hình thương hiệu, menu header và các cột footer.",
+    blog: "Quản lý bài viết, danh mục và xuất bản nội dung blog.",
+    settings: "Email thông báo, QR thanh toán, cấu hình hệ thống khác.",
+  } as Record<Tab, string>)[t];
 }
 
 function SettingsTab() {
