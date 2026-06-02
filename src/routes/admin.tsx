@@ -414,6 +414,59 @@ function AdminPage() {
                 </div>
               </Panel>
 
+              {/* Time-series analytics */}
+              <div className="grid lg:grid-cols-2 gap-6">
+                <Panel title="Doanh thu thành viên (14 ngày)">
+                  <div className="h-56 -ml-3">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={series} margin={{ top: 8, right: 12, left: 0, bottom: 0 }}>
+                        <defs>
+                          <linearGradient id="rev" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor="hsl(var(--gold, 42 70% 55%))" stopOpacity={0.5} />
+                            <stop offset="100%" stopColor="hsl(var(--gold, 42 70% 55%))" stopOpacity={0} />
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                        <XAxis dataKey="label" tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
+                        <YAxis tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" tickFormatter={(v) => v >= 1_000_000 ? `${(v / 1_000_000).toFixed(1)}M` : v >= 1000 ? `${v / 1000}K` : String(v)} />
+                        <Tooltip
+                          contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8, fontSize: 12 }}
+                          formatter={(v: any) => [`${Number(v).toLocaleString("vi-VN")} ₫`, "Doanh thu"]}
+                        />
+                        <Area type="monotone" dataKey="revenue" stroke="hsl(var(--gold, 42 70% 55%))" fill="url(#rev)" strokeWidth={2} />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </div>
+                  <div className="flex items-center justify-between text-xs text-muted-foreground pt-2 border-t border-border mt-2">
+                    <span>Tổng 14 ngày</span>
+                    <span className="font-mono text-foreground">{series.reduce((s, d) => s + d.revenue, 0).toLocaleString("vi-VN")} ₫</span>
+                  </div>
+                </Panel>
+
+                <Panel title="Đặt chỗ theo ngày (14 ngày)">
+                  <div className="h-56 -ml-3">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={series} margin={{ top: 8, right: 12, left: 0, bottom: 0 }}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                        <XAxis dataKey="label" tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
+                        <YAxis tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" allowDecimals={false} />
+                        <Tooltip
+                          contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8, fontSize: 12 }}
+                          formatter={(v: any) => [v, "Đặt chỗ"]}
+                        />
+                        <Bar dataKey="bookings" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                  <div className="flex items-center justify-between text-xs text-muted-foreground pt-2 border-t border-border mt-2">
+                    <span>Tổng 14 ngày</span>
+                    <span className="font-mono text-foreground">{series.reduce((s, d) => s + d.bookings, 0)} đặt chỗ</span>
+                  </div>
+                </Panel>
+              </div>
+
+
+
               <div className="grid lg:grid-cols-2 gap-6">
                 <Panel title="Thanh toán chờ duyệt" action={
                   <button onClick={() => setTab("payments")} className="text-xs text-gold inline-flex items-center gap-1">Tất cả <ArrowRight className="h-3 w-3" /></button>
