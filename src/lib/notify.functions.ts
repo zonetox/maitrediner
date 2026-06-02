@@ -45,10 +45,46 @@ export const notify = createServerFn({ method: "POST" })
     const from = process.env.RESEND_FROM || "Maison Dining <onboarding@resend.dev>";
     if (!apiKey) return { ok: false, skipped: "no_api_key" };
 
+    const sent: string[] = [];
+
+    // Payment approval / rejection — fetch payment + restaurant + owner email separately
+    if ((data.type === "payment_approved" || data.type === "payment_rejected") && data.paymentId) {
+      const { data: pay } = await supabaseAdmin
+        .from("membership_payments")
+        .select("*, restaurants(name, slug, email, owner_id)")
+        .eq("id", data.paymentId)
+        .maybeSingle();
+      if (!pay) return { ok: false, skipped: "no_payment" };
+      const rest = (pay as any).restaurants;
+      const approved = data.type === "payment_approved";
+      const amount = Number(pay.amount).toLocaleString("vi-VN");
+      const days = pay.duration_days;
+      const html = wrap(
+        approved ? `Thanh toán đã được duyệt — ${rest?.name ?? ""}` : `Thanh toán bị từ chối — ${rest?.name ?? ""}`,
+        approved
+          ? `<p>Xin chào,</p>
+             <p>Thanh toán gói <b>${escapeHtml(pay.plan_name)}</b> trị giá <b>${amount}₫</b> đã được duyệt. Nhà hàng <b>${escapeHtml(rest?.name ?? "")}</b> đã được kích hoạt thêm <b>${days} ngày</b>.</p>
+             <p>${pay.note ? `Ghi chú admin: ${escapeHtml(pay.note)}` : ""}</p>`
+          : `<p>Xin chào,</p>
+             <p>Yêu cầu thanh toán gói <b>${escapeHtml(pay.plan_name)}</b> trị giá <b>${amount}₫</b> đã bị từ chối.</p>
+             ${pay.note ? `<p>Lý do/Ghi chú: ${escapeHtml(pay.note)}</p>` : ""}
+             <p>Vui lòng kiểm tra lại thông tin và gửi lại biên lai nếu cần.</p>`
+      );
+      // Send to restaurant contact email
+      if (rest?.email) { await sendEmail(apiKey, from, rest.email, approved ? `[Maison Dining] Gói đã kích hoạt` : `[Maison Dining] Thanh toán bị từ chối`, html); sent.push("restaurant"); }
+      // Also send to the user who submitted (owner)
+      if (pay.user_id) {
+        const { data: u } = await supabaseAdmin.auth.admin.getUserById(pay.user_id);
+        const em = u?.user?.email;
+        if (em && em !== rest?.email) { await sendEmail(apiKey, from, em, approved ? `Gói thành viên đã kích hoạt` : `Thanh toán bị từ chối`, html); sent.push("user"); }
+      }
+      return { ok: true, sent };
+    }
+
+    if (!data.restaurantId) return { ok: false, skipped: "no_restaurant_id" };
     const { data: r } = await supabaseAdmin.from("restaurants").select("name, email, slug").eq("id", data.restaurantId).maybeSingle();
     if (!r) return { ok: false, skipped: "no_restaurant" };
 
-    const sent: string[] = [];
 
     if (data.type === "booking" && data.recordId) {
       const { data: b } = await supabaseAdmin.from("bookings").select("*").eq("id", data.recordId).maybeSingle();
