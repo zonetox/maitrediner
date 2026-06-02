@@ -150,6 +150,8 @@ function AdminPage() {
     );
   }
 
+  const notifyFn = useServerFn(notify);
+
   async function approvePayment(p: any) {
     const { error } = await supabase
       .from("membership_payments")
@@ -157,6 +159,7 @@ function AdminPage() {
       .eq("id", p.id);
     if (error) return toast.error(error.message);
     toast.success("Đã duyệt thanh toán & kích hoạt gói");
+    notifyFn({ data: { type: "payment_approved", paymentId: p.id } }).catch(() => {});
     loadAll();
   }
 
@@ -167,8 +170,10 @@ function AdminPage() {
       .eq("id", p.id);
     if (error) return toast.error(error.message);
     toast.success("Đã từ chối");
+    notifyFn({ data: { type: "payment_rejected", paymentId: p.id } }).catch(() => {});
     loadAll();
   }
+
 
   async function toggleFeatured(r: any) {
     const { error } = await supabase.from("restaurants").update({ is_featured: !r.is_featured }).eq("id", r.id);
