@@ -1,5 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import {
@@ -12,6 +13,10 @@ import { ImageUploader } from "@/components/ImageUploader";
 import { toast } from "sonner";
 import { invalidateSiteSettings } from "@/hooks/useSiteSettings";
 import { BlogTab } from "@/components/admin/BlogTab";
+import { notify } from "@/lib/notify.functions";
+import {
+  ResponsiveContainer, AreaChart, Area, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid,
+} from "recharts";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({ meta: [{ title: "Admin — Maison Dining" }] }),
