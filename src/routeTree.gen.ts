@@ -27,6 +27,7 @@ import { Route as PartnerMembershipRouteImport } from './routes/partner.membersh
 import { Route as CuisinesSlugRouteImport } from './routes/cuisines.$slug'
 import { Route as BlogSlugRouteImport } from './routes/blog.$slug'
 import { Route as BlogCategorySlugRouteImport } from './routes/blog.category.$slug'
+import { Route as ApiPublicCronExpireMembershipsRouteImport } from './routes/api/public/cron/expire-memberships'
 
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
@@ -118,6 +119,12 @@ const BlogCategorySlugRoute = BlogCategorySlugRouteImport.update({
   path: '/category/$slug',
   getParentRoute: () => BlogRoute,
 } as any)
+const ApiPublicCronExpireMembershipsRoute =
+  ApiPublicCronExpireMembershipsRouteImport.update({
+    id: '/api/public/cron/expire-memberships',
+    path: '/api/public/cron/expire-memberships',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -138,6 +145,7 @@ export interface FileRoutesByFullPath {
   '/partner/membership': typeof PartnerMembershipRoute
   '/r/$slug': typeof RSlugRoute
   '/blog/category/$slug': typeof BlogCategorySlugRoute
+  '/api/public/cron/expire-memberships': typeof ApiPublicCronExpireMembershipsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -158,6 +166,7 @@ export interface FileRoutesByTo {
   '/partner/membership': typeof PartnerMembershipRoute
   '/r/$slug': typeof RSlugRoute
   '/blog/category/$slug': typeof BlogCategorySlugRoute
+  '/api/public/cron/expire-memberships': typeof ApiPublicCronExpireMembershipsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -179,6 +188,7 @@ export interface FileRoutesById {
   '/partner/membership': typeof PartnerMembershipRoute
   '/r/$slug': typeof RSlugRoute
   '/blog/category/$slug': typeof BlogCategorySlugRoute
+  '/api/public/cron/expire-memberships': typeof ApiPublicCronExpireMembershipsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -201,6 +211,7 @@ export interface FileRouteTypes {
     | '/partner/membership'
     | '/r/$slug'
     | '/blog/category/$slug'
+    | '/api/public/cron/expire-memberships'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -221,6 +232,7 @@ export interface FileRouteTypes {
     | '/partner/membership'
     | '/r/$slug'
     | '/blog/category/$slug'
+    | '/api/public/cron/expire-memberships'
   id:
     | '__root__'
     | '/'
@@ -241,6 +253,7 @@ export interface FileRouteTypes {
     | '/partner/membership'
     | '/r/$slug'
     | '/blog/category/$slug'
+    | '/api/public/cron/expire-memberships'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -259,6 +272,7 @@ export interface RootRouteChildren {
   TermsRoute: typeof TermsRoute
   CuisinesSlugRoute: typeof CuisinesSlugRoute
   RSlugRoute: typeof RSlugRoute
+  ApiPublicCronExpireMembershipsRoute: typeof ApiPublicCronExpireMembershipsRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -389,6 +403,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BlogCategorySlugRouteImport
       parentRoute: typeof BlogRoute
     }
+    '/api/public/cron/expire-memberships': {
+      id: '/api/public/cron/expire-memberships'
+      path: '/api/public/cron/expire-memberships'
+      fullPath: '/api/public/cron/expire-memberships'
+      preLoaderRoute: typeof ApiPublicCronExpireMembershipsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -431,6 +452,7 @@ const rootRouteChildren: RootRouteChildren = {
   TermsRoute: TermsRoute,
   CuisinesSlugRoute: CuisinesSlugRoute,
   RSlugRoute: RSlugRoute,
+  ApiPublicCronExpireMembershipsRoute: ApiPublicCronExpireMembershipsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
