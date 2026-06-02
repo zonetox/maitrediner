@@ -2,12 +2,13 @@ import { createServerFn } from "@tanstack/react-start";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
 type Payload = {
-  type: "booking" | "order" | "booking_status" | "order_status";
-  restaurantId: string;
+  type: "booking" | "order" | "booking_status" | "order_status" | "payment_approved" | "payment_rejected";
+  restaurantId?: string;
   recordId?: string;
   // For status updates (partner side)
   newStatus?: string;
-  // For new booking/order (client side) — server will re-fetch from DB by id
+  // For payment_approved / payment_rejected — paymentId points to membership_payments.id
+  paymentId?: string;
 };
 
 async function sendEmail(apiKey: string, from: string, to: string, subject: string, html: string) {
