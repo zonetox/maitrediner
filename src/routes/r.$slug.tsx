@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
-import { notify } from "@/lib/notify.functions";
+import { notifyNew } from "@/lib/notify.functions";
 import { img } from "@/lib/img";
 import {
   MapPin, Phone, Clock, Heart, Calendar, Sparkles, Mail,
@@ -817,7 +817,7 @@ function HeroMedia({ r, lc, cover, gallery, onZoom }: { r: any; lc: any; cover: 
 
 
 function BookingModal({ r, menu, onClose, user }: any) {
-  const notifyFn = useServerFn(notify);
+  const notifyFn = useServerFn(notifyNew);
   const [form, setForm] = useState({
     guest_name: "", guest_phone: "", guest_email: user?.email ?? "",
     party_size: 2, date: "", time: "", notes: "",
