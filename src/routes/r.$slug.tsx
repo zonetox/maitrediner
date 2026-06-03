@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
-import { notify } from "@/lib/notify.functions";
+import { notifyNew } from "@/lib/notify.functions";
 import { img } from "@/lib/img";
 import {
   MapPin, Phone, Clock, Heart, Calendar, Sparkles, Mail,
