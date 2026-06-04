@@ -594,10 +594,10 @@ function AdminPage() {
                   <td>
                     {p.status === "pending" ? (
                       <div className="flex gap-2">
-                        <button onClick={() => approvePayment(p)} className="text-xs px-3 py-1.5 rounded-md bg-gold text-primary-foreground hover:opacity-90 flex items-center gap-1">
-                          <CheckCircle2 className="h-3 w-3" /> Duyệt
+                        <button onClick={() => approvePayment(p)} disabled={pendingId === p.id} className="text-xs px-3 py-1.5 rounded-md bg-gold text-primary-foreground hover:opacity-90 flex items-center gap-1 disabled:opacity-50">
+                          <CheckCircle2 className="h-3 w-3" /> {pendingId === p.id ? "Đang xử lý…" : "Duyệt"}
                         </button>
-                        <button onClick={() => rejectPayment(p)} className="text-xs px-3 py-1.5 rounded-md border border-border hover:border-destructive hover:text-destructive flex items-center gap-1">
+                        <button onClick={() => rejectPayment(p)} disabled={pendingId === p.id} className="text-xs px-3 py-1.5 rounded-md border border-border hover:border-destructive hover:text-destructive flex items-center gap-1 disabled:opacity-50">
                           <XCircle className="h-3 w-3" /> Từ chối
                         </button>
                       </div>
