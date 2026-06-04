@@ -68,6 +68,9 @@ function AdminPage() {
   const [query, setQuery] = useState("");
   const [refreshing, setRefreshing] = useState(false);
   const [lastSync, setLastSync] = useState<Date | null>(null);
+  const [pendingId, setPendingId] = useState<string | null>(null);
+  const [claiming, setClaiming] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) navigate({ to: "/auth" });
