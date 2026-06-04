@@ -58,22 +58,31 @@ function AccountPage() {
   }, [user]);
 
   async function saveProfile() {
+    if (saving) return;
+    setSaving(true);
     const { error } = await supabase.from("profiles").update({
       full_name: profile.full_name, phone: profile.phone,
     }).eq("id", user!.id);
+    setSaving(false);
     if (error) toast.error(error.message); else toast.success("Đã lưu hồ sơ");
   }
 
   async function removeFavorite(id: string) {
+    if (removingId) return;
+    setRemovingId(id);
     const { error } = await supabase.from("favorites").delete().eq("id", id);
+    setRemovingId(null);
     if (error) return toast.error(error.message);
     toast.success("Đã gỡ khỏi yêu thích");
     loadAll();
   }
 
   async function cancelBooking(id: string) {
+    if (cancellingId) return;
     if (!confirm("Huỷ đặt chỗ này?")) return;
+    setCancellingId(id);
     const { error } = await supabase.from("bookings").update({ status: "cancelled" }).eq("id", id);
+    setCancellingId(null);
     if (error) return toast.error(error.message);
     toast.success("Đã huỷ đặt chỗ");
     loadAll();
