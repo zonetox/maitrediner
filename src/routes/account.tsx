@@ -173,8 +173,8 @@ function AccountPage() {
                   <div className="flex items-center gap-2 self-start">
                     <span className={`text-xs px-3 py-1 rounded-full ${statusBadge(b.status)}`}>{statusLabel(b.status)}</span>
                     {(b.status === "pending" || b.status === "confirmed") && (
-                      <button onClick={() => cancelBooking(b.id)} className="text-xs px-3 py-1 rounded-full border border-border hover:border-destructive hover:text-destructive transition">
-                        Huỷ
+                      <button onClick={() => cancelBooking(b.id)} disabled={cancellingId === b.id} className="text-xs px-3 py-1 rounded-full border border-border hover:border-destructive hover:text-destructive transition disabled:opacity-50">
+                        {cancellingId === b.id ? "Đang huỷ…" : "Huỷ"}
                       </button>
                     )}
                   </div>
