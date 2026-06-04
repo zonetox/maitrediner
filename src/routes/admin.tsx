@@ -211,7 +211,10 @@ function AdminPage() {
   }
 
   async function signOut() {
+    if (signingOut) return;
+    setSigningOut(true);
     await supabase.auth.signOut();
+    toast.success("Đã đăng xuất");
     navigate({ to: "/" });
   }
 
