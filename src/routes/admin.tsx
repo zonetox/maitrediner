@@ -159,10 +159,13 @@ function AdminPage() {
   const notifyFn = useServerFn(notify);
 
   async function approvePayment(p: any) {
+    if (pendingId) return;
+    setPendingId(p.id);
     const { error } = await supabase
       .from("membership_payments")
       .update({ status: "approved", reviewed_by: user!.id, reviewed_at: new Date().toISOString() })
       .eq("id", p.id);
+    setPendingId(null);
     if (error) return toast.error(error.message);
     toast.success("Đã duyệt thanh toán & kích hoạt gói");
     notifyFn({ data: { type: "payment_approved", paymentId: p.id } }).catch(() => {});
@@ -170,10 +173,13 @@ function AdminPage() {
   }
 
   async function rejectPayment(p: any) {
+    if (pendingId) return;
+    setPendingId(p.id);
     const { error } = await supabase
       .from("membership_payments")
       .update({ status: "rejected", reviewed_by: user!.id, reviewed_at: new Date().toISOString() })
       .eq("id", p.id);
+    setPendingId(null);
     if (error) return toast.error(error.message);
     toast.success("Đã từ chối");
     notifyFn({ data: { type: "payment_rejected", paymentId: p.id } }).catch(() => {});
