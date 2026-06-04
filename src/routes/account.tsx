@@ -143,7 +143,8 @@ function AccountPage() {
               {savedDeals.map((f) => (
                 <div key={f.id} className="relative p-6 rounded-2xl bg-card border border-border">
                   <button onClick={() => removeFavorite(f.id)} title="Gỡ"
-                    className="absolute top-3 right-3 h-8 w-8 grid place-items-center rounded-full bg-background/60 hover:bg-destructive hover:text-destructive-foreground transition">
+                    disabled={removingId === f.id}
+                    className="absolute top-3 right-3 h-8 w-8 grid place-items-center rounded-full bg-background/60 hover:bg-destructive hover:text-destructive-foreground transition disabled:opacity-50">
                     <X className="h-4 w-4" />
                   </button>
                   <span className="text-xs uppercase tracking-wider text-gold">{f.deals?.restaurants?.name}</span>
