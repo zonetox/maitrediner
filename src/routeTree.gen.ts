@@ -27,6 +27,7 @@ import { Route as PartnerMembershipRouteImport } from './routes/partner.membersh
 import { Route as CuisinesSlugRouteImport } from './routes/cuisines.$slug'
 import { Route as BlogSlugRouteImport } from './routes/blog.$slug'
 import { Route as BlogCategorySlugRouteImport } from './routes/blog.category.$slug'
+import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
 import { Route as ApiPublicCronExpireMembershipsRouteImport } from './routes/api/public/cron/expire-memberships'
 
 const TermsRoute = TermsRouteImport.update({
@@ -119,6 +120,12 @@ const BlogCategorySlugRoute = BlogCategorySlugRouteImport.update({
   path: '/category/$slug',
   getParentRoute: () => BlogRoute,
 } as any)
+const LovableEmailQueueProcessRoute =
+  LovableEmailQueueProcessRouteImport.update({
+    id: '/lovable/email/queue/process',
+    path: '/lovable/email/queue/process',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicCronExpireMembershipsRoute =
   ApiPublicCronExpireMembershipsRouteImport.update({
     id: '/api/public/cron/expire-memberships',
@@ -146,6 +153,7 @@ export interface FileRoutesByFullPath {
   '/r/$slug': typeof RSlugRoute
   '/blog/category/$slug': typeof BlogCategorySlugRoute
   '/api/public/cron/expire-memberships': typeof ApiPublicCronExpireMembershipsRoute
+  '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -167,6 +175,7 @@ export interface FileRoutesByTo {
   '/r/$slug': typeof RSlugRoute
   '/blog/category/$slug': typeof BlogCategorySlugRoute
   '/api/public/cron/expire-memberships': typeof ApiPublicCronExpireMembershipsRoute
+  '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -189,6 +198,7 @@ export interface FileRoutesById {
   '/r/$slug': typeof RSlugRoute
   '/blog/category/$slug': typeof BlogCategorySlugRoute
   '/api/public/cron/expire-memberships': typeof ApiPublicCronExpireMembershipsRoute
+  '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -212,6 +222,7 @@ export interface FileRouteTypes {
     | '/r/$slug'
     | '/blog/category/$slug'
     | '/api/public/cron/expire-memberships'
+    | '/lovable/email/queue/process'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -233,6 +244,7 @@ export interface FileRouteTypes {
     | '/r/$slug'
     | '/blog/category/$slug'
     | '/api/public/cron/expire-memberships'
+    | '/lovable/email/queue/process'
   id:
     | '__root__'
     | '/'
@@ -254,6 +266,7 @@ export interface FileRouteTypes {
     | '/r/$slug'
     | '/blog/category/$slug'
     | '/api/public/cron/expire-memberships'
+    | '/lovable/email/queue/process'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -273,6 +286,7 @@ export interface RootRouteChildren {
   CuisinesSlugRoute: typeof CuisinesSlugRoute
   RSlugRoute: typeof RSlugRoute
   ApiPublicCronExpireMembershipsRoute: typeof ApiPublicCronExpireMembershipsRoute
+  LovableEmailQueueProcessRoute: typeof LovableEmailQueueProcessRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -403,6 +417,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BlogCategorySlugRouteImport
       parentRoute: typeof BlogRoute
     }
+    '/lovable/email/queue/process': {
+      id: '/lovable/email/queue/process'
+      path: '/lovable/email/queue/process'
+      fullPath: '/lovable/email/queue/process'
+      preLoaderRoute: typeof LovableEmailQueueProcessRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/cron/expire-memberships': {
       id: '/api/public/cron/expire-memberships'
       path: '/api/public/cron/expire-memberships'
@@ -453,6 +474,7 @@ const rootRouteChildren: RootRouteChildren = {
   CuisinesSlugRoute: CuisinesSlugRoute,
   RSlugRoute: RSlugRoute,
   ApiPublicCronExpireMembershipsRoute: ApiPublicCronExpireMembershipsRoute,
+  LovableEmailQueueProcessRoute: LovableEmailQueueProcessRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
