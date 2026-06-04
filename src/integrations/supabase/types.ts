@@ -770,6 +770,7 @@ export type Database = {
           dress_code: string | null
           email: string | null
           id: string
+          imported_at: string | null
           is_featured: boolean
           is_published: boolean
           landing_content: Json
@@ -786,6 +787,7 @@ export type Database = {
           rating: number | null
           short_description: string | null
           slug: string
+          source_url: string | null
           trial_ends_at: string
           updated_at: string
         }
@@ -800,6 +802,7 @@ export type Database = {
           dress_code?: string | null
           email?: string | null
           id?: string
+          imported_at?: string | null
           is_featured?: boolean
           is_published?: boolean
           landing_content?: Json
@@ -816,6 +819,7 @@ export type Database = {
           rating?: number | null
           short_description?: string | null
           slug: string
+          source_url?: string | null
           trial_ends_at?: string
           updated_at?: string
         }
@@ -830,6 +834,7 @@ export type Database = {
           dress_code?: string | null
           email?: string | null
           id?: string
+          imported_at?: string | null
           is_featured?: boolean
           is_published?: boolean
           landing_content?: Json
@@ -846,6 +851,7 @@ export type Database = {
           rating?: number | null
           short_description?: string | null
           slug?: string
+          source_url?: string | null
           trial_ends_at?: string
           updated_at?: string
         }
