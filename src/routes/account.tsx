@@ -22,6 +22,9 @@ function AccountPage() {
   
   const [savedDeals, setSavedDeals] = useState<any[]>([]);
   const [profile, setProfile] = useState<any>({ full_name: "", phone: "" });
+  const [saving, setSaving] = useState(false);
+  const [cancellingId, setCancellingId] = useState<string | null>(null);
+  const [removingId, setRemovingId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!loading && !user) navigate({ to: "/auth" });
