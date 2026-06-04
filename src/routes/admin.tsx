@@ -68,6 +68,9 @@ function AdminPage() {
   const [query, setQuery] = useState("");
   const [refreshing, setRefreshing] = useState(false);
   const [lastSync, setLastSync] = useState<Date | null>(null);
+  const [pendingId, setPendingId] = useState<string | null>(null);
+  const [claiming, setClaiming] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) navigate({ to: "/auth" });
@@ -127,7 +130,10 @@ function AdminPage() {
   if (!user) return null;
   if (!hasRole("admin")) {
     async function claim() {
+      if (claiming) return;
+      setClaiming(true);
       const { data, error } = await supabase.rpc("claim_admin_if_none");
+      setClaiming(false);
       if (error) return toast.error(error.message);
       if (data) { toast.success("Đã cấp quyền admin cho tài khoản này"); window.location.reload(); }
       else toast.error("Hệ thống đã có admin. Liên hệ admin hiện tại để được cấp quyền.");
@@ -140,8 +146,8 @@ function AdminPage() {
           <p className="text-muted-foreground mb-6">
             Tài khoản của bạn không có quyền quản trị. Nếu bạn là người thiết lập đầu tiên, hãy nhận quyền admin bên dưới.
           </p>
-          <button onClick={claim} className="px-6 py-3 rounded-full bg-gradient-gold text-primary-foreground font-medium hover:shadow-gold">
-            Nhận quyền Admin (chỉ user đầu tiên)
+          <button onClick={claim} disabled={claiming} className="px-6 py-3 rounded-full bg-gradient-gold text-primary-foreground font-medium hover:shadow-gold disabled:opacity-60">
+            {claiming ? "Đang xử lý…" : "Nhận quyền Admin (chỉ user đầu tiên)"}
           </button>
           <p className="text-xs text-muted-foreground/70 font-mono break-all mt-6">User ID: {user.id}</p>
           <Link to="/" className="inline-block mt-6 text-gold hover:underline">← Về trang chủ</Link>
@@ -153,10 +159,13 @@ function AdminPage() {
   const notifyFn = useServerFn(notify);
 
   async function approvePayment(p: any) {
+    if (pendingId) return;
+    setPendingId(p.id);
     const { error } = await supabase
       .from("membership_payments")
       .update({ status: "approved", reviewed_by: user!.id, reviewed_at: new Date().toISOString() })
       .eq("id", p.id);
+    setPendingId(null);
     if (error) return toast.error(error.message);
     toast.success("Đã duyệt thanh toán & kích hoạt gói");
     notifyFn({ data: { type: "payment_approved", paymentId: p.id } }).catch(() => {});
@@ -164,10 +173,13 @@ function AdminPage() {
   }
 
   async function rejectPayment(p: any) {
+    if (pendingId) return;
+    setPendingId(p.id);
     const { error } = await supabase
       .from("membership_payments")
       .update({ status: "rejected", reviewed_by: user!.id, reviewed_at: new Date().toISOString() })
       .eq("id", p.id);
+    setPendingId(null);
     if (error) return toast.error(error.message);
     toast.success("Đã từ chối");
     notifyFn({ data: { type: "payment_rejected", paymentId: p.id } }).catch(() => {});
@@ -199,7 +211,10 @@ function AdminPage() {
   }
 
   async function signOut() {
+    if (signingOut) return;
+    setSigningOut(true);
     await supabase.auth.signOut();
+    toast.success("Đã đăng xuất");
     navigate({ to: "/" });
   }
 
@@ -478,8 +493,8 @@ function AdminPage() {
                         <div className="text-xs text-muted-foreground">{p.plan_name} · {Number(p.amount).toLocaleString("vi-VN")} đ</div>
                       </div>
                       <div className="flex gap-1.5 shrink-0">
-                        <button onClick={() => approvePayment(p)} className="text-[11px] px-2.5 py-1 rounded-md bg-gold/15 text-gold hover:bg-gold/25"><CheckCircle2 className="h-3 w-3 inline" /> Duyệt</button>
-                        <button onClick={() => rejectPayment(p)} className="text-[11px] px-2.5 py-1 rounded-md border border-border hover:border-destructive hover:text-destructive"><XCircle className="h-3 w-3 inline" /></button>
+                        <button onClick={() => approvePayment(p)} disabled={pendingId === p.id} className="text-[11px] px-2.5 py-1 rounded-md bg-gold/15 text-gold hover:bg-gold/25 disabled:opacity-50"><CheckCircle2 className="h-3 w-3 inline" /> Duyệt</button>
+                        <button onClick={() => rejectPayment(p)} disabled={pendingId === p.id} className="text-[11px] px-2.5 py-1 rounded-md border border-border hover:border-destructive hover:text-destructive disabled:opacity-50"><XCircle className="h-3 w-3 inline" /></button>
                       </div>
                     </div>
                   ))}
@@ -579,10 +594,10 @@ function AdminPage() {
                   <td>
                     {p.status === "pending" ? (
                       <div className="flex gap-2">
-                        <button onClick={() => approvePayment(p)} className="text-xs px-3 py-1.5 rounded-md bg-gold text-primary-foreground hover:opacity-90 flex items-center gap-1">
-                          <CheckCircle2 className="h-3 w-3" /> Duyệt
+                        <button onClick={() => approvePayment(p)} disabled={pendingId === p.id} className="text-xs px-3 py-1.5 rounded-md bg-gold text-primary-foreground hover:opacity-90 flex items-center gap-1 disabled:opacity-50">
+                          <CheckCircle2 className="h-3 w-3" /> {pendingId === p.id ? "Đang xử lý…" : "Duyệt"}
                         </button>
-                        <button onClick={() => rejectPayment(p)} className="text-xs px-3 py-1.5 rounded-md border border-border hover:border-destructive hover:text-destructive flex items-center gap-1">
+                        <button onClick={() => rejectPayment(p)} disabled={pendingId === p.id} className="text-xs px-3 py-1.5 rounded-md border border-border hover:border-destructive hover:text-destructive flex items-center gap-1 disabled:opacity-50">
                           <XCircle className="h-3 w-3" /> Từ chối
                         </button>
                       </div>

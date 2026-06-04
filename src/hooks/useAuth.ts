@@ -37,7 +37,14 @@ export function useAuth() {
   }
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      const { toast } = await import("sonner");
+      toast.error("Không thể đăng xuất: " + error.message);
+      return;
+    }
+    const { toast } = await import("sonner");
+    toast.success("Đã đăng xuất");
     window.location.href = "/";
   };
 

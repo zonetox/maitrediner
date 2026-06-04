@@ -22,6 +22,9 @@ function AccountPage() {
   
   const [savedDeals, setSavedDeals] = useState<any[]>([]);
   const [profile, setProfile] = useState<any>({ full_name: "", phone: "" });
+  const [saving, setSaving] = useState(false);
+  const [cancellingId, setCancellingId] = useState<string | null>(null);
+  const [removingId, setRemovingId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!loading && !user) navigate({ to: "/auth" });
@@ -55,22 +58,31 @@ function AccountPage() {
   }, [user]);
 
   async function saveProfile() {
+    if (saving) return;
+    setSaving(true);
     const { error } = await supabase.from("profiles").update({
       full_name: profile.full_name, phone: profile.phone,
     }).eq("id", user!.id);
+    setSaving(false);
     if (error) toast.error(error.message); else toast.success("Đã lưu hồ sơ");
   }
 
   async function removeFavorite(id: string) {
+    if (removingId) return;
+    setRemovingId(id);
     const { error } = await supabase.from("favorites").delete().eq("id", id);
+    setRemovingId(null);
     if (error) return toast.error(error.message);
     toast.success("Đã gỡ khỏi yêu thích");
     loadAll();
   }
 
   async function cancelBooking(id: string) {
+    if (cancellingId) return;
     if (!confirm("Huỷ đặt chỗ này?")) return;
+    setCancellingId(id);
     const { error } = await supabase.from("bookings").update({ status: "cancelled" }).eq("id", id);
+    setCancellingId(null);
     if (error) return toast.error(error.message);
     toast.success("Đã huỷ đặt chỗ");
     loadAll();
@@ -109,7 +121,8 @@ function AccountPage() {
               {favs.map((f) => (
                 <div key={f.id} className="group relative rounded-2xl bg-card border border-border overflow-hidden hover:border-gold transition">
                   <button onClick={() => removeFavorite(f.id)} title="Gỡ yêu thích"
-                    className="absolute top-3 right-3 z-10 h-8 w-8 grid place-items-center rounded-full bg-background/80 backdrop-blur hover:bg-destructive hover:text-destructive-foreground transition">
+                    disabled={removingId === f.id}
+                    className="absolute top-3 right-3 z-10 h-8 w-8 grid place-items-center rounded-full bg-background/80 backdrop-blur hover:bg-destructive hover:text-destructive-foreground transition disabled:opacity-50">
                     <X className="h-4 w-4" />
                   </button>
                   <Link to="/r/$slug" params={{ slug: f.restaurants?.slug ?? "" }} className="block">
@@ -130,7 +143,8 @@ function AccountPage() {
               {savedDeals.map((f) => (
                 <div key={f.id} className="relative p-6 rounded-2xl bg-card border border-border">
                   <button onClick={() => removeFavorite(f.id)} title="Gỡ"
-                    className="absolute top-3 right-3 h-8 w-8 grid place-items-center rounded-full bg-background/60 hover:bg-destructive hover:text-destructive-foreground transition">
+                    disabled={removingId === f.id}
+                    className="absolute top-3 right-3 h-8 w-8 grid place-items-center rounded-full bg-background/60 hover:bg-destructive hover:text-destructive-foreground transition disabled:opacity-50">
                     <X className="h-4 w-4" />
                   </button>
                   <span className="text-xs uppercase tracking-wider text-gold">{f.deals?.restaurants?.name}</span>
@@ -159,8 +173,8 @@ function AccountPage() {
                   <div className="flex items-center gap-2 self-start">
                     <span className={`text-xs px-3 py-1 rounded-full ${statusBadge(b.status)}`}>{statusLabel(b.status)}</span>
                     {(b.status === "pending" || b.status === "confirmed") && (
-                      <button onClick={() => cancelBooking(b.id)} className="text-xs px-3 py-1 rounded-full border border-border hover:border-destructive hover:text-destructive transition">
-                        Huỷ
+                      <button onClick={() => cancelBooking(b.id)} disabled={cancellingId === b.id} className="text-xs px-3 py-1 rounded-full border border-border hover:border-destructive hover:text-destructive transition disabled:opacity-50">
+                        {cancellingId === b.id ? "Đang huỷ…" : "Huỷ"}
                       </button>
                     )}
                   </div>
@@ -187,7 +201,7 @@ function AccountPage() {
                   className="w-full mt-2 px-4 py-3 rounded-lg bg-card border border-border focus:border-gold outline-none" />
               </div>
               <div className="flex gap-3 pt-2">
-                <button onClick={saveProfile} className="px-6 py-3 rounded-full bg-gradient-gold text-primary-foreground font-medium">Lưu thay đổi</button>
+                <button onClick={saveProfile} disabled={saving} className="px-6 py-3 rounded-full bg-gradient-gold text-primary-foreground font-medium disabled:opacity-60">{saving ? "Đang lưu…" : "Lưu thay đổi"}</button>
                 <Link to="/reset-password" className="px-6 py-3 rounded-full border border-border hover:border-gold inline-flex items-center">Đổi mật khẩu</Link>
               </div>
             </div>
