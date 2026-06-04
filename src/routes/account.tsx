@@ -121,7 +121,8 @@ function AccountPage() {
               {favs.map((f) => (
                 <div key={f.id} className="group relative rounded-2xl bg-card border border-border overflow-hidden hover:border-gold transition">
                   <button onClick={() => removeFavorite(f.id)} title="Gỡ yêu thích"
-                    className="absolute top-3 right-3 z-10 h-8 w-8 grid place-items-center rounded-full bg-background/80 backdrop-blur hover:bg-destructive hover:text-destructive-foreground transition">
+                    disabled={removingId === f.id}
+                    className="absolute top-3 right-3 z-10 h-8 w-8 grid place-items-center rounded-full bg-background/80 backdrop-blur hover:bg-destructive hover:text-destructive-foreground transition disabled:opacity-50">
                     <X className="h-4 w-4" />
                   </button>
                   <Link to="/r/$slug" params={{ slug: f.restaurants?.slug ?? "" }} className="block">
