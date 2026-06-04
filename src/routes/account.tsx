@@ -201,7 +201,7 @@ function AccountPage() {
                   className="w-full mt-2 px-4 py-3 rounded-lg bg-card border border-border focus:border-gold outline-none" />
               </div>
               <div className="flex gap-3 pt-2">
-                <button onClick={saveProfile} className="px-6 py-3 rounded-full bg-gradient-gold text-primary-foreground font-medium">Lưu thay đổi</button>
+                <button onClick={saveProfile} disabled={saving} className="px-6 py-3 rounded-full bg-gradient-gold text-primary-foreground font-medium disabled:opacity-60">{saving ? "Đang lưu…" : "Lưu thay đổi"}</button>
                 <Link to="/reset-password" className="px-6 py-3 rounded-full border border-border hover:border-gold inline-flex items-center">Đổi mật khẩu</Link>
               </div>
             </div>
