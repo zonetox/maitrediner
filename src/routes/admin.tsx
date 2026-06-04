@@ -493,8 +493,8 @@ function AdminPage() {
                         <div className="text-xs text-muted-foreground">{p.plan_name} · {Number(p.amount).toLocaleString("vi-VN")} đ</div>
                       </div>
                       <div className="flex gap-1.5 shrink-0">
-                        <button onClick={() => approvePayment(p)} className="text-[11px] px-2.5 py-1 rounded-md bg-gold/15 text-gold hover:bg-gold/25"><CheckCircle2 className="h-3 w-3 inline" /> Duyệt</button>
-                        <button onClick={() => rejectPayment(p)} className="text-[11px] px-2.5 py-1 rounded-md border border-border hover:border-destructive hover:text-destructive"><XCircle className="h-3 w-3 inline" /></button>
+                        <button onClick={() => approvePayment(p)} disabled={pendingId === p.id} className="text-[11px] px-2.5 py-1 rounded-md bg-gold/15 text-gold hover:bg-gold/25 disabled:opacity-50"><CheckCircle2 className="h-3 w-3 inline" /> Duyệt</button>
+                        <button onClick={() => rejectPayment(p)} disabled={pendingId === p.id} className="text-[11px] px-2.5 py-1 rounded-md border border-border hover:border-destructive hover:text-destructive disabled:opacity-50"><XCircle className="h-3 w-3 inline" /></button>
                       </div>
                     </div>
                   ))}
