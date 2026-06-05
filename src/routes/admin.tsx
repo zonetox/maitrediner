@@ -876,10 +876,14 @@ function DirectoryTab() {
   }
   async function removeCuisine(id: string) {
     if (!confirm("Xoá danh mục này?")) return;
-    await supabase.from("cuisine_categories").delete().eq("id", id); load();
+    const { error } = await supabase.from("cuisine_categories").delete().eq("id", id);
+    if (error) return toast.error(error.message);
+    load();
   }
   async function toggleCuisine(c: any) {
-    await supabase.from("cuisine_categories").update({ is_active: !c.is_active }).eq("id", c.id); load();
+    const { error } = await supabase.from("cuisine_categories").update({ is_active: !c.is_active }).eq("id", c.id);
+    if (error) return toast.error(error.message);
+    load();
   }
   async function addLocation() {
     if (!newLocation.trim()) return;
@@ -891,10 +895,14 @@ function DirectoryTab() {
   }
   async function removeLocation(id: string) {
     if (!confirm("Xoá địa điểm này?")) return;
-    await supabase.from("locations").delete().eq("id", id); load();
+    const { error } = await supabase.from("locations").delete().eq("id", id);
+    if (error) return toast.error(error.message);
+    load();
   }
   async function toggleLocation(l: any) {
-    await supabase.from("locations").update({ is_active: !l.is_active }).eq("id", l.id); load();
+    const { error } = await supabase.from("locations").update({ is_active: !l.is_active }).eq("id", l.id);
+    if (error) return toast.error(error.message);
+    load();
   }
   async function addAmenity() {
     if (!newAmenity.name.trim()) return;
@@ -907,10 +915,14 @@ function DirectoryTab() {
   }
   async function removeAmenity(id: string) {
     if (!confirm("Xoá tiện ích này?")) return;
-    await supabase.from("amenities").delete().eq("id", id); load();
+    const { error } = await supabase.from("amenities").delete().eq("id", id);
+    if (error) return toast.error(error.message);
+    load();
   }
   async function toggleAmenity(a: any) {
-    await supabase.from("amenities").update({ is_active: !a.is_active }).eq("id", a.id); load();
+    const { error } = await supabase.from("amenities").update({ is_active: !a.is_active }).eq("id", a.id);
+    if (error) return toast.error(error.message);
+    load();
   }
 
   return (
@@ -1049,7 +1061,8 @@ function PlansTab() {
   }
 
   async function toggle(p: any) {
-    await supabase.from("membership_plans").update({ is_active: !p.is_active }).eq("id", p.id);
+    const { error } = await supabase.from("membership_plans").update({ is_active: !p.is_active }).eq("id", p.id);
+    if (error) return toast.error(error.message);
     load();
   }
 

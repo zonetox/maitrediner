@@ -27,6 +27,8 @@ function PartnerPage() {
   const [restaurants, setRestaurants] = useState<any[]>([]);
   const [selected, setSelected] = useState<any | null>(null);
   const [savedSnapshot, setSavedSnapshot] = useState<string>("");
+  const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [tab, setTab] = useState<Tab>("dashboard");
   const [menu, setMenu] = useState<any[]>([]);
   const [bookings, setBookings] = useState<any[]>([]);
@@ -141,9 +143,11 @@ function PartnerPage() {
   }
 
   async function saveRestaurant() {
-    if (!selected) return;
+    if (!selected || saving) return;
+    setSaving(true);
     const { id, created_at, updated_at, owner_id, ...payload } = selected;
     const { error } = await supabase.from("restaurants").update(payload).eq("id", id);
+    setSaving(false);
     if (error) toast.error(error.message);
     else {
       toast.success("Đã lưu thay đổi");
@@ -153,8 +157,11 @@ function PartnerPage() {
   }
 
   async function deleteRestaurant() {
-    if (!selected || !confirm(`Xoá nhà hàng "${selected.name}"? Toàn bộ dữ liệu liên quan sẽ mất.`)) return;
+    if (!selected || deleting) return;
+    if (!confirm(`Xoá nhà hàng "${selected.name}"? Toàn bộ dữ liệu liên quan sẽ mất.`)) return;
+    setDeleting(true);
     const { error } = await supabase.from("restaurants").delete().eq("id", selected.id);
+    setDeleting(false);
     if (error) return toast.error(error.message);
     toast.success("Đã xoá nhà hàng");
     setSelected(null); load();
@@ -307,12 +314,12 @@ function PartnerPage() {
                     </div>
                   </div>
                   <div className="flex gap-2 flex-wrap">
-                    <button onClick={deleteRestaurant} className="h-9 px-3 rounded-lg border border-border text-sm flex items-center gap-1.5 hover:border-destructive hover:text-destructive transition">
+                    <button onClick={deleteRestaurant} disabled={deleting} className="h-9 px-3 rounded-lg border border-border text-sm flex items-center gap-1.5 hover:border-destructive hover:text-destructive transition disabled:opacity-50">
                       <Trash2 className="h-3.5 w-3.5" />
                     </button>
-                    <button onClick={saveRestaurant} disabled={!dirty}
-                      className={`h-9 px-4 rounded-lg text-sm font-medium flex items-center gap-1.5 transition ${dirty ? "bg-gradient-gold text-primary-foreground shadow-gold ring-2 ring-gold/40 animate-pulse" : "bg-card border border-border text-muted-foreground"}`}>
-                      <Save className="h-3.5 w-3.5" /> {dirty ? "Lưu thay đổi" : "Đã lưu"}
+                    <button onClick={saveRestaurant} disabled={!dirty || saving}
+                      className={`h-9 px-4 rounded-lg text-sm font-medium flex items-center gap-1.5 transition disabled:opacity-60 ${dirty ? "bg-gradient-gold text-primary-foreground shadow-gold ring-2 ring-gold/40 animate-pulse" : "bg-card border border-border text-muted-foreground"}`}>
+                      <Save className="h-3.5 w-3.5" /> {saving ? "Đang lưu…" : dirty ? "Lưu thay đổi" : "Đã lưu"}
                     </button>
                   </div>
                 </div>
@@ -324,8 +331,8 @@ function PartnerPage() {
                     <AlertTriangle className="h-4 w-4 shrink-0" />
                     Bạn có thay đổi chưa lưu.
                   </span>
-                  <button onClick={saveRestaurant} className="shrink-0 px-3 py-1.5 rounded-full bg-gradient-gold text-primary-foreground text-xs font-medium inline-flex items-center gap-1.5">
-                    <Save className="h-3 w-3" /> Lưu ngay
+                  <button onClick={saveRestaurant} disabled={saving} className="shrink-0 px-3 py-1.5 rounded-full bg-gradient-gold text-primary-foreground text-xs font-medium inline-flex items-center gap-1.5 disabled:opacity-60">
+                    <Save className="h-3 w-3" /> {saving ? "Đang lưu…" : "Lưu ngay"}
                   </button>
                 </div>
               )}
@@ -801,7 +808,9 @@ function MenuTab({ restaurantId, menu, reload }: any) {
   }
   async function remove(id: string) {
     if (!confirm("Xoá món này?")) return;
-    await supabase.from("menu_items").delete().eq("id", id); reload();
+    const { error } = await supabase.from("menu_items").delete().eq("id", id);
+    if (error) return toast.error(error.message);
+    toast.success("Đã xoá món"); reload();
   }
   return (
     <div>
@@ -986,10 +995,13 @@ function DealsTab({ restaurantId, deals, reload }: any) {
   }
   async function remove(id: string) {
     if (!confirm("Xoá ưu đãi này?")) return;
-    await supabase.from("deals").delete().eq("id", id); reload();
+    const { error } = await supabase.from("deals").delete().eq("id", id);
+    if (error) return toast.error(error.message);
+    toast.success("Đã xoá ưu đãi"); reload();
   }
   async function toggleActive(d: any) {
-    await supabase.from("deals").update({ is_active: !d.is_active }).eq("id", d.id);
+    const { error } = await supabase.from("deals").update({ is_active: !d.is_active }).eq("id", d.id);
+    if (error) return toast.error(error.message);
     reload();
   }
   return (

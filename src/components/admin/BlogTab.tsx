@@ -96,7 +96,8 @@ function CategoriesPanel({ cats, reload }: { cats: Cat[]; reload: () => void }) 
     reload(); toast.success("Đã xoá");
   }
   async function toggle(c: Cat) {
-    await (supabase as any).from("blog_categories").update({ is_active: !c.is_active }).eq("id", c.id);
+    const { error } = await (supabase as any).from("blog_categories").update({ is_active: !c.is_active }).eq("id", c.id);
+    if (error) return toast.error(error.message);
     reload();
   }
   async function saveEdit() {
@@ -351,11 +352,11 @@ function PostEditor({ post, cats, onClose, onSaved }: {
           <div className="flex items-center justify-between px-6 py-4 border-b border-border sticky top-0 bg-card rounded-t-2xl z-10">
             <h2 className="font-serif text-xl">{isNew ? "Bài viết mới" : "Sửa bài viết"}</h2>
             <div className="flex gap-2">
-              <button onClick={() => save(false)} disabled={saving} className="px-4 py-2 rounded-md border border-border text-sm inline-flex items-center gap-1">
-                <Save className="h-3 w-3" /> Lưu nháp
+              <button onClick={() => save(false)} disabled={saving} className="px-4 py-2 rounded-md border border-border text-sm inline-flex items-center gap-1 disabled:opacity-60">
+                <Save className="h-3 w-3" /> {saving ? "Đang lưu…" : "Lưu nháp"}
               </button>
-              <button onClick={() => save(true)} disabled={saving} className="px-4 py-2 rounded-md bg-gradient-gold text-primary-foreground text-sm inline-flex items-center gap-1">
-                <Eye className="h-3 w-3" /> {form.status === "published" ? "Cập nhật" : "Xuất bản"}
+              <button onClick={() => save(true)} disabled={saving} className="px-4 py-2 rounded-md bg-gradient-gold text-primary-foreground text-sm inline-flex items-center gap-1 disabled:opacity-60">
+                <Eye className="h-3 w-3" /> {saving ? "Đang xử lý…" : form.status === "published" ? "Cập nhật" : "Xuất bản"}
               </button>
               <button onClick={onClose} className="p-2 rounded-md border border-border"><X className="h-4 w-4" /></button>
             </div>
