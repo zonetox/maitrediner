@@ -13,6 +13,7 @@ import { ImageUploader } from "@/components/ImageUploader";
 import { toast } from "sonner";
 import { invalidateSiteSettings } from "@/hooks/useSiteSettings";
 import { BlogTab } from "@/components/admin/BlogTab";
+import { ImportTab } from "@/components/admin/ImportTab";
 import { notify } from "@/lib/notify.functions";
 import {
   ResponsiveContainer, AreaChart, Area, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid,
@@ -23,7 +24,7 @@ export const Route = createFileRoute("/admin")({
   component: AdminPage,
 });
 
-type Tab = "overview" | "restaurants" | "payments" | "plans" | "users" | "bookings" | "directory" | "site" | "blog" | "settings";
+type Tab = "overview" | "restaurants" | "payments" | "plans" | "users" | "bookings" | "directory" | "site" | "blog" | "import" | "settings";
 
 const NAV_GROUPS: { title: string; items: { k: Tab; label: string; icon: any }[] }[] = [
   {
@@ -40,6 +41,7 @@ const NAV_GROUPS: { title: string; items: { k: Tab; label: string; icon: any }[]
     title: "Nội dung",
     items: [
       { k: "blog", label: "Blog", icon: FileText },
+      { k: "import", label: "Nhập liệu", icon: Sparkles },
       { k: "directory", label: "Danh mục & Địa điểm", icon: FolderTree },
       { k: "site", label: "Header & Footer", icon: LayoutIcon },
     ],
@@ -677,6 +679,7 @@ function AdminPage() {
           {tab === "plans" && <PlansTab />}
           {tab === "site" && <SiteTab />}
           {tab === "blog" && <BlogTab />}
+          {tab === "import" && <ImportTab />}
           {tab === "settings" && <SettingsTab />}
         </main>
       </div>
