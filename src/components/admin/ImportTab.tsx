@@ -275,6 +275,74 @@ export function ImportTab() {
           </div>
         )}
       </div>
+
+      {/* Enrich existing drafts */}
+      <div className="rounded-2xl border border-border bg-card p-6">
+        <div className="flex items-start justify-between flex-wrap gap-2 mb-3">
+          <div>
+            <h3 className="font-serif text-lg flex items-center gap-2"><Wand2 className="h-4 w-4 text-gold" /> Enrich nháp bằng Firecrawl</h3>
+            <p className="text-xs text-muted-foreground mt-1">Nhà hàng có <code className="text-gold">source_url</code> sẽ tự điền các trường còn trống.</p>
+          </div>
+          <div className="flex items-center gap-3">
+            <label className="text-xs inline-flex items-center gap-1.5 text-muted-foreground">
+              <input type="checkbox" checked={overwrite} onChange={(e) => setOverwrite(e.target.checked)} />
+              Ghi đè dữ liệu cũ
+            </label>
+            <button onClick={loadDrafts} disabled={loadingDrafts}
+              className="text-xs px-3 py-1.5 rounded-md border border-border inline-flex items-center gap-1 hover:border-gold disabled:opacity-60">
+              <RefreshCw className={"h-3 w-3 " + (loadingDrafts ? "animate-spin" : "")} /> Tải lại
+            </button>
+          </div>
+        </div>
+
+        {drafts.length === 0 ? (
+          <p className="text-sm text-muted-foreground italic">
+            {loadingDrafts ? "Đang tải…" : "Chưa có nhà hàng nào được import qua URL/CSV. Dùng 2 công cụ ở trên trước."}
+          </p>
+        ) : (
+          <div className="rounded-md border border-border max-h-96 overflow-auto">
+            <table className="w-full text-xs">
+              <thead className="bg-muted/30 text-muted-foreground sticky top-0">
+                <tr>
+                  <th className="text-left px-3 py-2">Tên</th>
+                  <th className="text-left px-3 py-2">Thành phố</th>
+                  <th className="text-left px-3 py-2">Trạng thái</th>
+                  <th className="text-left px-3 py-2">Nguồn</th>
+                  <th className="text-right px-3 py-2"></th>
+                </tr>
+              </thead>
+              <tbody>
+                {drafts.map((d) => (
+                  <tr key={d.id} className="border-t border-border">
+                    <td className="px-3 py-2">
+                      <div className="font-medium">{d.name}</div>
+                      <div className="text-muted-foreground font-mono text-[10px]">/{d.slug}</div>
+                    </td>
+                    <td className="px-3 py-2 text-muted-foreground">{d.city || "—"}</td>
+                    <td className="px-3 py-2">
+                      {d.is_published
+                        ? <span className="text-emerald-400">Đã đăng</span>
+                        : <span className="text-amber-400">Nháp</span>}
+                    </td>
+                    <td className="px-3 py-2 max-w-[200px] truncate">
+                      <a href={d.source_url} target="_blank" rel="noreferrer" className="text-gold hover:underline inline-flex items-center gap-1">
+                        {d.source_url?.replace(/^https?:\/\//, "").slice(0, 30)}… <ExternalLink className="h-3 w-3" />
+                      </a>
+                    </td>
+                    <td className="px-3 py-2 text-right">
+                      <button onClick={() => enrichOne(d.id)} disabled={enrichingId === d.id}
+                        className="px-3 py-1 rounded-md bg-gold/15 text-gold hover:bg-gold/25 inline-flex items-center gap-1.5 disabled:opacity-60">
+                        {enrichingId === d.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Wand2 className="h-3 w-3" />}
+                        Enrich
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
