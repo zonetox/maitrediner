@@ -5,6 +5,8 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { Calendar, Clock, BookOpen, Search, X, ArrowUpRight } from "lucide-react";
 import { img } from "@/lib/img";
+import { LiveSearch } from "@/components/LiveSearch";
+import { searchBlogPosts } from "@/lib/search-fetchers";
 
 export const Route = createFileRoute("/blog")({
   head: () => ({
