@@ -174,3 +174,107 @@ export const importRestaurants = createServerFn({ method: "POST" })
       results,
     };
   });
+
+// ---------- Enrich existing draft via Firecrawl ----------
+
+const EnrichInput = z.object({
+  restaurant_id: z.string().uuid(),
+  url: z.string().url().optional(),
+  overwrite: z.boolean().default(false),
+});
+
+export const enrichRestaurant = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => EnrichInput.parse(d))
+  .handler(async ({ data, context }) => {
+    if (!(await isAdmin(context.userId))) throw new Response("Forbidden", { status: 403 });
+    const apiKey = process.env.FIRECRAWL_API_KEY;
+    if (!apiKey) throw new Response("FIRECRAWL_API_KEY chưa cấu hình", { status: 500 });
+
+    const { data: existing, error: rErr } = await supabaseAdmin
+      .from("restaurants")
+      .select("*")
+      .eq("id", data.restaurant_id)
+      .maybeSingle();
+    if (rErr || !existing) throw new Response("Không tìm thấy nhà hàng", { status: 404 });
+
+    const url = data.url || existing.source_url;
+    if (!url) throw new Response("Thiếu source_url (URL gốc)", { status: 400 });
+
+    const res = await fetch("https://api.firecrawl.dev/v2/scrape", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        url,
+        onlyMainContent: true,
+        formats: [
+          "markdown",
+          { type: "json", schema: ExtractSchema, prompt: "Trích thông tin nhà hàng từ trang này. Bỏ qua nếu không có." },
+        ],
+      }),
+    });
+    if (!res.ok) {
+      const t = await res.text();
+      throw new Response(`Firecrawl ${res.status}: ${t.slice(0, 300)}`, { status: 502 });
+    }
+    const json: any = await res.json();
+    const doc = json?.data ?? json;
+    const ex = doc?.json ?? doc?.extract ?? {};
+    const meta = doc?.metadata ?? {};
+
+    // Only fill empty fields unless overwrite=true
+    const pick = (current: any, next: any) =>
+      data.overwrite ? (next || current) : (current && String(current).trim() ? current : next || current);
+
+    const update: Record<string, any> = {
+      name: pick(existing.name, ex.name || meta.title),
+      cuisine_type: pick(existing.cuisine_type, ex.cuisine_type),
+      city: pick(existing.city, ex.city),
+      address: pick(existing.address, ex.address),
+      phone: pick(existing.phone, ex.phone),
+      email: pick(existing.email, ex.email),
+      short_description: pick(existing.short_description, ex.short_description || meta.description),
+      cover_image_url: pick(existing.cover_image_url, ex.cover_image_url || meta.ogImage),
+      price_range: pick(existing.price_range, ex.price_range),
+      source_url: url,
+      imported_at: new Date().toISOString(),
+    };
+
+    const lc = (existing.landing_content || {}) as any;
+    update.landing_content = {
+      ...lc,
+      hero_tagline: pick(lc.hero_tagline, ex.short_description || meta.description),
+      story: pick(lc.story, ex.story),
+      hours: pick(lc.hours, ex.hours),
+    };
+
+    const filled: string[] = [];
+    for (const [k, v] of Object.entries(update)) {
+      if (k === "imported_at" || k === "source_url" || k === "landing_content") continue;
+      if (v && v !== (existing as any)[k]) filled.push(k);
+    }
+
+    const { error: uErr } = await supabaseAdmin
+      .from("restaurants")
+      .update(update as any)
+      .eq("id", data.restaurant_id);
+    if (uErr) throw new Response(uErr.message, { status: 500 });
+
+    return { ok: true, filled, name: update.name };
+  });
+
+// ---------- List drafts that can be enriched ----------
+
+export const listImportedDrafts = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    if (!(await isAdmin(context.userId))) throw new Response("Forbidden", { status: 403 });
+    const { data, error } = await supabaseAdmin
+      .from("restaurants")
+      .select("id, name, slug, city, cuisine_type, cover_image_url, short_description, source_url, is_published, imported_at")
+      .not("source_url", "is", null)
+      .order("imported_at", { ascending: false, nullsFirst: false })
+      .limit(100);
+    if (error) throw new Response(error.message, { status: 500 });
+    return { rows: data ?? [] };
+  });
