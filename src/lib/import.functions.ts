@@ -256,7 +256,7 @@ export const enrichRestaurant = createServerFn({ method: "POST" })
 
     const { error: uErr } = await supabaseAdmin
       .from("restaurants")
-      .update(update)
+      .update(update as any)
       .eq("id", data.restaurant_id);
     if (uErr) throw new Response(uErr.message, { status: 500 });
 
