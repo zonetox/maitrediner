@@ -78,19 +78,14 @@ function BlogIndex() {
         <div className="max-w-6xl mx-auto px-6">
           {/* Search + categories */}
           <div className="flex flex-col gap-4 mb-10">
-            <div className="relative max-w-xl mx-auto w-full">
-              <Search className="h-4 w-4 absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
-              <input
+            <div className="max-w-xl mx-auto w-full">
+              <LiveSearch
                 value={q}
-                onChange={(e) => setQ(e.target.value)}
+                onChange={setQ}
                 placeholder="Tìm bài viết, tác giả, từ khoá…"
-                className="w-full bg-card border border-border rounded-full pl-11 pr-10 py-3 text-sm focus:outline-none focus:border-gold transition"
+                fetcher={searchBlogPosts}
+                variant="pill"
               />
-              {q && (
-                <button onClick={() => setQ("")} className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-gold">
-                  <X className="h-4 w-4" />
-                </button>
-              )}
             </div>
 
             {cats.length > 0 && (
