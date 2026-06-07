@@ -51,6 +51,8 @@ function parseCSV(text: string): Draft[] {
 export function ImportTab() {
   const scrapeFn = useServerFn(scrapeRestaurant);
   const importFn = useServerFn(importRestaurants);
+  const enrichFn = useServerFn(enrichRestaurant);
+  const listDraftsFn = useServerFn(listImportedDrafts);
 
   const [url, setUrl] = useState("");
   const [scraping, setScraping] = useState(false);
@@ -59,6 +61,34 @@ export function ImportTab() {
   const [csvRows, setCsvRows] = useState<Draft[]>([]);
   const [importing, setImporting] = useState(false);
   const [results, setResults] = useState<{ name: string; status: "ok" | "error"; slug?: string; error?: string }[]>([]);
+
+  const [drafts, setDrafts] = useState<any[]>([]);
+  const [loadingDrafts, setLoadingDrafts] = useState(false);
+  const [enrichingId, setEnrichingId] = useState<string | null>(null);
+  const [overwrite, setOverwrite] = useState(false);
+
+  async function loadDrafts() {
+    setLoadingDrafts(true);
+    try {
+      const r: any = await listDraftsFn();
+      setDrafts(r.rows ?? []);
+    } catch (e: any) {
+      toast.error(e?.message ?? "Không tải được danh sách");
+    } finally { setLoadingDrafts(false); }
+  }
+  useEffect(() => { loadDrafts(); }, []);
+
+  async function enrichOne(id: string) {
+    setEnrichingId(id);
+    try {
+      const r: any = await enrichFn({ data: { restaurant_id: id, overwrite } });
+      toast.success(`Đã enrich · điền ${r.filled?.length ?? 0} trường`);
+      await loadDrafts();
+    } catch (e: any) {
+      toast.error(e?.message ?? "Lỗi enrich");
+    } finally { setEnrichingId(null); }
+  }
+
 
   async function handleScrape() {
     if (!url.trim()) return toast.error("Nhập URL");
