@@ -2,10 +2,12 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { LuxSelect } from "@/components/LuxSelect";
+import { LiveSearch } from "@/components/LiveSearch";
+import { searchRestaurants } from "@/lib/search-fetchers";
 import heroImg from "@/assets/hero-restaurant.jpg";
 import hero2 from "@/assets/hero-2.jpg";
 import hero3 from "@/assets/hero-3.jpg";
-import { Search, MapPin, Utensils, ChevronLeft, ChevronRight, Sparkles, X } from "lucide-react";
+import { MapPin, Utensils, ChevronLeft, ChevronRight, Sparkles, X } from "lucide-react";
 
 const FALLBACK_CUISINES = ["Fine dining", "Omakase", "Steakhouse", "Pháp", "Ý", "Việt"];
 const FALLBACK_CITIES = ["TP.HCM", "Hà Nội", "Đà Nẵng"];
