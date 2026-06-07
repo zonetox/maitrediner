@@ -192,10 +192,14 @@ function RestaurantsPage() {
           </div>
 
           <form onSubmit={apply} className="bg-card/80 backdrop-blur-md border border-border rounded-2xl p-2 mb-4 grid md:grid-cols-[1.4fr_1fr_1fr_auto] gap-2 shadow-elegant">
-            <div className="flex items-center gap-3 px-4 py-3">
-              <Search className="h-4 w-4 text-gold" />
-              <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Tên nhà hàng..." className="bg-transparent outline-none text-sm flex-1" />
-            </div>
+            <LiveSearch
+              value={q}
+              onChange={setQ}
+              placeholder="Tên nhà hàng..."
+              fetcher={searchRestaurants}
+              onSubmit={() => apply()}
+              variant="hero"
+            />
             <div className="border-l border-border">
               <LuxSelect
                 value={cuisine}
