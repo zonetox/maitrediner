@@ -4,6 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { LuxSelect } from "@/components/LuxSelect";
+import { LiveSearch } from "@/components/LiveSearch";
+import { searchRestaurants } from "@/lib/search-fetchers";
 import { Search, MapPin, Utensils, Star, Heart, SlidersHorizontal, X, Sparkles } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
