@@ -97,15 +97,13 @@ function SignaturePage() {
 
         <div className="bg-card/80 backdrop-blur-md border border-border rounded-2xl p-2 mb-10 shadow-elegant">
           <div className="grid grid-cols-1 md:grid-cols-[1.6fr_1fr] gap-2">
-            <div className="flex items-center gap-3 px-4 py-3 rounded-xl">
-              <Search className="h-4 w-4 text-gold shrink-0" />
-              <input
-                value={q}
-                onChange={(e) => setQ(e.target.value)}
-                placeholder="Tìm món signature, tên nhà hàng..."
-                className="bg-transparent text-sm outline-none flex-1 placeholder:text-muted-foreground"
-              />
-            </div>
+            <LiveSearch
+              value={q}
+              onChange={setQ}
+              placeholder="Tìm món signature, tên nhà hàng..."
+              fetcher={searchSignatureDishes}
+              variant="hero"
+            />
             <div className="border-l border-border">
               <LuxSelect
                 value={cuisine}
