@@ -2,10 +2,12 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { LuxSelect } from "@/components/LuxSelect";
+import { LiveSearch } from "@/components/LiveSearch";
+import { searchRestaurants } from "@/lib/search-fetchers";
 import heroImg from "@/assets/hero-restaurant.jpg";
 import hero2 from "@/assets/hero-2.jpg";
 import hero3 from "@/assets/hero-3.jpg";
-import { Search, MapPin, Utensils, ChevronLeft, ChevronRight, Sparkles, X } from "lucide-react";
+import { MapPin, Utensils, ChevronLeft, ChevronRight, Sparkles, X } from "lucide-react";
 
 const FALLBACK_CUISINES = ["Fine dining", "Omakase", "Steakhouse", "Pháp", "Ý", "Việt"];
 const FALLBACK_CITIES = ["TP.HCM", "Hà Nội", "Đà Nẵng"];
@@ -153,15 +155,24 @@ export function Hero() {
           {/* Search */}
           <form onSubmit={onSearch} className="bg-card/80 backdrop-blur-md border border-border rounded-2xl p-2 shadow-elegant">
             <div className="grid grid-cols-1 md:grid-cols-[1.4fr_1fr_1fr_auto] gap-2">
-              <div className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-secondary/60 transition">
-                <Search className="h-4 w-4 text-gold shrink-0" />
-                <input
-                  value={q}
-                  onChange={(e) => setQ(e.target.value)}
-                  placeholder="Tên nhà hàng, món ăn..."
-                  className="bg-transparent text-sm outline-none flex-1 placeholder:text-muted-foreground"
-                />
-              </div>
+              <LiveSearch
+                value={q}
+                onChange={setQ}
+                placeholder="Tên nhà hàng, món ăn..."
+                fetcher={searchRestaurants}
+                onSubmit={(v) =>
+                  navigate({
+                    to: "/restaurants",
+                    search: {
+                      q: v || undefined,
+                      cuisine: cuisine || undefined,
+                      city: city || undefined,
+                      amenities: amenities.length ? amenities.join(",") : undefined,
+                    } as any,
+                  })
+                }
+                variant="hero"
+              />
               <div className="border-l border-border">
                 <LuxSelect
                   value={cuisine}
