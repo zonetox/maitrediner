@@ -5,6 +5,8 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { Search, Star, Utensils } from "lucide-react";
 import { LuxSelect } from "@/components/LuxSelect";
+import { LiveSearch } from "@/components/LiveSearch";
+import { searchSignatureDishes } from "@/lib/search-fetchers";
 
 export const Route = createFileRoute("/signature")({
   head: () => ({
