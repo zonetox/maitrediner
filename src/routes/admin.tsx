@@ -73,6 +73,8 @@ function AdminPage() {
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [claiming, setClaiming] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
+  const notifyFn = useServerFn(notify);
+
 
   useEffect(() => {
     if (!loading && !user) navigate({ to: "/auth" });
