@@ -17,11 +17,11 @@ import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as PartnerRouteImport } from './routes/partner'
 import { Route as MembershipRouteImport } from './routes/membership'
 import { Route as DealsRouteImport } from './routes/deals'
-import { Route as BlogRouteImport } from './routes/blog'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AccountRouteImport } from './routes/account'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as BlogIndexRouteImport } from './routes/blog.index'
 import { Route as RSlugRouteImport } from './routes/r.$slug'
 import { Route as PartnerMembershipRouteImport } from './routes/partner.membership'
 import { Route as CuisinesSlugRouteImport } from './routes/cuisines.$slug'
@@ -70,11 +70,6 @@ const DealsRoute = DealsRouteImport.update({
   path: '/deals',
   getParentRoute: () => rootRouteImport,
 } as any)
-const BlogRoute = BlogRouteImport.update({
-  id: '/blog',
-  path: '/blog',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
@@ -93,6 +88,11 @@ const AccountRoute = AccountRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BlogIndexRoute = BlogIndexRouteImport.update({
+  id: '/blog/',
+  path: '/blog/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RSlugRoute = RSlugRouteImport.update({
@@ -138,7 +138,6 @@ export interface FileRoutesByFullPath {
   '/account': typeof AccountRoute
   '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
-  '/blog': typeof BlogRouteWithChildren
   '/deals': typeof DealsRoute
   '/membership': typeof MembershipRoute
   '/partner': typeof PartnerRouteWithChildren
@@ -151,6 +150,7 @@ export interface FileRoutesByFullPath {
   '/cuisines/$slug': typeof CuisinesSlugRoute
   '/partner/membership': typeof PartnerMembershipRoute
   '/r/$slug': typeof RSlugRoute
+  '/blog/': typeof BlogIndexRoute
   '/blog/category/$slug': typeof BlogCategorySlugRoute
   '/api/public/cron/expire-memberships': typeof ApiPublicCronExpireMembershipsRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
@@ -160,7 +160,6 @@ export interface FileRoutesByTo {
   '/account': typeof AccountRoute
   '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
-  '/blog': typeof BlogRouteWithChildren
   '/deals': typeof DealsRoute
   '/membership': typeof MembershipRoute
   '/partner': typeof PartnerRouteWithChildren
@@ -173,6 +172,7 @@ export interface FileRoutesByTo {
   '/cuisines/$slug': typeof CuisinesSlugRoute
   '/partner/membership': typeof PartnerMembershipRoute
   '/r/$slug': typeof RSlugRoute
+  '/blog': typeof BlogIndexRoute
   '/blog/category/$slug': typeof BlogCategorySlugRoute
   '/api/public/cron/expire-memberships': typeof ApiPublicCronExpireMembershipsRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
@@ -183,7 +183,6 @@ export interface FileRoutesById {
   '/account': typeof AccountRoute
   '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
-  '/blog': typeof BlogRouteWithChildren
   '/deals': typeof DealsRoute
   '/membership': typeof MembershipRoute
   '/partner': typeof PartnerRouteWithChildren
@@ -196,6 +195,7 @@ export interface FileRoutesById {
   '/cuisines/$slug': typeof CuisinesSlugRoute
   '/partner/membership': typeof PartnerMembershipRoute
   '/r/$slug': typeof RSlugRoute
+  '/blog/': typeof BlogIndexRoute
   '/blog/category/$slug': typeof BlogCategorySlugRoute
   '/api/public/cron/expire-memberships': typeof ApiPublicCronExpireMembershipsRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
@@ -207,7 +207,6 @@ export interface FileRouteTypes {
     | '/account'
     | '/admin'
     | '/auth'
-    | '/blog'
     | '/deals'
     | '/membership'
     | '/partner'
@@ -220,6 +219,7 @@ export interface FileRouteTypes {
     | '/cuisines/$slug'
     | '/partner/membership'
     | '/r/$slug'
+    | '/blog/'
     | '/blog/category/$slug'
     | '/api/public/cron/expire-memberships'
     | '/lovable/email/queue/process'
@@ -229,7 +229,6 @@ export interface FileRouteTypes {
     | '/account'
     | '/admin'
     | '/auth'
-    | '/blog'
     | '/deals'
     | '/membership'
     | '/partner'
@@ -242,6 +241,7 @@ export interface FileRouteTypes {
     | '/cuisines/$slug'
     | '/partner/membership'
     | '/r/$slug'
+    | '/blog'
     | '/blog/category/$slug'
     | '/api/public/cron/expire-memberships'
     | '/lovable/email/queue/process'
@@ -251,7 +251,6 @@ export interface FileRouteTypes {
     | '/account'
     | '/admin'
     | '/auth'
-    | '/blog'
     | '/deals'
     | '/membership'
     | '/partner'
@@ -264,6 +263,7 @@ export interface FileRouteTypes {
     | '/cuisines/$slug'
     | '/partner/membership'
     | '/r/$slug'
+    | '/blog/'
     | '/blog/category/$slug'
     | '/api/public/cron/expire-memberships'
     | '/lovable/email/queue/process'
@@ -274,7 +274,6 @@ export interface RootRouteChildren {
   AccountRoute: typeof AccountRoute
   AdminRoute: typeof AdminRoute
   AuthRoute: typeof AuthRoute
-  BlogRoute: typeof BlogRouteWithChildren
   DealsRoute: typeof DealsRoute
   MembershipRoute: typeof MembershipRoute
   PartnerRoute: typeof PartnerRouteWithChildren
@@ -285,6 +284,7 @@ export interface RootRouteChildren {
   TermsRoute: typeof TermsRoute
   CuisinesSlugRoute: typeof CuisinesSlugRoute
   RSlugRoute: typeof RSlugRoute
+  BlogIndexRoute: typeof BlogIndexRoute
   ApiPublicCronExpireMembershipsRoute: typeof ApiPublicCronExpireMembershipsRoute
   LovableEmailQueueProcessRoute: typeof LovableEmailQueueProcessRoute
 }
@@ -347,13 +347,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DealsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/blog': {
-      id: '/blog'
-      path: '/blog'
-      fullPath: '/blog'
-      preLoaderRoute: typeof BlogRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/auth': {
       id: '/auth'
       path: '/auth'
@@ -380,6 +373,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/blog/': {
+      id: '/blog/'
+      path: '/blog'
+      fullPath: '/blog/'
+      preLoaderRoute: typeof BlogIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/r/$slug': {
@@ -434,18 +434,6 @@ declare module '@tanstack/react-router' {
   }
 }
 
-interface BlogRouteChildren {
-  BlogSlugRoute: typeof BlogSlugRoute
-  BlogCategorySlugRoute: typeof BlogCategorySlugRoute
-}
-
-const BlogRouteChildren: BlogRouteChildren = {
-  BlogSlugRoute: BlogSlugRoute,
-  BlogCategorySlugRoute: BlogCategorySlugRoute,
-}
-
-const BlogRouteWithChildren = BlogRoute._addFileChildren(BlogRouteChildren)
-
 interface PartnerRouteChildren {
   PartnerMembershipRoute: typeof PartnerMembershipRoute
 }
@@ -462,7 +450,6 @@ const rootRouteChildren: RootRouteChildren = {
   AccountRoute: AccountRoute,
   AdminRoute: AdminRoute,
   AuthRoute: AuthRoute,
-  BlogRoute: BlogRouteWithChildren,
   DealsRoute: DealsRoute,
   MembershipRoute: MembershipRoute,
   PartnerRoute: PartnerRouteWithChildren,
@@ -473,9 +460,20 @@ const rootRouteChildren: RootRouteChildren = {
   TermsRoute: TermsRoute,
   CuisinesSlugRoute: CuisinesSlugRoute,
   RSlugRoute: RSlugRoute,
+  BlogIndexRoute: BlogIndexRoute,
   ApiPublicCronExpireMembershipsRoute: ApiPublicCronExpireMembershipsRoute,
   LovableEmailQueueProcessRoute: LovableEmailQueueProcessRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
