@@ -115,8 +115,8 @@ function BlogPost() {
       </header>
 
       <main className="max-w-3xl mx-auto px-6 pt-12 pb-16">
-        <Link to="/blog" className="inline-flex items-center gap-2 text-xs text-muted-foreground hover:text-gold mb-8">
-          <ArrowLeft className="h-3 w-3" /> Tất cả bài viết
+        <Link to="/blog" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-gold mb-8 transition-colors">
+          <ArrowLeft className="h-4 w-4" /> Quay lại danh sách blog
         </Link>
 
         <article
