@@ -160,7 +160,8 @@ function AdminPage() {
     );
   }
 
-  const notifyFn = useServerFn(notify);
+
+
 
   async function approvePayment(p: any) {
     if (pendingId) return;
