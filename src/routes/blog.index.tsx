@@ -8,7 +8,7 @@ import { img } from "@/lib/img";
 import { LiveSearch } from "@/components/LiveSearch";
 import { searchBlogPosts } from "@/lib/search-fetchers";
 
-export const Route = createFileRoute("/blog")({
+export const Route = createFileRoute("/blog/")({
   head: () => ({
     meta: [
       { title: "Blog ẩm thực — Tạp chí Maison Dining" },
