@@ -73,6 +73,8 @@ function AdminPage() {
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [claiming, setClaiming] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
+  const notifyFn = useServerFn(notify);
+
 
   useEffect(() => {
     if (!loading && !user) navigate({ to: "/auth" });
@@ -128,6 +130,31 @@ function AdminPage() {
     return bookings.filter((b) => [b.restaurants?.name, b.guest_name, b.guest_phone, b.status].some((v) => v?.toLowerCase().includes(q)));
   }, [bookings, query]);
 
+  // Time-series for charts: last 14 days
+  const series = useMemo(() => {
+    const days: { key: string; label: string; bookings: number; revenue: number }[] = [];
+    const now = new Date();
+    for (let i = 13; i >= 0; i--) {
+      const d = new Date(now);
+      d.setDate(d.getDate() - i);
+      const key = d.toISOString().slice(0, 10);
+      days.push({ key, label: `${d.getDate()}/${d.getMonth() + 1}`, bookings: 0, revenue: 0 });
+    }
+    const idx: Record<string, number> = {};
+    days.forEach((d, i) => (idx[d.key] = i));
+    bookings.forEach((b) => {
+      const k = (b.created_at || "").slice(0, 10);
+      if (k in idx) days[idx[k]].bookings += 1;
+    });
+    payments.forEach((p) => {
+      if (p.status !== "approved") return;
+      const k = (p.reviewed_at || p.created_at || "").slice(0, 10);
+      if (k in idx) days[idx[k]].revenue += Number(p.amount || 0);
+    });
+    return days;
+  }, [bookings, payments]);
+
+
   if (loading) return <div className="min-h-screen bg-background" />;
   if (!user) return null;
   if (!hasRole("admin")) {
@@ -158,7 +185,8 @@ function AdminPage() {
     );
   }
 
-  const notifyFn = useServerFn(notify);
+
+
 
   async function approvePayment(p: any) {
     if (pendingId) return;
@@ -231,29 +259,8 @@ function AdminPage() {
     return d.toDateString() === t.toDateString();
   }).length;
 
-  // Time-series for charts: last 14 days
-  const series = useMemo(() => {
-    const days: { key: string; label: string; bookings: number; revenue: number }[] = [];
-    const now = new Date();
-    for (let i = 13; i >= 0; i--) {
-      const d = new Date(now);
-      d.setDate(d.getDate() - i);
-      const key = d.toISOString().slice(0, 10);
-      days.push({ key, label: `${d.getDate()}/${d.getMonth() + 1}`, bookings: 0, revenue: 0 });
-    }
-    const idx: Record<string, number> = {};
-    days.forEach((d, i) => (idx[d.key] = i));
-    bookings.forEach((b) => {
-      const k = (b.created_at || "").slice(0, 10);
-      if (k in idx) days[idx[k]].bookings += 1;
-    });
-    payments.forEach((p) => {
-      if (p.status !== "approved") return;
-      const k = (p.reviewed_at || p.created_at || "").slice(0, 10);
-      if (k in idx) days[idx[k]].revenue += Number(p.amount || 0);
-    });
-    return days;
-  }, [bookings, payments]);
+
+
 
   const showSearch = ["restaurants", "payments", "users", "bookings"].includes(tab);
 
