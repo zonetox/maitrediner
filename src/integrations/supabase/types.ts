@@ -44,21 +44,6 @@ export type Database = {
         }
         Relationships: []
       }
-      app_settings: {
-        Row: {
-          id: boolean
-          updated_at: string
-        }
-        Insert: {
-          id?: boolean
-          updated_at?: string
-        }
-        Update: {
-          id?: boolean
-          updated_at?: string
-        }
-        Relationships: []
-      }
       blog_categories: {
         Row: {
           created_at: string
